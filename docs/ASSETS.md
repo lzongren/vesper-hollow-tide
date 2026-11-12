@@ -1,14 +1,22 @@
 # Asset provenance
 
-All characters, weapons, arenas, effects, story names, and audio patterns were created for this project. Existing game assets are not included.
+Story names, encounter rules, architecture, effects, cloak/hat/bell details and synthesized audio were created for this project. The realism revision also uses third-party CC0 models and scanned PBR materials, listed in [the machine-readable asset manifest](imported-assets.json). No assets from Bloodborne or Wuchang are included.
 
-- `public/art/vesper-cover.png`: generated with the built-in OpenAI image-generation tool for this project on 2026-11-11. The in-game scene uses separate original procedural 3D geometry; the cover is concept/title art, not a gameplay screenshot.
+- `public/art/vesper-cover.png`: generated with the built-in OpenAI image-generation tool for this project on 2026-11-11. The in-game scene uses separate 3D geometry and textures; the cover is concept/title art, not a gameplay screenshot.
 - `public/favicon.svg`: original geometric project emblem.
-- `src/scene.ts`: original procedural meshes, texture generation, animation, lighting, and effects.
+- `src/scene.ts`: original temple geometry, costume additions, cloth deformation, skeletal posing, lighting and effects. Imported actors retain their original mesh and texture provenance.
 - `src/audio.ts`: original synthesis and composition code; no recordings or samples from other games.
 - `public/fonts/cormorant-garamond.ttf`: Cormorant Garamond from Google Fonts, SIL Open Font License. License included beside the file.
 - `public/fonts/inter.ttf`: Inter from Google Fonts, SIL Open Font License. License included beside the file.
 - Three.js, TypeScript, Vite, and other dependencies retain their upstream licenses; see the lockfile for exact versions.
+
+## Imported CC0 art
+
+The six GLB files in `public/models/` are from VibeAssets: Gothic plate-armour knight, winged wraith, horned sorcerer, longsword, fir trees and dead pine. The source catalogue identifies several as Meshy-generated. These are prototype art assets, not commissioned historical Chinese characters. Costume additions and material treatment are authored in `src/scene.ts`.
+
+Poly Haven supplies cobblestone_floor_001 and castle_brick_02_red (2K diffuse, normal and roughness maps), rock_boulder_cracked, wood_planks_grey and rusty_metal_02 (1K maps), and the 1K dikhololo_night HDR environment. All are CC0; exact source links and bundled filenames are in `imported-assets.json`. Assets are served from this repository, never hotlinked at runtime.
+
+The game's MIT license applies to our code; fonts keep their OFL licenses and imported art keeps its CC0 dedication.
 
 ## Cover-art generation prompt
 

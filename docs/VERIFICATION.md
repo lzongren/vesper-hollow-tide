@@ -22,4 +22,10 @@ Build workers briefly stalled on a local read of an installed Three.js type defi
 
 ## Limits
 
-The game uses stylized procedural geometry and synthesized audio. Physical controllers, iOS/Android devices, Safari, and non-Mac ARM hardware have not been manually tested. Touch and gamepad controls are implemented but should receive physical-device playtesting before claiming broad platform certification. Save data belongs to the current browser/origin and does not synchronize between devices. GPU performance depends on hardware and resolution; a Performance mode disables bloom and shadows and limits pixel ratio.
+The game combines original procedural architecture with CC0 rigged character models, scanned materials and synthesized audio. These are prototype characters and code-driven poses, not commercial-quality bespoke animation. Physical controllers, iOS/Android devices, Safari, and non-Mac ARM hardware have not been manually tested. Touch and gamepad controls are implemented but should receive physical-device playtesting before claiming broad platform certification. Save data belongs to the current browser/origin and does not synchronize between devices. GPU performance depends on hardware and resolution; a Performance mode disables SSAO, bloom and shadows and limits pixel ratio.
+
+## Realism revision (2026-11-11)
+
+All three encounters load textured GLB actors and PBR courtyards in local Chrome. The first arena was inspected through movement, a heavy strike (620 to 573 boss HP), dodging, damage and pause using real keyboard events. Movement is now camera-relative. An active-combat 180-frame requestAnimationFrame sample at 1440 x 900, High quality, on the Apple Silicon Mac averaged 8.29 ms, with a 9.60 ms 95th percentile. This is a short local browser sample, not a broad GPU benchmark or guarantee.
+
+Screenshots in this directory are captures of the actual renderer, not the generated title illustration. Asset source and license data is included in `imported-assets.json`. The heavier art downloads are approximately 35 MB before browser caching.

@@ -115,7 +115,10 @@ function message(text: string, duration = 1.6) {
   messageUntil = performance.now() + duration * 1000;
   $("combat-message").style.opacity = "1";
 }
+let startingEncounter = false;
 async function begin(index = selected) {
+  if (startingEncounter) return;
+  startingEncounter = true;
   $("loading").hidden = false;
   hideModal();
   clearInput();
@@ -123,6 +126,7 @@ async function begin(index = selected) {
     if (!world) {
       const { World: WorldClass } = await import("./scene");
       world = new WorldClass($<HTMLCanvasElement>("world"));
+      await world.ready;
       world.setQuality(save.quality);
       world.reducedMotion = save.reducedMotion;
     }
@@ -131,6 +135,8 @@ async function begin(index = selected) {
     world.setArena(index);
     world.player.root.visible = true;
     world.telegraphKey = "";
+    world.cameraInitialized = false;
+    world.yaw = 0;
     save.attempts[index]++;
     persist(save);
     inGame = true;
@@ -161,8 +167,10 @@ async function begin(index = selected) {
     $("loading").hidden = true;
     $("error").hidden = false;
     $("error").textContent =
-      `The arena could not be opened. This game requires WebGL 2 in a modern browser. Try enabling hardware acceleration, then reload. ${err instanceof Error ? err.message : String(err)}`;
+      `The arena could not be opened. Check the connection and WebGL 2 support, then reload. ${err instanceof Error ? err.message : String(err)}`;
     console.error(err);
+  } finally {
+    startingEncounter = false;
   }
 }
 function backToMenu() {
@@ -434,7 +442,7 @@ function getInput(): Input {
   }
   if (performance.now() > queueUntil) queued = undefined;
   return {
-    move: { x, z },
+    move: world ? world.movement({ x, z }) : { x, z },
     aim: !locked && mouseUsed ? world?.aim(mouse.x, mouse.y) : undefined,
     action: queued,
     locked,

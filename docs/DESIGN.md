@@ -2,7 +2,7 @@
 
 The first chapter has one protagonist and three separate replayable encounters. The masked pilgrim carries a single ceremonial blade and a finite supply of amber vials. The title artwork describes a larger world; the shipped game concentrates on the boss arenas.
 
-The visual language joins a ruined tidal monastery, bell towers, lacquer-red cloth, bronze inlay, ivory masks, and drifting ash. The environment and characters use deliberately faceted geometry. Gold versus red telegraphs communicate whether parrying is possible; the same distinction is also written in the HUD, so color is not the only cue.
+The visual language joins a ruined tidal monastery, bell towers, lacquer-red cloth, bronze inlay, ivory masks, and drifting ash. The revised scene uses scanned PBR surfaces, rigged textured characters, a close shoulder camera, layered eaves, carved timber brackets, brocade cloth and lantern light against cold mist. Imported character meshes are prototype assets; historical Chinese costumes and fully authored animation remain a later production milestone. Gold versus red telegraphs communicate whether parrying is possible; the same distinction is also written in the HUD, so color is not the only cue.
 
 ```mermaid
 stateDiagram-v2

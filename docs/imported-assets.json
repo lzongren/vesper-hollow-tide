@@ -1,0 +1,118 @@
+[
+  {
+    "file": "public/models/pilgrim.glb",
+    "source": "https://vibeassets.io/a/lvj49vzlzd",
+    "license": "CC0-1.0",
+    "description": "Realistic medieval knight in Gothic plate armour, rigged"
+  },
+  {
+    "file": "public/models/wraith.glb",
+    "source": "https://vibeassets.io/a/2fxmhhs4ql",
+    "license": "CC0-1.0",
+    "description": "Winged demon wraith, rigged (Meshy)"
+  },
+  {
+    "file": "public/models/sorcerer.glb",
+    "source": "https://vibeassets.io/a/6lgzyditwz",
+    "license": "CC0-1.0",
+    "description": "Demon sorcerer, rigged (Meshy)"
+  },
+  {
+    "file": "public/models/sword.glb",
+    "source": "https://vibeassets.io/a/i6qxdomxi0",
+    "license": "CC0-1.0",
+    "description": "Realistic medieval longsword"
+  },
+  {
+    "file": "public/models/pine.glb",
+    "source": "https://vibeassets.io/a/njbxg5swgt",
+    "license": "CC0-1.0",
+    "description": "Realistic Douglas fir pair (Meshy)"
+  },
+  {
+    "file": "public/models/dead-tree.glb",
+    "source": "https://vibeassets.io/a/g3nh7h52s2",
+    "license": "CC0-1.0",
+    "description": "Dead standing pine snag (Meshy)"
+  },
+  {
+    "file": "public/textures/stone-color.jpg",
+    "source": "https://polyhaven.com/a/cobblestone_floor_001",
+    "license": "CC0"
+  },
+  {
+    "file": "public/textures/stone-normal.jpg",
+    "source": "https://polyhaven.com/a/cobblestone_floor_001",
+    "license": "CC0"
+  },
+  {
+    "file": "public/textures/stone-rough.jpg",
+    "source": "https://polyhaven.com/a/cobblestone_floor_001",
+    "license": "CC0"
+  },
+  {
+    "file": "public/textures/wall-color.jpg",
+    "source": "https://polyhaven.com/a/castle_brick_02_red",
+    "license": "CC0"
+  },
+  {
+    "file": "public/textures/wall-normal.jpg",
+    "source": "https://polyhaven.com/a/castle_brick_02_red",
+    "license": "CC0"
+  },
+  {
+    "file": "public/textures/wall-rough.jpg",
+    "source": "https://polyhaven.com/a/castle_brick_02_red",
+    "license": "CC0"
+  },
+  {
+    "file": "public/textures/rock-color.jpg",
+    "source": "https://polyhaven.com/a/rock_boulder_cracked",
+    "license": "CC0"
+  },
+  {
+    "file": "public/textures/rock-normal.jpg",
+    "source": "https://polyhaven.com/a/rock_boulder_cracked",
+    "license": "CC0"
+  },
+  {
+    "file": "public/textures/rock-rough.jpg",
+    "source": "https://polyhaven.com/a/rock_boulder_cracked",
+    "license": "CC0"
+  },
+  {
+    "file": "public/textures/wood-color.jpg",
+    "source": "https://polyhaven.com/a/wood_planks_grey",
+    "license": "CC0"
+  },
+  {
+    "file": "public/textures/wood-normal.jpg",
+    "source": "https://polyhaven.com/a/wood_planks_grey",
+    "license": "CC0"
+  },
+  {
+    "file": "public/textures/wood-rough.jpg",
+    "source": "https://polyhaven.com/a/wood_planks_grey",
+    "license": "CC0"
+  },
+  {
+    "file": "public/textures/metal-color.jpg",
+    "source": "https://polyhaven.com/a/rusty_metal_02",
+    "license": "CC0"
+  },
+  {
+    "file": "public/textures/metal-normal.jpg",
+    "source": "https://polyhaven.com/a/rusty_metal_02",
+    "license": "CC0"
+  },
+  {
+    "file": "public/textures/metal-rough.jpg",
+    "source": "https://polyhaven.com/a/rusty_metal_02",
+    "license": "CC0"
+  },
+  {
+    "file": "public/textures/moonlight.hdr",
+    "source": "https://polyhaven.com/a/dikhololo_night",
+    "license": "CC0"
+  }
+]
