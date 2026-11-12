@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#101b1e" />
+    <meta
+      name="description"
+      content="Vesper: The Hollow Tide. An original dark fantasy action game. Three fallen saints. One last bell."
+    />
+    <title>Vesper — The Hollow Tide</title>
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+  </head>
+  <body>
+    <canvas id="world" aria-label="Three-dimensional combat arena"></canvas>
+    <div id="vignette"></div>
+    <div id="damage-flash"></div>
+    <main id="menu" class="screen">
+      <div class="cover"></div>
+      <div class="cover-shade"></div>
+      <div class="grain"></div>
+      <header class="masthead">
+        <span class="brand"><span class="sigil">✧</span> HOLLOW TIDE</span
+        ><button class="text-button" id="settings-open">
+          Settings <span>↗</span>
+        </button>
+      </header>
+      <section class="title-block">
+        <div class="eyebrow">
+          <span class="fine-line"></span> AN ORIGINAL SOULSLIKE
+        </div>
+        <h1>VESPER</h1>
+        <div class="subtitle">THE HOLLOW TIDE</div>
+        <p class="tagline">Three fallen saints.<br />One last bell.</p>
+        <p class="intro-copy">
+          The sea has taken everything but the dead.<br />Take up your blade.
+          End their vigil.
+        </p>
+        <div class="menu-actions">
+          <button id="begin" class="primary">
+            Enter the belfry <span>↗</span></button
+          ><button id="how-open" class="text-button">
+            Learn the rites <span>+</span>
+          </button>
+        </div>
+        <div class="input-note">
+          <span class="small-diamond">◇</span> KEYBOARD & MOUSE
+          <span class="dot">·</span> CONTROLLER READY
+        </div>
+      </section>
+      <section class="chapter-section" aria-label="Choose a boss encounter">
+        <div class="chapter-heading">
+          <span>THE THREE VIGILS</span
+          ><span id="progress-label">0 / 3 RELEASED</span>
+        </div>
+        <div class="chapters" id="chapters"></div>
+      </section>
+      <footer class="menu-footer">
+        <span>A BOSS-RUSH CHAPTER <span class="dot">/</span> v0.1</span
+        ><span
+          >HEADPHONES RECOMMENDED <span class="sound-waves">ı|ı</span></span
+        >
+      </footer>
+    </main>
+    <section id="hud" hidden aria-label="Combat status">
+      <div class="player-status">
+        <div class="player-label">
+          <span class="sigil">✧</span><span>THE LAST PILGRIM</span
+          ><span id="difficulty-label">PENITENT</span>
+        </div>
+        <div class="bar health">
+          <div id="rally-bar"></div>
+          <div id="health-bar"></div>
+        </div>
+        <div class="bar stamina"><div id="stamina-bar"></div></div>
+        <div class="health-numbers">
+          <span id="health-value">100 / 100</span
+          ><span id="stamina-value">100 STAMINA</span>
+        </div>
+      </div>
+      <div class="hud-top-right">
+        <button id="sound-button" aria-label="Toggle sound">♪</button
+        ><button id="pause-button" aria-label="Pause game">Ⅱ</button>
+      </div>
+      <div id="encounter-intro">
+        <div class="eyebrow" id="intro-chapter"></div>
+        <h2 id="intro-arena"></h2>
+        <div class="fine-line"></div>
+      </div>
+      <div id="combat-message" role="status" aria-live="polite"></div>
+      <div class="quick-item">
+        <div class="flask-icon">♧</div>
+        <div>
+          <span id="flask-count">3</span>
+          <span class="muted">/ AMBER VIALS</span
+          ><small><kbd>E</kbd> Restore vitality</small>
+        </div>
+      </div>
+      <div class="boss-status">
+        <div class="boss-heading">
+          <span id="boss-epithet"></span
+          ><span id="phase-label">FIRST VIGIL</span>
+        </div>
+        <h2 id="boss-name"></h2>
+        <div class="bar boss-health"><div id="boss-health-bar"></div></div>
+        <div class="bar posture"><div id="posture-bar"></div></div>
+        <div id="attack-tell">Observe. Endure. Answer.</div>
+      </div>
+      <div class="combat-controls">
+        <span><kbd>J</kbd> Strike</span><span><kbd>K</kbd> Heavy</span
+        ><span><kbd>SPACE</kbd> Dodge</span><span><kbd>Q</kbd> Parry</span
+        ><span id="lock-label"><kbd>TAB</kbd> Locked on</span>
+      </div>
+      <div id="touch-controls">
+        <div id="touch-stick"><span></span></div>
+        <div class="touch-actions">
+          <button data-action="parry">Parry</button
+          ><button data-action="heavy">Heavy</button
+          ><button data-action="heal">Heal</button
+          ><button data-action="dodge">Dodge</button
+          ><button data-action="light">Strike</button>
+        </div>
+      </div>
+    </section>
+    <div id="modal-backdrop" hidden>
+      <section
+        id="help-panel"
+        class="panel"
+        hidden
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="help-title"
+      >
+        <div class="eyebrow">A PILGRIM’S FIELD GUIDE</div>
+        <h2 id="help-title">Learn the rites</h2>
+        <p class="panel-lead">
+          Commit to your strikes. Leave enough breath to escape.
+        </p>
+        <div class="control-grid">
+          <div>
+            <kbd>W A S D</kbd
+            ><span>Move <small>Left stick on controller</small></span>
+          </div>
+          <div>
+            <kbd>J / LMB</kbd
+            ><span>Quick strike <small>X / Square</small></span>
+          </div>
+          <div>
+            <kbd>K / RMB</kbd
+            ><span>Heavy strike · riposte <small>Y / Triangle</small></span>
+          </div>
+          <div>
+            <kbd>SPACE</kbd
+            ><span>Dodge through danger <small>B / Circle</small></span>
+          </div>
+          <div>
+            <kbd>Q</kbd
+            ><span>Parry at the moment of impact <small>LB / L1</small></span>
+          </div>
+          <div>
+            <kbd>E</kbd
+            ><span>Drink an amber vial <small>A / Cross</small></span>
+          </div>
+          <div>
+            <kbd>TAB</kbd
+            ><span>Toggle target lock <small>Right stick click</small></span>
+          </div>
+          <div>
+            <kbd>ESC</kbd
+            ><span>Pause / settings <small>Start / Options</small></span>
+          </div>
+        </div>
+        <div class="rite-notes">
+          <p>
+            <b class="gold">Gold tells</b> can be parried.
+            <b class="coral">Red tells</b> must be dodged or avoided. Tells lock
+            direction before impact.
+          </p>
+          <p>
+            Fill the enemy’s <b>posture bar</b> with strikes and parries. When
+            they kneel, land a heavy strike for a devastating riposte.
+          </p>
+          <p>
+            Strike back soon after being hit to reclaim the pale portion of your
+            health. Every boss changes at half health.
+          </p>
+        </div>
+        <button class="primary close-panel">I am ready <span>↗</span></button>
+      </section>
+      <section
+        id="settings-panel"
+        class="panel compact"
+        hidden
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="settings-title"
+      >
+        <div class="eyebrow">MAKE THE PILGRIMAGE YOURS</div>
+        <h2 id="settings-title">Settings</h2>
+        <label class="setting-row"
+          >Challenge<select id="difficulty">
+            <option value="penitent">Penitent · intended challenge</option>
+            <option value="pilgrim">Pilgrim · gentler journey</option>
+          </select></label
+        >
+        <p class="setting-help">
+          Pilgrim reduces incoming damage, widens parry timing, restores stamina
+          faster, and grants five vials. Applies to your next attempt.
+        </p>
+        <label class="setting-row"
+          >Master volume<input
+            id="volume"
+            type="range"
+            min="0"
+            max="100"
+            value="55"
+            aria-label="Master volume" /></label
+        ><label class="setting-row"
+          >Visual quality<select id="quality">
+            <option value="high">High · bloom & shadows</option>
+            <option value="low">Performance</option>
+          </select></label
+        ><label class="setting-row"
+          >Reduce camera shake<input
+            id="reduced-motion"
+            type="checkbox" /></label
+        ><button class="primary close-panel">Return <span>↗</span></button>
+      </section>
+      <section
+        id="pause-panel"
+        class="panel compact centered"
+        hidden
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="pause-title"
+      >
+        <div class="eyebrow">THE TIDE CAN WAIT</div>
+        <h2 id="pause-title">A moment’s respite</h2>
+        <button id="resume" class="primary">
+          Continue the vigil <span>↗</span></button
+        ><button id="pause-help" class="secondary">Learn the rites</button
+        ><button id="pause-settings" class="secondary">Settings</button
+        ><button id="abandon" class="text-button">
+          Return to the monastery
+        </button>
+      </section>
+      <section
+        id="result-panel"
+        class="panel result centered"
+        hidden
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="result-title"
+      >
+        <div id="result-eyebrow" class="eyebrow"></div>
+        <h2 id="result-title"></h2>
+        <p id="result-copy"></p>
+        <div id="result-stats"></div>
+        <button id="retry" class="primary"></button
+        ><button id="result-menu" class="text-button">
+          Return to the monastery
+        </button>
+      </section>
+    </div>
+    <div id="loading" hidden>
+      <span class="sigil">✧</span>
+      <p>Crossing the hollow tide…</p>
+    </div>
+    <div id="error" hidden role="alert"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
