@@ -1,5 +1,7 @@
 # Vesper — The Hollow Tide
 
+**Visual rebuild in progress.** The browser prototype below did not meet the requested Bloodborne / Wuchang visual standard. A [native Unreal rebuild](native/README.md) is being prepared; it has no playable native level yet.
+
 **Three fallen saints. One last bell.**
 
 An original, playable 3D soulslike boss-rush chapter for the browser. Deliberate melee combat, weathered temple courtyards, detailed armoured and skeletal characters, pale feathers, and an adaptive dark-ambient score. Inspired by the tension and combat language of games such as Bloodborne and Wuchang: Fallen Feathers; no characters, music, models, or other assets from those games are used.

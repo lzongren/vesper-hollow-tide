@@ -26,3 +26,16 @@ jobs:
           name: vesper-web-build
           path: dist
           retention-days: 14
+
+  native-source-tools:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m unittest discover -s native/Tests -v
+      - run: python -m py_compile native/Scripts/assets.py native/Scripts/import_environment.py

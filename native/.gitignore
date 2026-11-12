@@ -1,0 +1,10 @@
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/
+SourceAssets/
+Content/External/
+.vs/
+*.sln
+*.suo
+__pycache__/
