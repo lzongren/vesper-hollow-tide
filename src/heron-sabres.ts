@@ -208,40 +208,45 @@ export function duelistSabre(side: number, m: Finishes) {
     indices: number[] = [],
     colors: number[] = [],
     uv: number[] = [];
-  // Flat faces split at the ridge to give the bevel a moving linear highlight.
-  const section = [
-    [-0.042, 0],
-    [-0.016, 0.023],
-    [0.071, 0.011],
-    [0.12, 0],
-    [0.071, -0.011],
-    [-0.016, -0.023],
-    [-0.042, 0],
+  // A recessed fuller interrupts the broad face. The last quarter of the
+  // width is ground to the edge. Each change of slope has its own normals.
+  const profile = [
+    [-0.042, 0, 0.28], [-0.031, 0.021, 0.58], [-0.016, 0.024, 0.63],
+    [-0.009, 0.015, 0.21], [0.009, 0.014, 0.20], [0.016, 0.023, 0.58],
+    [0.072, 0.014, 0.55], [0.12, 0, 1.00],
   ];
-  const length = 1.17;
-  for (let k = 0; k < section.length - 1; k++) {
-    const base = verts.length / 3;
-    for (let j = 0; j <= 32; j++) {
-      const u = j / 32,
-        w = 0.95 + 0.23 * Math.sin(u * Math.PI),
-        tip = Math.min(1, (1 - u) * 3.65);
-      const cx = shaftX + 0.018 * u + 0.225 * u * u * u;
-      for (let face = 0; face <= 1; face++) {
-        const [x, z] = section[k + face];
-        verts.push(
-          side * (cx + x * w * tip),
-          0.182 + length * u,
-          0.022 + z * tip,
-        );
-        uv.push((k + face) / 6, u);
-        const faceTint = [0.43, 0.67, 0.83, 0.83, 0.67, 0.43][k];
-        const tone =
-          faceTint + 0.04 * face + 0.024 * Math.sin(35 * u + 0.55 * k);
-        colors.push(tone * 0.94, tone, tone * 1.02);
-      }
-      if (j) {
-        const a = base + 2 * j - 2;
-        indices.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
+  function surface(t: number, x: number, z: number) {
+    const tip = Math.min(1, (1 - t) * 3.65);
+    const width = (0.95 + 0.23 * Math.sin(t * Math.PI)) * tip;
+    return [
+      side * (shaftX + 0.018 * t + 0.225 * t ** 3 + x * width),
+      0.182 + 1.17 * t,
+      0.022 + z * tip,
+    ];
+  }
+  for (const front of [-1, 1]) {
+    for (let k = 0; k < profile.length - 1; k++) {
+      const base = verts.length / 3;
+      const [x0, z0, c0] = profile[k], [x1, z1, c1] = profile[k + 1];
+      for (let j = 0; j <= 64; j++) {
+        const t = j / 64;
+        for (let h = 0; h <= 8; h++) {
+          const q = h / 8;
+          const x = T.MathUtils.lerp(x0, x1, q);
+          verts.push(...surface(t, x, front * T.MathUtils.lerp(z0, z1, q)));
+          uv.push((x + 0.042) / 0.162, t);
+          // Irregular bright temper line at the transition to the ground edge.
+          const wave = 0.073 + 0.004 * Math.sin(37*t) + 0.0025 * Math.sin(61*t);
+          const line = Math.exp(-((x-wave)**2) / 0.000023);
+          const grain = Math.sin(150*x + 4*Math.sin(11*t) + 9*t);
+          const tone = T.MathUtils.lerp(c0, c1, q) + 0.22*line + 0.026*grain;
+          colors.push(tone * 0.92, tone * 0.965, tone);
+          if (j && h) {
+            const d = base + j*9 + h, a = d-10, b = d-9, c = d-1;
+            if (front * side > 0) indices.push(a,b,c,b,d,c);
+            else indices.push(a,c,b,b,c,d);
+          }
+        }
       }
     }
   }
@@ -249,9 +254,35 @@ export function duelistSabre(side: number, m: Finishes) {
   blade.setAttribute("position", new T.Float32BufferAttribute(verts, 3));
   blade.setAttribute("color", new T.Float32BufferAttribute(colors, 3));
   blade.setAttribute("uv", new T.Float32BufferAttribute(uv, 2));
-  blade.setIndex(side > 0 ? indices : indices.reverse());
+  blade.setIndex(indices);
   blade.computeVertexNormals();
   add(m.steel, blade);
+  // Fine brass wire let into both flats. Each vane returns to the central
+  // quill. Its z coordinate follows the ground face all the way to its tip.
+  for (const front of [-1, 1]) {
+    const inlay = (t: number, x: number) => {
+      const z = T.MathUtils.lerp(0.023, 0.014, (x-0.016)/0.056);
+      const [px, py, pz] = surface(t, x, front*(z+0.0009));
+      return [px*side, py, pz];
+    };
+    const quill = (t: number) => 0.032 + 0.011 * Math.sin(7*t);
+    const points = Array.from({length: 18}, (_, i) => {
+      const t = 0.045 + 0.36*i/17;
+      return inlay(t, quill(t));
+    });
+    cord(m.bronze, points, 0.0018);
+    for (let i = 0; i < 5; i++) {
+      const start = 0.06 + i*0.056;
+      for (const direction of [-1, 1]) {
+        const reach = (1-i*0.105) * (direction < 0 ? 0.016 : 0.026);
+        cord(m.bronze, [
+          inlay(start, quill(start)),
+          inlay(start+0.025, quill(start)+direction*reach*0.74),
+          inlay(start+0.069, quill(start)+direction*reach),
+        ], 0.0015);
+      }
+    }
+  }
   for (const z of [-0.026, 0.026]) {
     cord(
       m.bronze,

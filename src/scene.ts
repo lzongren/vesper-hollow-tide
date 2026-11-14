@@ -1066,6 +1066,7 @@ export class World {
           : [];
     const [seal] = await Promise.all([
       this.art.courtSeal(["belfry", "heron", "cinder"][index]),
+      index === 1 ? this.art.loadCraneFresco() : undefined,
       ...scans.map((name) => this.art.loadLandmark(name)),
     ]);
     seal.color.setHex(index === 0 ? 0xd2d6ce : 0xb4bbb8);
@@ -1181,17 +1182,6 @@ export class World {
       this.decor.add(plume);
     }
     for (const side of [-1, 1]) {
-      if (index === 1) {
-        const silk = foldingScreen(
-          this.materials["heron-silk"],
-          this.materials.gold,
-          4.6,
-          3.5,
-          3,
-        );
-        silk.position.set(side * 5.9, 3.6, -18.28);
-        this.arena.add(silk);
-      }
       if (index === 0) {
         const corridor = new T.Group();
         corridor.position.set(side * 18, 0, -1);

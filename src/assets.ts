@@ -32,6 +32,15 @@ export class ArtLibrary {
     return material;
   }
 
+  async loadCraneFresco() {
+    if (this.textures.has("crane-fresco")) return;
+    const map = await new T.TextureLoader().loadAsync(
+      `${import.meta.env.BASE_URL}art/crane-fresco.jpg`,
+    );
+    map.colorSpace = T.SRGBColorSpace;
+    map.anisotropy = 8;
+    this.textures.set("crane-fresco", map);
+  }
   async loadLandmark(name: string) {
     if (this.models.has(name)) return;
     const model = await new GLTFLoader().loadAsync(

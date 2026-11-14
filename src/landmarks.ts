@@ -200,6 +200,11 @@ export function heronGarden(art: ArtLibrary, m: Palette, rand: () => number) {
       -19.55,
     );
   }
+  const pigment = new T.MeshStandardMaterial({
+    name: "Weathered mineral pigment",
+    map: art.textures.get("crane-fresco"),
+    roughness: 0.94,
+  });
   for (const s of [-1, 1]) {
     stone.block(m.rock, s * 5.7, 0.28, -19.1, 5.1, 0.54, 1.12);
     stone.block(lime, s * 13.1, 1.95, -20.3, 9.6, 3.9, 0.75);
@@ -214,9 +219,28 @@ export function heronGarden(art: ArtLibrary, m: Palette, rand: () => number) {
         1.2 - j * 0.16,
       );
     // Small lattice windows are raised timber frames set into shadowed recesses.
-    for (const xx of [s * 6, s * 11, s * 15]) {
-      const cy = Math.abs(xx) === 6 ? 3.6 : 2.2,
-        zz = Math.abs(xx) === 6 ? -18.61 : -19.89;
+    // Painted plaster lies flush with the two reveals in the main porch.
+    // Both panels read from one atlas. Their stone sills project into the court.
+    const panel = new T.PlaneGeometry(3.94, 4.75);
+    const uv = panel.attributes.uv;
+    for (let i = 0; i < uv.count; i++)
+      uv.setX(i, (uv.getX(i) + (s > 0 ? 1 : 0)) / 2);
+    stone.add(panel, pigment, s * 5.86, 3.25, -18.62);
+    for (const x of [-2.02, 2.02])
+      stone.block(m.wood, s * 5.86 + x, 3.25, -18.59, 0.105, 4.9, 0.135);
+    stone.block(m.wood, s * 5.86, 5.65, -18.59, 4.14, 0.14, 0.135);
+    stone.block(m.rock, s * 5.86, 0.81, -18.58, 4.27, 0.18, 0.42);
+    // A run of recessed terracotta lozenges catches grazing light below
+    // the windows, breaking up the formerly uninterrupted lower wall.
+    stone.block(m.rock, s*13.1, 0.25, -19.92, 9.58, 0.48, 0.31);
+    stone.block(m.wood, s*13.1, 1.08, -19.87, 9.58, 0.075, 0.16);
+    for (let j = 0; j < 18; j++) {
+      const x = s * (8.73 + j * 0.51);
+      const tile = new T.BoxGeometry(0.29, 0.29, 0.08).rotateZ(Math.PI / 4);
+      stone.add(tile, m.rock, x, 0.75, -19.88);
+    }
+    for (const xx of [s * 11, s * 15]) {
+      const cy = 2.2, zz = -19.89;
       stone.block(m.dark, xx, cy, zz, 1.65, 1.86, 0.1);
       for (const dx of [-0.86, 0.86])
         stone.block(m.wood, xx + dx, cy, zz + 0.08, 0.13, 2.05, 0.14);
