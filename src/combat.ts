@@ -226,6 +226,7 @@ export interface Boss extends Vec {
 export interface Hazard extends Vec {
   id: number;
   type: "feather" | "ring" | "eruption";
+  targeted?: boolean;
   vx: number;
   vz: number;
   life: number;
@@ -697,6 +698,7 @@ export class Combat {
       for (const [i, t] of targets.entries())
         add({
           type: "eruption",
+          targeted: i === 0,
           ...t,
           vx: 0,
           vz: 0,

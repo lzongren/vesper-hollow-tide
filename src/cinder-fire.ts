@@ -82,13 +82,13 @@ export class CinderFire extends T.Mesh<T.BufferGeometry, T.ShaderMaterial> {
     geometry.setAttribute("kind",new T.Float32BufferAttribute(kinds,1));
     geometry.setIndex(indices);
     // Vertex positions encode slice and particle coordinates, not world bounds.
-    geometry.boundingSphere=new T.Sphere(new T.Vector3(0,2,0),3);
+    geometry.boundingSphere=new T.Sphere(new T.Vector3(0,2,0),4);
     const material=new T.ShaderMaterial({
       glslVersion:T.GLSL3, transparent:true, side:T.DoubleSide, forceSinglePass:true, depthWrite:false,
       uniforms:{ field:{value:volume.map}, eddies:{value:volume.eddies}, seed:{value:id}, age:{value:-2}, life:{value:.85},
-        eyeLocal:{value:new T.Vector3()}, cellSize:{value:cell} },
+        wind:{value:new T.Vector2()}, eyeLocal:{value:new T.Vector3()}, cellSize:{value:cell} },
       vertexShader:`
-        uniform float age,life,seed;uniform vec3 eyeLocal;
+        uniform float age,life,seed;uniform vec3 eyeLocal;uniform vec2 wind;
         in float kind;out vec3 samplePoint;out vec2 coord;flat out float surface;
         float hash(float n){return fract(sin(n*17.31+seed*23.47)*4375.13);}
         void main(){
@@ -104,10 +104,12 @@ export class CinderFire extends T.Mesh<T.BufferGeometry, T.ShaderMaterial> {
             samplePoint=vec3(.5+.56*uv.x,position.y,.5+.56*uv.y);
             float height=mix(3.25,4.75,hash(2.));
             p=vec3(slice.x,position.y*height,slice.y);
+            p.xz+=wind*position.y*position.y*1.45*smoothstep(0.,.34,age);
           }else{
             float i=position.z,flight=clamp((age-.06-.34*hash(i+8.))/.65,0.,1.);
             float angle=6.283185*hash(i+.5),r=.10+flight*(.18+.51*hash(i+2.));
             vec2 travel=vec2(cos(angle),sin(angle))*r+vec2(.16,.03)*flight*flight;
+            travel+=wind*.54*flight*flight;
             float y=.26+flight*(1.1+3.3*hash(i+3.))-1.35*flight*flight;
             float width=(kind>2.5 ? .027+.021*hash(i+4.) : .003+.007*hash(i+4.))*sin(3.14159*flight);
             if(kind>2.5){
@@ -198,6 +200,9 @@ export class CinderFire extends T.Mesh<T.BufferGeometry, T.ShaderMaterial> {
       this.worldToLocal(eye);
       this.material.uniformsNeedUpdate=true;
     };
+  }
+  drift(x: number, z: number) {
+    this.material.uniforms.wind.value.set(x, z).normalize();
   }
   burn(age: number, duration: number) {
     this.visible = age > -.8 && age < duration;

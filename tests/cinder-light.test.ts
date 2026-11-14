@@ -3,6 +3,7 @@ import test from "node:test";
 import { readFileSync } from "node:fs";
 import { gunzipSync } from "node:zlib";
 import { Data3DTexture, PointLight } from "three";
+import { sealTime } from "../src/cinder-cast";
 import { Combat } from "../src/combat";
 import { CinderFire, CinderLights } from "../src/cinder-fire";
 
@@ -87,4 +88,20 @@ test("each vent produces its ignition cue once, where and when it becomes danger
     }
   }
   assert.deepEqual(heard,vents.map(h=>h.id));
+});
+
+
+test("the seal falls on the targeted vent and does not replay on later vents", () => {
+  const game = new Combat(2);
+  game.boss.phase = 2;
+  game.boss.attack = 2;
+  game.emitAttack();
+  const mark = game.hazards.find(h => h.targeted)!;
+  assert.equal(game.hazards.filter(h => h.targeted).length, 1);
+  assert.equal(sealTime("windup", true, 1, []), 1);
+  assert.equal(sealTime("active", true, 0, game.hazards), 1);
+  mark.age = mark.delay;
+  assert.equal(sealTime("approach", false, 0, game.hazards), 2.06);
+  assert.equal(sealTime("dead", true, 1, game.hazards), 0);
+  assert.equal(sealTime("recover", true, .9, game.hazards.filter(h => h !== mark)), 0);
 });

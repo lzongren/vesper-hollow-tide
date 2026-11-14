@@ -39,6 +39,8 @@ import { belfryGallery } from "./belfry-gallery";
 import { belfryFront } from "./belfry-front";
 import { cinderArmour } from "./cinder-armour";
 import { cinderIcon } from "./cinder-icon";
+import { WristBeads } from "./wrist-beads";
+import { CinderCast, castFingers, sealTime } from "./cinder-cast";
 import { CinderFire, CinderLights, shrineFireVolume } from "./cinder-fire";
 import { CourtLight, vigilLamp } from "./vigil-light";
 import { batchCourt } from "./static-court";
@@ -214,6 +216,8 @@ interface Actor {
   rightHand?: T.Bone;
   halo?: T.Group;
   castingHand?: T.Mesh;
+  seal?: CinderCast;
+  beads?: WristBeads;
   votiveEmber?: T.MeshStandardMaterial;
   staff?: RingStaff;
   pinions?: HeronWing[];
@@ -700,6 +704,9 @@ export class World {
       }
     }
     if (kind === 2) {
+      a.beads = new WristBeads();
+      root.add(a.beads);
+      a.seal = new CinderCast(root, bones.get("LeftArm")!, bones.get("LeftForeArm")!, bones.get("LeftHand")!);
       model.traverse(o => {
         if (isMesh(o) && o.morphTargetDictionary?.CastOpen !== undefined) a.castingHand = o;
       });
@@ -1743,13 +1750,18 @@ export class World {
       dt,
       game.attack.shape,
     );
+    const seal = this.boss.seal ? sealTime(game.mode === "won" ? "dead" : b.state,
+      game.attack.shape === "eruption", b.timer / Math.max(.001, b.duration), game.hazards) : 0;
+    this.boss.seal?.pose(seal, dt);
+    this.boss.beads?.follow(this.boss.bones.get("LeftHand")!, this.boss.bones.get("LeftForeArm")!, this.boss.root, dt);
     const fingers = this.boss.castingHand;
     if (fingers?.morphTargetInfluences && fingers.morphTargetDictionary) {
       const weights = fingers.morphTargetInfluences, names = fingers.morphTargetDictionary;
       const progress = T.MathUtils.clamp(b.timer / Math.max(.001, b.duration), 0, 1);
-      const open = game.mode === "won" ? .35 : b.state === "windup" ? .35 + .65 * progress :
+      const handSeal = seal > 0 ? castFingers(seal) : undefined;
+      const open = handSeal ? handSeal.open : game.mode === "won" ? .35 : b.state === "windup" ? .35 + .65 * progress :
         b.state === "recover" ? .28 * (1 - progress) : 0;
-      const close = game.mode === "combat" && (b.state === "active" || b.state === "stagger") ? 1 : 0;
+      const close = handSeal ? handSeal.closed : game.mode === "combat" && (b.state === "active" || b.state === "stagger") ? 1 : 0;
       weights[names.CastOpen] = T.MathUtils.damp(weights[names.CastOpen], open, 13, dt);
       weights[names.CastClench] = T.MathUtils.damp(weights[names.CastClench], close, 17, dt);
     }
@@ -1916,7 +1928,13 @@ export class World {
         } else {
           const o = mesh(g, new T.RingGeometry(0.98, 1, 96), m);
           o.rotation.x = -Math.PI / 2;
-          if (h.type === "eruption") g.add(new CinderFire(h.id, this.fireVolume!));
+          if (h.type === "eruption") {
+            const fire = new CinderFire(h.id, this.fireVolume!);
+            // Carry the hot column away from its summoner. The footprint stays
+            // at the original impact and the independent camera sees the same drift.
+            fire.drift(h.x - game.boss.x, h.z - game.boss.z);
+            g.add(fire);
+          }
         }
         g.traverse(classifyCourtSurface);
       }
