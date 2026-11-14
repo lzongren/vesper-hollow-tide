@@ -1,3 +1,4 @@
+import { RainCape } from "../src/rain-cape";
 import assert from "node:assert/strict";
 import test from "node:test";
 import * as T from "three";
@@ -44,4 +45,30 @@ test("a raised elbow lifts its own shoulder while the skirt lags through a turn 
       assert.ok(p.length() < h * 1.08 && p.y > 0);
     }
   }
+});
+
+test("every sewn palm strip follows a translation of its cloth surface", () => {
+  const panel = new T.PlaneGeometry(0.8, 0.45, 32, 32);
+  const cape = new RainCape(panel);
+  const source = panel.attributes.position as T.BufferAttribute;
+  const dest = cape.geometry.attributes.position;
+  const rest = new Float32Array(dest.array);
+  const shift = new T.Vector3(0.13, -0.05, 0.21);
+  for (let i = 0; i < source.count; i++) {
+    source.setXYZ(
+      i,
+      source.getX(i) + shift.x,
+      source.getY(i) + shift.y,
+      source.getZ(i) + shift.z,
+    );
+  }
+  cape.fit(source);
+  for (let i = 0; i < dest.count; i++) {
+    assert.ok(Math.abs(dest.getX(i) - rest[3 * i] - shift.x) < 1e-6);
+    assert.ok(Math.abs(dest.getY(i) - rest[3 * i + 1] - shift.y) < 1e-6);
+    assert.ok(Math.abs(dest.getZ(i) - rest[3 * i + 2] - shift.z) < 1e-6);
+  }
+  cape.geometry.dispose();
+  cape.material.dispose();
+  panel.dispose();
 });

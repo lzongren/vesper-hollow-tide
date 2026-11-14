@@ -40,6 +40,7 @@ import { CourtLight, vigilLamp } from "./vigil-light";
 import { batchCourt } from "./static-court";
 import { incenseVessel, incenseSmoke } from "./incense";
 import { ceremonialSilks, type SilkPanel } from "./silk";
+import { pilgrimScabbard } from "./pilgrim-scabbard";
 import { travelHat } from "./travel-hat";
 import { BladeImpact } from "./blade-impact";
 import { Footwork } from "./footwork";
@@ -537,6 +538,11 @@ export class World {
         const headwear = travelHat();
         root.add(headwear);
         bones.get("Head")?.attach(headwear);
+        const scabbard = pilgrimScabbard();
+        scabbard.position.set(0.27, 1.19, -0.03);
+        scabbard.quaternion.setFromUnitVectors(new T.Vector3(0,-1,0),new T.Vector3(0.31,-0.76,-0.63).normalize());
+        root.add(scabbard);
+        bones.get("Hips")!.attach(scabbard);
         weapon.add(pilgrimJian());
         const upper = bones.get("RightArm"),
           fore = bones.get("RightForeArm");

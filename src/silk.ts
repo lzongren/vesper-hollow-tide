@@ -1,3 +1,4 @@
+import { RainCape } from "./rain-cape";
 import * as T from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
@@ -89,6 +90,7 @@ type Link = { a: number; b: number; length: number };
  * interpolates the displacement and preserves the cut's small rest folds. */
 export class SilkPanel {
   readonly mesh: T.Mesh;
+  private rainCape?: RainCape;
   private base: T.Vector3[] = [];
   private current: T.Vector3[] = [];
   private previous: T.Vector3[] = [];
@@ -106,6 +108,7 @@ export class SilkPanel {
     material: T.Material,
     private knees: readonly T.Bone[],
     private elbows: readonly T.Bone[] = [],
+    withRainCape = false,
   ) {
     root.updateWorldMatrix(true, true);
     this.bind = anchor.matrixWorld.clone().invert().multiply(root.matrixWorld);
@@ -161,6 +164,10 @@ export class SilkPanel {
     this.mesh.castShadow = this.mesh.receiveShadow = true;
     this.mesh.frustumCulled = false;
     root.add(this.mesh);
+    if (withRainCape) {
+      this.rainCape = new RainCape(g);
+      root.add(this.rainCape);
+    }
   }
   update(dt: number, time: number) {
     this.anchor.updateWorldMatrix(true, false);
@@ -291,6 +298,7 @@ export class SilkPanel {
     }
     attr.needsUpdate = true;
     this.mesh.geometry.computeVertexNormals();
+    this.rainCape?.fit(attr as T.BufferAttribute);
   }
   private lastStep = 1 / 120;
 }
@@ -438,6 +446,7 @@ export function ceremonialSilks(
         c.shoulder
           ? [bones.get("RightForeArm")!, bones.get("LeftForeArm")!]
           : [],
+        !warden && c.shoulder,
       ),
   );
 }
