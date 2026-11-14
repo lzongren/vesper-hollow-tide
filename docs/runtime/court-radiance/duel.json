@@ -1,0 +1,23 @@
+{
+  "results": [
+    {
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+      "boss": "Saint of Cinders",
+      "mode": "PILGRIM",
+      "timing": {
+        "samples": 2079,
+        "median": 16.7,
+        "p95": 33.4,
+        "max": 116.6
+      },
+      "title": "Vigil released",
+      "stats": "0:48TIME3PARRIES5HITS TAKEN",
+      "bossHealth": "0%",
+      "playerHealth": 78,
+      "awakened": true,
+      "elapsed": 48.37350000004809,
+      "terminal": true
+    }
+  ],
+  "errors": []
+}
