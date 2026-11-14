@@ -1,16 +1,12 @@
 /** Export both hands, their fittings and the wrist-relative stroke animation. */
 import * as T from "three";
-import { duelistSabre, heronStroke, honedSteel } from "../src/heron-sabres";
+import { duelistSabre, heronStroke, honedSteel, handSkin } from "../src/heron-sabres";
 import { BOSSES } from "../src/combat";
 import { bake } from "./bake_glb";
 
 const materials = {
-  skin: new T.MeshStandardMaterial({
-    name: "Ivory hand",
-    color: 0xe0d2b2,
-    metalness: 0.13,
-    roughness: 0.39,
-  }),
+  skin: handSkin(),
+  nail: new T.MeshStandardMaterial({ name: "Cinnabar nails", color: 0x71332d, roughness: 0.41 }),
   binding: new T.MeshStandardMaterial({
     name: "Hilt binding",
     color: 0x557675,

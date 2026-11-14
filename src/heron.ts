@@ -2,7 +2,7 @@ import { TessellateModifier } from "three/addons/modifiers/TessellateModifier.js
 import { heronSleeve } from "./heron-sleeve";
 import { MantleMotion } from "./vestments";
 import { WeaponGrip } from "./pilgrim";
-import { duelistSabre, heronGuards, honedSteel } from "./heron-sabres";
+import { duelistSabre, heronGuards, honedSteel, handSkin } from "./heron-sabres";
 import * as T from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
@@ -405,11 +405,8 @@ export function dressHeron(
     metalness: 0.52,
     roughness: 0.32,
   });
-  const ivory = new T.MeshStandardMaterial({
-    color: 0xe0d2b2,
-    metalness: 0.13,
-    roughness: 0.39,
-  });
+  const skin = handSkin();
+  const nail = new T.MeshStandardMaterial({ name: "Cinnabar nails", color: 0x71332d, roughness: 0.41 });
   const steel = honedSteel();
   const place = (target: T.Object3D, g: T.BufferGeometry, m: T.Material) => {
     const mesh = new T.Mesh(g, m);
@@ -587,7 +584,7 @@ export function dressHeron(
     heronSleeve(root, bones.get(name + "Arm")!, bones.get(name + "ForeArm")!,
       bones.get(name + "Hand")!, side, sleeveSilk, brocade, gold);
     const sword = duelistSabre(side, {
-      skin: ivory,
+      skin, nail,
       steel,
       bronze: gold,
       binding: enamel,

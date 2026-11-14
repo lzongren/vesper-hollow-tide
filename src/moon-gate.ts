@@ -17,8 +17,18 @@ export const porchLamp = new T.Vector3(-3.98, 5.15, 2.0);
 export function moonGatePorch(m: GateFinishes) {
   const porch = new T.Group();
   porch.name = "Moon gate rain porch";
+  // Tint the porch only. The gallery uses the same unmodified glaze.
+  const glaze = m.ceramic.clone();
+  glaze.vertexColors = true;
   const batches = new Map<T.Material, T.BufferGeometry[]>();
   function add(material: T.Material, geometry: T.BufferGeometry) {
+    if (material === m.ceramic) {
+      material = glaze;
+      if (!geometry.hasAttribute("color")) {
+        geometry.setAttribute("color", new T.Float32BufferAttribute(
+          new Float32Array(geometry.attributes.position.count * 3).fill(1), 3));
+      }
+    }
     let batch = batches.get(material);
     if (!batch) batches.set(material, (batch = []));
     const flat = geometry.index ? geometry.toNonIndexed() : geometry;
@@ -70,6 +80,7 @@ export function moonGatePorch(m: GateFinishes) {
     depth: number,
     sample: (x: number, y: number) => T.Vector3,
     reverse: boolean,
+    glazeTone?: T.Color,
   ) {
     const xyz: number[] = [],
       uv: number[] = [],
@@ -91,6 +102,11 @@ export function moonGatePorch(m: GateFinishes) {
     const g = new T.BufferGeometry();
     g.setAttribute("position", new T.Float32BufferAttribute(xyz, 3));
     g.setAttribute("uv", new T.Float32BufferAttribute(uv, 2));
+    if (glazeTone) {
+      const colors = new Float32Array(xyz.length);
+      for (let i = 0; i < xyz.length; i += 3) glazeTone.toArray(colors, i);
+      g.setAttribute("color", new T.BufferAttribute(colors, 3));
+    }
     g.setIndex(idx);
     g.computeVertexNormals();
     add(mat, g);
@@ -130,19 +146,20 @@ export function moonGatePorch(m: GateFinishes) {
     }
     for (let j = 0; j <= bays; j++) {
       const u = (2 * j) / bays - 1;
-      patch(
-        m.ceramic,
-        8,
-        12,
-        (x, y) => {
-          const p = point(u, y, face),
-            a = Math.PI * x;
-          p.x -= 0.083 * Math.cos(a);
-          p.y += 0.14 + 0.091 * Math.sin(a);
+      for (let course = 0; course < courses; course++) {
+        const start = course / courses;
+        const end = Math.min(1, (course + 1.08) / courses);
+        const variation = Math.sin(31.79 * j + 73.17 * course + face) * 0.5 + 0.5;
+        const tone = new T.Color(0xa7b4ac).lerp(new T.Color(0xe4decb), variation);
+        patch(m.ceramic, 8, 5, (x, y) => {
+          const p = point(u, T.MathUtils.lerp(start, end, y), face);
+          const lip = T.MathUtils.smoothstep(y, 0.72, 1);
+          const crown = Math.sin(Math.PI * x);
+          p.x -= (0.082 + 0.013 * lip) * Math.cos(Math.PI * x);
+          p.y += 0.14 + (0.087 + 0.028 * lip) * crown + 0.008 * variation;
           return p;
-        },
-        face > 0,
-      );
+        }, face > 0, tone);
+      }
       const end = point(u, 1, face);
       const disk = new T.CylinderGeometry(0.109, 0.113, 0.07, 12).rotateX(
         Math.PI / 2,

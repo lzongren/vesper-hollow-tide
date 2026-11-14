@@ -98,11 +98,20 @@ export function honedSteel() {
   });
 }
 
+export function handSkin() {
+  return new T.MeshStandardMaterial({
+    name: "Heron duelist skin",
+    vertexColors: true,
+    roughness: 0.68,
+  });
+}
+
 interface Finishes {
   skin: T.Material;
   steel: T.Material;
   bronze: T.Material;
   binding: T.Material;
+  nail: T.Material;
 }
 
 /** Thumb crosses the index finger; the other digits wrap progressively lower
@@ -111,6 +120,22 @@ export function duelistSabre(side: number, m: Finishes) {
   const socket = new T.Group(),
     parts = new Map<T.Material, T.BufferGeometry[]>();
   function add(material: T.Material, g: T.BufferGeometry) {
+    if (material === m.skin) {
+      const positions = g.attributes.position;
+      const colors = new Float32Array(positions.count * 3);
+      const skin = new T.Color(0xc09d87), joint = new T.Color(0x975e50);
+      const contact = new T.Color(0x744b43), tint = new T.Color();
+      for (let i = 0; i < positions.count; i++) {
+        const x = side * positions.getX(i), y = positions.getY(i), z = positions.getZ(i);
+        const knuckle = T.MathUtils.smoothstep(x, 0.034, 0.08);
+        const pad = T.MathUtils.smoothstep(z, 0.032, 0.069);
+        const jointFold = Math.exp(-(((x - 0.067) / 0.004) ** 2)) * knuckle;
+        const warm = 0.47 * knuckle + 0.24 * pad + 0.12 * Math.sin(y * 136 + x * 32);
+        tint.copy(skin).lerp(joint, T.MathUtils.clamp(warm, 0, 1))
+          .lerp(contact, 0.26 * jointFold).toArray(colors, i * 3);
+      }
+      g.setAttribute("color", new T.BufferAttribute(colors, 3));
+    }
     const flat = g.index ? g.toNonIndexed() : g;
     if (flat !== g) g.dispose();
     if (!parts.has(material)) parts.set(material, []);
@@ -154,7 +179,8 @@ export function duelistSabre(side: number, m: Finishes) {
       const t = ring / 34;
       path.getPointAt(t, center);
       const joint = Math.exp(-(((t - 0.44) / 0.095) ** 2)) + 0.65 * Math.exp(-(((t - 0.7) / 0.08) ** 2));
-      const girth = radius * (1.07 - 0.28 * t + 0.12 * joint);
+      const fold = Math.exp(-(((t - 0.36) / 0.031) ** 2)) + 0.7 * Math.exp(-(((t - 0.64) / 0.03) ** 2));
+      const girth = radius * (1.05 - 0.32 * t + 0.19 * joint - 0.12 * fold);
       for (let k = 0; k <= 12; k++) {
         const index = ring * 13 + k;
         v.fromBufferAttribute(verts, index).sub(center).multiplyScalar(girth);
@@ -209,12 +235,16 @@ export function duelistSabre(side: number, m: Finishes) {
       r * 0.92,
       r * 0.9,
     );
-    ellipsoid(m.skin, 0.055, y + 0.006, -0.017, r * 1.13, r * 0.88, r * 0.9);
+    cord(m.skin, [
+      [-0.044, y * 0.55 - 0.006, -0.031],
+      [-0.021, y * 0.74, -0.047],
+      [0.006, y * 0.93, -0.04],
+      [0.036, y + 0.004, -0.023],
+    ], 0.0054 - 0.0005 * j);
     // A thin shell of lacquer protects each nail.
-    ellipsoid(m.binding, 0.031 + j * 0.003, y - 0.018, 0.068, r * 0.58, r * 0.51, 0.0037);
+    ellipsoid(m.nail, 0.031 + j * 0.003, y - 0.018, 0.068, r * 0.58, r * 0.51, 0.0037);
   }
-  cord(
-    m.skin,
+  finger(
     [
       [-0.05, 0.024, -0.009],
       [-0.046, 0.067, 0.01],
@@ -225,6 +255,7 @@ export function duelistSabre(side: number, m: Finishes) {
     0.024,
   );
   ellipsoid(m.skin, 0.043, 0.044, 0.065, 0.024, 0.021, 0.021);
+  ellipsoid(m.nail, 0.039, 0.051, 0.082, 0.016, 0.009, 0.003, -0.42 * side);
   const guard = new T.Shape();
   guard.moveTo(-0.17, 0);
   guard.bezierCurveTo(-0.12, -0.042, -0.06, -0.015, 0, -0.012);

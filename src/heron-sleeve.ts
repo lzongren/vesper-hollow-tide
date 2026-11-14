@@ -45,9 +45,16 @@ export function heronSleeve(
       const crease = 0.015 * Math.cos(48 * t + 2.7 * Math.sin(theta)) *
         (gauss(t, bend, 0.18) + 0.77 * gauss(t, 0.8, 0.14));
       const base = 0.058 + 0.063 * (1 - t) + 0.038 * gauss(t, 0.17, 0.16);
-      const radius = base + drape + flute + crease;
+      // Compress the silk under a bias-cut wrist binding. Three overlapping
+      // turns stand proud of the folds and catch the light as the wrist turns.
+      const cuff = ease(t, 0.818, 0.87);
+      const windingPhase = (t - 0.85) * 19 + side * theta / (2 * Math.PI);
+      const overlap = 0.008 * cuff * Math.cos(2 * Math.PI * windingPhase);
+      const gathers = 0.013 * gauss(t, 0.82, 0.046) * Math.cos(9 * winding + 8 * t);
+      const fold = overlap + gathers;
+      const radius = base + drape + flute + crease + fold;
       offset.copy(center).addScaledVector(down, c * radius)
-        .addScaledVector(front, s * (base + 0.42 * drape + flute + crease));
+        .addScaledVector(front, s * (base + 0.42 * drape + flute + crease + fold));
       position.push(offset.x, offset.y, offset.z);
       uv.push(col / columns, 1 - t);
       joints.push(0, 1, 0, 0);
@@ -55,7 +62,7 @@ export function heronSleeve(
       if (row < rows && col < columns) {
         const mid = (row + 0.5) / rows;
         const shoulderEdge = 0.24 + 0.045 * Math.cos(theta * 4);
-        const piping = Math.abs(mid - shoulderEdge) < 0.008 || Math.abs(mid - 0.87) < 0.008 || mid > 0.977;
+        const piping = Math.abs(mid - shoulderEdge) < 0.008 || Math.abs(mid - 0.87) < 0.008 || mid > 0.983 || (mid > 0.875 && Math.cos(2 * Math.PI * windingPhase) > 0.94);
         const material = piping ? 2 : mid < shoulderEdge || mid > 0.87 ? 1 : 0;
         const a = row * (columns + 1) + col, b = a + columns + 1;
         faces[material].push(a, a + 1, b, a + 1, b + 1, b);

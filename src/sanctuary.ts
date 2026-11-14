@@ -16,16 +16,21 @@ export function valleyHorizon(texture: T.Texture, clouds: T.Texture, encounter: 
   // avoids repeating the ridgeline through the zenith or pinching a sky pole.
   material.onBeforeCompile = shader => {
     shader.uniforms.cloudCeiling = {value:clouds};
+    shader.uniforms.valleyAir = {value:new T.Color([0x8494a5, 0x819d9e, 0x9b8c89][encounter])};
     shader.vertexShader = shader.vertexShader.replace("#include <common>",
       "#include <common>\nvarying vec3 vaultPosition;").replace("#include <begin_vertex>",
       "#include <begin_vertex>\nvaultPosition=position;");
     shader.fragmentShader = shader.fragmentShader.replace("#include <common>",
-      "#include <common>\nuniform sampler2D cloudCeiling;varying vec3 vaultPosition;")
+      "#include <common>\nuniform sampler2D cloudCeiling;uniform vec3 valleyAir;varying vec3 vaultPosition;")
       .replace("#include <map_fragment>", `#include <map_fragment>
         vec2 cloudUv=vaultPosition.xz/230.+.5;
         vec3 ceiling=texture2D(cloudCeiling,cloudUv).rgb*diffuse;
         float blend=smoothstep(15.,39.,vaultPosition.y);
-        diffuseColor.rgb=mix(diffuseColor.rgb,ceiling,blend);`);
+        // Distant foothills share a veil of aerial light. The ceiling clears
+        // above the crest, preserving the distinction between the two planes.
+        float haze=0.32*(1.-smoothstep(-3.,36.,vaultPosition.y));
+        vec3 valley=mix(diffuseColor.rgb,valleyAir,haze);
+        diffuseColor.rgb=mix(valley,ceiling,blend);`);
   };
   const rings = [new T.Vector2(104, -31), new T.Vector2(104, 31)];
   const elevations = [0, 1];
