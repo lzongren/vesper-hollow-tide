@@ -693,16 +693,15 @@ export class World {
         alphaTest: 0.54,
         side: T.DoubleSide,
         roughness: 0.68,
-        emissiveMap: this.art.textures.get("heron-quill"),
-        emissive: 0xc7d3ce,
-        emissiveIntensity: 0.13,
+        alphaToCoverage: true,
       });
       quill.vertexColors = true;
       a.pinions = [-1, 1].map(side => new HeronWing(side, this.featherTemplate!, quill));
       root.add(...a.pinions);
       const head = bones.get("Head");
       if (head) {
-        const mask = bridalMask(this.materials.gold, this.materials["heron-silk"]);
+        const mask = bridalMask(this.materials.gold, this.materials["heron-silk"],
+          this.art.textures.get("heron-porcelain")!);
         root.add(mask);
         head.getWorldPosition(mask.position);
         root.worldToLocal(mask.position);

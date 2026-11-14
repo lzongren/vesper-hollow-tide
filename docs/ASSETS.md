@@ -56,3 +56,5 @@ The shrine guardian relief uses the project's existing cinder-mask painting as a
 
 
 The Saint uses a derivative of the rigged CC0 sorcerer. The bake rasterizes the original UVs and weights to paint the forearms and claws, with separate color, emission, normal and roughness maps. The folded hide and worn horn pigments follow the skinned surface. The original rig, geometry and UVs are preserved. Rebuild with `python3 art/cinder_skin.py` (NumPy and Pillow). The paired cast-bronze lion guards, lacquered lames and forearm fittings are original geometry attached to the arms during play. [CC0 source record](imported-assets.json) · [Playable skinned GLB](../public/models/cinder-ascetic.glb)
+
+The Veiled Heron's porcelain uses an original AI-generated painted glaze texture, mapped across the two pierced halves of the playable mask. Its openwork crown, cheek relief, pleated throat wrap and flight-feather shapes are built in `src/heron.ts`. [Combat captures](runtime/heron-porcelain/README.md)

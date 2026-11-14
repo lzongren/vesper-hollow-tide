@@ -32,27 +32,30 @@ export class HeronWing extends T.Group {
       angle: number,
       sweep: number,
       tint: number,
+      distal: boolean,
+      twist: number,
     ) => {
       const g = template.clone();
       const pos = g.attributes.position,
         uv = g.attributes.uv;
       const colors = new Float32Array(pos.count * 3);
       const base = new T.Color(tint),
-        tip = new T.Color(0xbcc6c3),
+        tip = new T.Color(distal ? 0x303e49 : 0xd7cdba),
         color = new T.Color();
       for (let i = 0; i < pos.count; i++) {
         const v = uv.getY(i);
         const shaft = (pos.getY(i) + 0.5) * length;
-        const across = pos.getX(i) * width;
+        const across = pos.getX(i) * width * (1 - (distal ? 0.31 : 0.12) * v);
+        const lean = angle + twist * v * v;
         pos.setXYZ(
           i,
-          side * (x + shaft * Math.sin(angle) + across * Math.cos(angle)),
-          y - shaft * Math.cos(angle) + across * Math.sin(angle) - 0.11 * v * v,
-          z - sweep * v * v + 0.11 * v * (1 - v) + across * 0.23,
+          side * (x + shaft * Math.sin(lean) + across * Math.cos(lean)),
+          y - shaft * Math.cos(lean) + across * Math.sin(lean) - 0.11 * v * v,
+          z - sweep * v * v + 0.11 * v * (1 - v) + across * (0.26 + twist * 3 * v) - 0.48 * across * across,
         );
         color
           .copy(base)
-          .lerp(tip, 0.38 * v * v)
+          .lerp(tip, (distal ? 0.94 : 0.44) * T.MathUtils.smoothstep(v, 0.34, 0.96))
           .toArray(colors, i * 3);
       }
       g.setAttribute("color", new T.BufferAttribute(colors, 3));
@@ -64,7 +67,7 @@ export class HeronWing extends T.Group {
     for (const section of ["arm", "hand"] as const) {
       const hand = section === "hand";
       for (let row = 0; row < 3; row++) {
-        const count = hand ? [9, 12, 14][row] : [12, 14, 16][row];
+        const count = hand ? [8, 11, 14][row] : [12, 14, 16][row];
         for (let j = 0; j < count; j++) {
           const u = j / (count - 1);
           const x = (hand ? 1.0 : 0.94) * u;
@@ -80,17 +83,19 @@ export class HeronWing extends T.Group {
             [1, 0.64, 0.35][row] *
             (1 + 0.032 * Math.sin(j * 2.73));
           const tint =
-            hand && row === 0 ? 0x97a7a8 : [0xcfc7b9, 0xe6d7bc, 0xf0e5d4][row];
+            hand && row === 0 ? 0x8798a2 : [0xa3b1b3, 0xcac3b3, 0xeee2c8][row];
           vane(
             section,
             x,
             y + row * 0.034,
             -0.23 * u + row * 0.058,
             length,
-            (hand ? 1.2 : 1.02) * [1, 0.86, 0.75][row],
+            (hand ? 1.04 - 0.32 * u : 1.02) * [1, 0.86, 0.75][row],
             angle + 0.08 * row,
             (hand ? 0.72 : 0.4) * (1 - 0.24 * row),
             tint,
+            hand && row === 0,
+            (hand ? 0.12 : 0.045) * Math.sin(j * 2.2 + row + side * 0.3) - 0.08 * u,
           );
         }
       }
@@ -113,7 +118,7 @@ export class HeronWing extends T.Group {
 
 /** Hollow porcelain face on the actor's head joint, with pierced eyes and a
  * projecting central ridge. Both cheek pieces share the same glazed surface. */
-export function bridalMask(gold: T.Material, silk: T.Material) {
+export function bridalMask(gold: T.Material, silk: T.Material, porcelain: T.Texture | null = null) {
   const mask = new T.Group();
   const hair = new T.MeshStandardMaterial({
     color: 0x252a2d,
@@ -121,13 +126,15 @@ export function bridalMask(gold: T.Material, silk: T.Material) {
     metalness: 0.13,
   });
   const glaze = new T.MeshPhysicalMaterial({
-    color: 0xd5ccaf,
+    color: 0xfff6e8,
+    map: porcelain,
     vertexColors: true,
     roughness: 0.39,
     clearcoat: 0.72,
     clearcoatRoughness: 0.29,
     side: T.DoubleSide,
   });
+  const pearl = new T.MeshPhysicalMaterial({ name: "Crown pearls", color: 0xeedec0, roughness: 0.28, clearcoat: 0.64 });
   const bead = new T.MeshStandardMaterial({ color: 0x7b221a, roughness: 0.33 });
   const groups = new Map<T.Material, T.BufferGeometry[]>();
   const add = (m: T.Material, g: T.BufferGeometry) => {
@@ -165,6 +172,15 @@ export function bridalMask(gold: T.Material, silk: T.Material) {
         .scale(0.117, 0.109, 0.11)
         .translate(side * 0.102, 0.208, -0.078),
     );
+    for (let k = 0; k < 5; k++) {
+      const u = k / 4;
+      const base = [side * (0.034 + u * 0.112), 0.163, 0.089 - u * 0.03];
+      const tip = [side * (0.042 + u * 0.238), 0.395 - 0.112 * u, -0.07];
+      line(gold, [base, [side * (0.062 + 0.17 * u), 0.282, 0.045], tip], 0.007);
+      line(gold, [base, [side * (0.016 + 0.163 * u), 0.266, 0.06], tip], 0.004);
+      add(k === 0 ? bead : pearl, new T.SphereGeometry(0.012, 10, 8)
+        .scale(0.88, 1.4, 1).translate(tip[0], tip[1], tip[2]));
+    }
     for (let j = 0; j < 9; j++) {
       const u = j / 8;
       line(
@@ -189,7 +205,7 @@ export function bridalMask(gold: T.Material, silk: T.Material) {
     );
     for (let j = 0; j < 3; j++)
       add(
-        glaze,
+        pearl,
         new T.SphereGeometry(0.016 - j * 0.002, 12, 8).translate(
           side * (0.228 + j * 0.025),
           0.292 + j * 0.012,
@@ -199,9 +215,10 @@ export function bridalMask(gold: T.Material, silk: T.Material) {
   }
   const profile = (x: number, y: number) =>
     0.209 +
-    0.034 * Math.exp(-(((x - 0.117) / 0.065) ** 2) - (((y + 0.011) / 0.061) ** 2)) -
-    0.019 * Math.exp(-(((x - 0.112) / 0.062) ** 2) - (((y - 0.066) / 0.035) ** 2)) -
-    2.9 * x * x +
+    0.052 * Math.exp(-(((x - 0.117) / 0.065) ** 2) - (((y + 0.011) / 0.061) ** 2)) -
+    0.035 * Math.exp(-(((x - 0.112) / 0.062) ** 2) - (((y - 0.066) / 0.035) ** 2)) -
+    3.35 * x * x +
+    0.021 * Math.exp(-(((y - 0.112 - 0.24 * x) / 0.032) ** 2)) +
     0.17 * Math.exp(-155 * x * x) * T.MathUtils.clamp((0.13 - y) / 0.32, 0, 1);
   for (const side of [-1, 1]) {
     const outline = new T.Shape();
@@ -234,6 +251,7 @@ export function bridalMask(gold: T.Material, silk: T.Material) {
     for (let i = 0; i < p.count; i++) {
       const x = p.getX(i), y = p.getY(i);
       p.setXYZ(i, x, y, p.getZ(i) + profile(x, y));
+      g.attributes.uv.setXY(i, 0.5 + side * x / 0.445, (y + 0.235) / 0.443);
       const dx = (profile(x + 0.001, y) - profile(x - 0.001, y)) * 500;
       const dy = (profile(x, y + 0.001) - profile(x, y - 0.001)) * 500;
       n.fromBufferAttribute(normals, i);
@@ -483,13 +501,18 @@ export function dressHeron(
       new T.TubeGeometry(new T.CatmullRomCurve3(points), 24, r, 6, false),
       mat,
     );
-  place(
-    hip,
-    new T.SphereGeometry(1, 24, 16)
-      .scale(0.12, 0.24, 0.12)
-      .translate(collar.x, collar.y + 0.13, collar.z),
-    ivory,
-  );
+  // The pleated silk throat wraps under the mask and tucks inside the crossed collar.
+  const throat = new T.SphereGeometry(1, 72, 36);
+  const surface = throat.attributes.position;
+  for (let i = 0; i < surface.count; i++) {
+    const x = surface.getX(i), y = surface.getY(i), z = surface.getZ(i);
+    const theta = Math.atan2(x, z);
+    const bias = 0.075 * Math.sin(17 * y + 2.7 * Math.sin(theta) + 0.6 * Math.sin(3 * theta));
+    surface.setXYZ(i, collar.x + x * 0.128 * (1 + bias), collar.y + 0.13 + 0.24 * y,
+      collar.z + z * 0.134 * (1 + bias));
+  }
+  throat.computeVertexNormals();
+  place(hip, throat, brocade);
   // Crossed collar with an embroidered facing and a knotted girdle.
   for (const side of [-1, 1]) {
     const edge = [

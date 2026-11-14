@@ -140,6 +140,7 @@ export class ArtLibrary {
         "tide-icon",
         "lacquer-bay",
         "heron-silk",
+        "heron-porcelain",
         "cinder-mask",
         "dragon-mantle",
         "rain-stones",
