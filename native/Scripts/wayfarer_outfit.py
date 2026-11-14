@@ -1,10 +1,11 @@
 """Fit the magnolia coat, crisscross sash, coiled hair and mapped portrait to the combat rig."""
 
 import json
-from math import atan2, cos, pi, sin, tau
+from math import atan2, cos, exp, pi, sin, tau
 
 from bind_pilgrim import cross, unit
 from garment_surfaces import garment_surfaces
+from cloud_collar import cloud_collar
 
 
 def dress(out, bones, rest, art):
@@ -23,7 +24,7 @@ def dress(out, bones, rest, art):
         )
         return len(out.doc["materials"]) - 1
 
-    face = material("WayfarerSkin", (1, 1, 1), 0.60, texture="magnolia-face.jpg")
+    face = material("WayfarerSkin", (1, 1, 1), 0.60, texture="ruyi-face.jpg")
     silk = material("MagnoliaSilk", (1, 1, 1), 0.66, texture="magnolia-silk.jpg")
     lining = material("CeladonSilk", (1, 1, 1), 0.76, texture="celadon.jpg")
     crimson = material("RoseBinding", (1, 1, 1), 0.71, texture="rosewood.jpg")
@@ -33,6 +34,8 @@ def dress(out, bones, rest, art):
     pearl = material("SeedPearl", (0.84, 0.75, 0.62), 0.28, 0.09)
     petal = material("MagnoliaJade", (0.55, 0.76, 0.61), 0.34, 0.04)
     river = material("RiverBrocade", (1, 1, 1), 0.65, texture="river-sash.jpg")
+    brocade = material("RuyiBrocade", (1, 1, 1), 0.58, texture="ruyi-embroidery.jpg")
+    eye = material("WetIris", (1, 1, 1), 0.23, texture="ruyi-face.jpg")
     patch, finish = garment_surfaces(out, bones)
     head = [("head", 1)]
     waist = [("pelvis", 1)]
@@ -43,8 +46,8 @@ def dress(out, bones, rest, art):
 
     def face_uv(x, y):
         # Place the eyeballs and lip seam on the corresponding portrait landmarks.
-        v = 0.459 - (y - 7.284) * (0.400 if y < 7.284 else 0.354)
-        return (0.511 + 0.389 * x, v)
+        v = 0.454 - (y - 7.284) * (0.435 if y < 7.284 else 0.342)
+        return (0.508 + 0.416 * x, v)
 
     # Preserve the open eyelids and lips of the CC0 human mesh. Only the face
     # receives the frontal projection; the back of the skull carries wrapped hair.
@@ -53,10 +56,17 @@ def dress(out, bones, rest, art):
 
     def sculpt(x, y, z):
         jaw = min(1, max(0, (7.14 - y) / 0.80))
+        # Lift the malar pads and round the transition into the jaw while
+        # retaining the rig's eyelid and mouth boundaries.
+        cheek = exp(-(((abs(x) - 0.42) / 0.26) ** 2) - ((y - 7.01) / 0.24) ** 2)
+        front = smooth((z - 0.80) / 0.44)
+        nose = exp(-((x / 0.18) ** 2) - ((y - 6.95) / 0.29) ** 2)
         return (
-            x * (1 - 0.13 * jaw) * (0.78 + 0.22 * smooth((y - 5.76) / 0.30)),
-            y - 0.034 * jaw,
-            z - 0.054 * jaw * max(0, z - 0.5),
+            x
+            * (1 + 0.035 * cheek * front - 0.15 * jaw)
+            * (0.78 + 0.22 * smooth((y - 5.76) / 0.30)),
+            y + 0.050 * jaw * front + 0.018 * cheek * front,
+            z + front * (0.061 * cheek - 0.072 * nose) - 0.032 * jaw * max(0, z - 0.5),
         )
 
     shaped = [sculpt(*v) for v in verts]
@@ -75,7 +85,7 @@ def dress(out, bones, rest, art):
         hairline = 8.14 - 0.40 * smooth((angle - 0.50) / 0.57)
         hairline -= 0.59 * smooth((angle - 1.07) / 0.40)
         hairline -= 0.59 * smooth((angle - 1.53) / 0.95)
-        slot = hair if y > hairline else face
+        slot = hair if y > hairline - 0.20 * smooth((angle - 0.65) / 0.45) else face
         for j in range(1, len(f) - 1):
             batches[slot].extend([f[0], f[j], f[j + 1]])
 
@@ -84,18 +94,23 @@ def dress(out, bones, rest, art):
 
     coords = [pos(*v) for v in shaped]
     uv = []
+    coverage = []
     neck_weights = []
     for x, y, z in verts:
         u, v = face_uv(x, y)
-        portrait = smooth((z - 0.72) / 0.37) * smooth((y - 6.04) / 0.26)
-        # The rear neck and ears sample clean skin, away from the portrait edge.
-        uv.append((0.62 + (u - 0.62) * portrait, 0.70 + (v - 0.70) * portrait))
+        # Keep the projected features straight. The skin shader fades their
+        # colour into a cheek swatch at the temples, ears and under the jaw.
+        uv.append((min(0.99, max(0.01, u)), min(0.99, max(0.01, v))))
+        front = smooth((z - 0.77) / 0.42) * smooth((y - 6.04) / 0.26)
+        side = smooth((abs(x) - 0.53) / 0.20) * (1 - smooth((z - 1.02) / 0.28))
+        coverage.append((front * (1 - side), 0))
         neck = 1 - smooth((y - 5.78) / 0.63)
         neck_weights.append((1 - neck, neck, 0, 0))
     attrs = dict(
         POSITION=out.data(coords, "VEC3", bounds=True),
         NORMAL=out.data([unit(n) for n in normals], "VEC3"),
         TEXCOORD_0=out.data(uv, "VEC2"),
+        TEXCOORD_1=out.data(coverage, "VEC2"),
         JOINTS_0=out.data(
             [(bones["head"], bones["neck_01"], 0, 0)] * len(verts), "VEC4", 5123
         ),
@@ -133,7 +148,7 @@ def dress(out, bones, rest, art):
 
     for side in (-1, 1):
         globe(
-            face, pos(side * 0.308, 7.284, 1.245), (0.0128, 0.0125, 0.0126), head, True
+            eye, pos(side * 0.308, 7.284, 1.245), (0.0128, 0.0125, 0.0126), head, True
         )
     # A low, offset chignon reads in silhouette in both profile and the combat view.
     globe(hair, (-0.015, 1.734, -0.076), (0.070, 0.061, 0.055), head, grooves=1)
@@ -165,12 +180,14 @@ def dress(out, bones, rest, art):
         edge = 8.045 - 0.39 * smooth((temple - 0.32) / 0.77)
         edge -= 0.44 * smooth((temple - 1.06) / 0.45)
         edge -= 0.53 * smooth((temple - 1.62) / 0.95)
+        # The part sits above the left brow. The opposite wave hangs lower.
+        edge += 0.13 * sin(a + 0.35) * max(0, cos(a)) - 0.05 * cos(3 * a)
         h = edge + (8.57 - edge) * sin(v * pi / 2)
         t = (h - 7.42) / (1.15 if h >= 7.42 else 1.32)
         radius = max(0, 1 - t * t) ** 0.5
         wave = 0.009 * cos(15 * a + 2.8 * v) * sin(pi * v)
-        width = (0.82 + wave) * radius
-        depth = (1.03 + wave) * radius
+        width = (0.87 + wave) * radius
+        depth = (1.08 + wave) * radius
         return pos(width * sin(a), h, 0.56 + depth * cos(a))
 
     def swept_hair(u, v):
@@ -181,6 +198,39 @@ def dress(out, bones, rest, art):
         return p, (u * 4 + 0.22 * sin(a) * v, 0.94 - 0.88 * v), head
 
     patch(hair, 128, 38, swept_hair)
+    # Broad overlapping locks sweep from the offset part across each temple.
+    # The ridge fades into the cap at both ends rather than forming a tube.
+    for side in (-1, 1):
+        for layer in range(3):
+
+            def lock(u, v, side=side, layer=layer):
+                sweep = v * v * (3 - 2 * v)
+                angle = 0.22 + side * (0.035 * layer + (1.32 + 0.10 * layer) * sweep)
+                width = (0.07 + 0.13 * sin(pi * v)) * (1 - 0.83 * v**4)
+                angle += (2 * u - 1) * width
+                row = 0.47 + 0.103 * layer - (0.47 + 0.100 * layer) * v
+                x, y, z = hair_shell(angle, row)
+                crest = (0.0007 + 0.0021 * sin(pi * u)) * sin(pi * v) ** 0.65
+                drop = (0.007 + 0.0013 * layer) * v**4
+                return (
+                    (x + crest * sin(angle), y - drop, z + crest * cos(angle)),
+                    (u * 0.36, v),
+                    head,
+                )
+
+            patch(hair, 10, 38, lock)
+    # Short, tapered baby hairs break up the smooth edge at close range.
+    for index in range(88):
+        angle = -1.47 + 2.94 * index / 87
+        bend = 0.037 * sin(8 * angle + 0.7)
+        length = 0.0025 + 0.0045 * (0.5 + 0.5 * cos(index * 2.39))
+
+        def hairline_tip(t, angle=angle, bend=bend, length=length):
+            a = angle + bend * t
+            x, y, z = hair_shell(a, 0.018 * (1 - t))
+            return x + 0.0007 * sin(a), y - length * t, z + 0.0007 * cos(a)
+
+        strand(hair, hairline_tip, lambda t: 0.00042 * (1 - 0.94 * t), head, 6)
     for side in (-1, 1):
         for j in range(4):
             root = hair_shell(side * (1.03 + 0.055 * j), 0.08)
@@ -353,7 +403,7 @@ def dress(out, bones, rest, art):
             n = unit(cross(axis, (0, 0, 1)))
             m = cross(axis, n)
             width = (
-                0.071 * (1 - v)
+                (0.055 + 0.016 * smooth(v / 0.23)) * (1 - v)
                 + 0.043 * v
                 + 0.0025 * sin(10 * pi * v + 2 * cos(tau * u))
             )
@@ -374,7 +424,7 @@ def dress(out, bones, rest, art):
             # The shoulder dome extends out of the sleeve opening along the
             # upper-arm axis, then joins the sloping bodice close to the neck.
             axis = unit([a - b for a, b in zip(centre, rest[chain[1]])])
-            dome = 0.048 * sin(angle)
+            dome = 0.016 * sin(angle)
             p = tuple(
                 centre[k] + (ring[k] - centre[k]) * cos(angle) + axis[k] * dome
                 for k in range(3)
@@ -461,4 +511,5 @@ def dress(out, bones, rest, art):
 
         patch(river, 16, 48, streamer)
     globe(jade, (0, 1.064, -0.175), (0.020, 0.019, 0.012), waist)
+    cloud_collar(patch, brocade, brass, crimson)
     finish()

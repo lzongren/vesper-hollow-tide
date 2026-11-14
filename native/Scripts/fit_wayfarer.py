@@ -10,8 +10,9 @@ sys.path.insert(0, str(project / "Scripts"))
 from build_bellwarden import mesh_for, fit, lib, combat
 from keeper_materials import surface
 from sash_material import silk_motion
+from wayfarer_skin import complexion
 
-mesh = mesh_for("MagnoliaStreamers", "pilgrim.glb", armed=True, wayfarer=True)
+mesh = mesh_for("JadeMagnolia", "pilgrim.glb", armed=True, wayfarer=True)
 bp = lib.load_asset(combat + "BP_CombatCharacter")
 reference = unreal.get_default_object(
     bp.generated_class()
@@ -21,7 +22,8 @@ lib.save_loaded_asset(mesh.skeleton, only_if_is_dirty=False)
 root = mesh.get_path_name().split("/SkeletalMeshes/")[0]
 slots = list(mesh.materials)
 finishes = {
-    "WayfarerSkin": (0, 0.59),
+    "WetIris": (0, 0.23),
+    "RuyiBrocade": (0.08, 0.62),
     "MagnoliaSilk": (0.06, 0.63),
     "CeladonSilk": (0.03, 0.77),
     "RoseBinding": (0.03, 0.70),
@@ -29,14 +31,16 @@ finishes = {
 }
 for slot in slots:
     name = str(slot.material_slot_name)
-    if name in finishes:
+    if name == "WayfarerSkin":
+        slot.material_interface = complexion(root)
+    elif name in finishes:
         metal, rough = finishes[name]
         slot.material_interface = surface(root, name + "Surface", name, metal, rough)
     elif name == "RiverBrocade":
         slot.material_interface = silk_motion(root)
     elif name == "InkHair":
         slot.material_interface = surface(
-            root, "BrushedInk", name, 0, 0.82, specular=0.065
+            root, "BrushedInk", name, 0, 0.72, specular=0.06
         )
     elif name == "Pilgrim_0":
         slot.material_interface = surface(
@@ -55,6 +59,6 @@ mesh.set_editor_property("materials", slots)
 lib.save_loaded_asset(mesh, only_if_is_dirty=False)
 fit("BP_CombatCharacter", "BP_BelfryPilgrim", mesh, {})
 (project / "Saved" / "WayfarerOutfit.json").write_text(
-    json.dumps({"mesh": mesh.get_path_name(), "revision": 4})
+    json.dumps({"mesh": mesh.get_path_name(), "revision": 5})
 )
 unreal.log("VESPER_WAYFARER_READY")
