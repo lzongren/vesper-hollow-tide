@@ -18,13 +18,21 @@ export class ArtLibrary {
     const loader = new T.TextureLoader();
     const base = `${import.meta.env.BASE_URL}textures/seal-${name}`;
     const [color, normal, orm] = await Promise.all(
-      ["color", "normal", "orm"].map(channel => loader.loadAsync(`${base}-${channel}.jpg`)),
+      ["color", "normal", "orm"].map((channel) =>
+        loader.loadAsync(`${base}-${channel}.jpg`),
+      ),
     );
     for (const map of [color, normal, orm]) map.anisotropy = 8;
     color.colorSpace = T.SRGBColorSpace;
     const material = new T.MeshStandardMaterial({
-      name: `${name} engraved stone and bronze`, map: color, normalMap: normal,
-      roughness: 1, metalness: 1, roughnessMap: orm, metalnessMap: orm, aoMap: orm,
+      name: `${name} engraved stone and bronze`,
+      map: color,
+      normalMap: normal,
+      roughness: 1,
+      metalness: 1,
+      roughnessMap: orm,
+      metalnessMap: orm,
+      aoMap: orm,
     });
     this.seals.set(name, material);
     return material;
@@ -32,7 +40,9 @@ export class ArtLibrary {
 
   async loadLandmark(name: string) {
     if (this.models.has(name)) return;
-    const model = await new GLTFLoader().loadAsync(`${import.meta.env.BASE_URL}models/${name}.glb`);
+    const model = await new GLTFLoader().loadAsync(
+      `${import.meta.env.BASE_URL}models/${name}.glb`,
+    );
     this.models.set(name, model);
   }
   async load() {
@@ -40,14 +50,20 @@ export class ArtLibrary {
       images = new T.TextureLoader();
     const base = import.meta.env.BASE_URL;
     await Promise.all([
-      ...["pilgrim", "wraith", "sorcerer", "sword", "pine", "dead-tree", "tide-bell"].map(
-        async (name) => {
-          this.models.set(
-            name,
-            await gltf.loadAsync(`${base}models/${name}.glb`),
-          );
-        },
-      ),
+      ...[
+        "pilgrim",
+        "wraith",
+        "sorcerer",
+        "sword",
+        "pine",
+        "dead-tree",
+        "tide-bell",
+      ].map(async (name) => {
+        this.models.set(
+          name,
+          await gltf.loadAsync(`${base}models/${name}.glb`),
+        );
+      }),
       ...["stone", "wall", "rock", "wood", "metal"].flatMap((name) =>
         ["color", "normal", "rough"].map(async (channel) => {
           const texture = await images.loadAsync(
@@ -59,11 +75,31 @@ export class ArtLibrary {
           this.textures.set(`${name}-${channel}`, texture);
         }),
       ),
-      ...["color", "normal"].map(async channel => {
-        const map = await images.loadAsync(`${base}textures/pilgrim-brocade-${channel}.jpg`);
+      ...["color", "normal"].map(async (channel) => {
+        const map = await images.loadAsync(
+          `${base}textures/pilgrim-brocade-${channel}.jpg`,
+        );
         if (channel === "color") map.colorSpace = T.SRGBColorSpace;
         map.anisotropy = 8;
         this.textures.set(`pilgrim-brocade-${channel}`, map);
+      }),
+      ...[
+        "karst-valley",
+        "tide-icon",
+        "lacquer-bay",
+        "heron-silk",
+        "cinder-mask",
+        "dragon-mantle",
+        "rain-stones",
+        "heron-quill",
+        "warden-mask",
+      ].map(async (name) => {
+        const map = await images.loadAsync(
+          `${base}art/${name}.${name === "heron-quill" || name === "warden-mask" ? "png" : "jpg"}`,
+        );
+        map.colorSpace = T.SRGBColorSpace;
+        map.anisotropy = 8;
+        this.textures.set(name, map);
       }),
       new HDRLoader().loadAsync(`${base}textures/moonlight.hdr`).then((t) => {
         t.mapping = T.EquirectangularReflectionMapping;

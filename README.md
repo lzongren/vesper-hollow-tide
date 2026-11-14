@@ -6,7 +6,9 @@
 
 An original, playable 3D soulslike boss-rush chapter for the browser. Deliberate melee combat, weathered temple courtyards, detailed armoured and skeletal characters, pale feathers, and an adaptive dark-ambient score. Inspired by the tension and combat language of games such as Bloodborne and Wuchang: Fallen Feathers; no characters, music, models, or other assets from those games are used.
 
-![Vesper title artwork](public/art/vesper-cover.png)
+![Veiled Heron in combat, captured from the playable browser build](docs/runtime/sanctuary/heron.jpg)
+
+[Three encounters and combat footage](docs/runtime/sanctuary/)
 
 ## Play locally
 

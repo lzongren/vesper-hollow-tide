@@ -14,6 +14,13 @@ import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { Combat, angleDiff, type GameEvent, type Vec } from "./combat";
 import { ArtLibrary } from "./assets";
 import { PilgrimGrip, mantleGeometry, BladeTrail } from "./pilgrim";
+import {
+  courtyardMaple,
+  featherGeometry,
+  foldingScreen,
+  leafDrifts,
+  valleyHorizon,
+} from "./sanctuary";
 import { courtPaving } from "./court";
 import { heronGarden, cinderReliquary } from "./landmarks";
 
@@ -168,6 +175,7 @@ interface Actor {
   grip?: PilgrimGrip;
   rightHand?: T.Bone;
   halo?: T.Group;
+  pinions?: T.Group[];
 }
 interface Effect {
   mesh: T.Mesh;
@@ -212,6 +220,24 @@ export class World {
   fill: T.PointLight;
   clothMeshes: T.Mesh[] = [];
   flames: T.Mesh[] = [];
+  featherTemplate?: T.BufferGeometry;
+  lampPaper = textureCanvas((c) => {
+    const glow = c.createLinearGradient(0, 0, 0, 512);
+    for (const [stop, tint] of [
+      [0, "#3c190c"],
+      [0.17, "#bb6f32"],
+      [0.42, "#ffde8c"],
+      [0.54, "#ffe9af"],
+      [0.85, "#c68736"],
+      [1, "#562810"],
+    ] as const)
+      glow.addColorStop(stop, tint);
+    c.fillStyle = glow;
+    c.fillRect(0, 0, 512, 512);
+    c.fillStyle = "#46241055";
+    for (let x = 0; x < 512; x += 32) c.fillRect(x, 0, 2, 512);
+    for (let y = 0; y < 512; y += 4) c.fillRect(0, y, 512, 1);
+  });
   rain: T.Points;
   rainBase: Float32Array;
   fogSheets: T.Mesh[] = [];
@@ -229,8 +255,8 @@ export class World {
     this.renderer.toneMappingExposure = 1.1;
     this.scene.background = new T.Color(0x111d22);
     this.scene.fog = new T.FogExp2(0x19272b, 0.022);
-    this.scene.add(new T.HemisphereLight(0xb7d0da, 0x465146, 1.5));
-    this.moon = new T.DirectionalLight(0xcbddea, 3.2);
+    this.scene.add(new T.HemisphereLight(0xc3daef, 0x544138, 1.08));
+    this.moon = new T.DirectionalLight(0xb9d2ec, 2.55);
     this.moon.position.set(-12, 20, -15);
     this.moon.castShadow = true;
     this.moon.shadow.mapSize.set(2048, 2048);
@@ -332,6 +358,39 @@ export class World {
       }),
       moss: standard(0x44523a, 0, 0.95),
     };
+    for (const name of [
+      "tide-icon",
+      "lacquer-bay",
+      "heron-silk",
+      "cinder-mask",
+      "dragon-mantle",
+    ]) {
+      const map = this.art.textures.get(name)!;
+      this.materials[name] = new T.MeshStandardMaterial({
+        map,
+        bumpMap: map,
+        bumpScale: name.includes("silk") ? 0.012 : 0.055,
+        emissiveMap: map,
+        emissive: 0xffdfa9,
+        emissiveIntensity: name === "lacquer-bay" ? 0.48 : 0.16,
+        roughness: 0.74,
+        metalness: 0.12,
+        side: T.DoubleSide,
+      });
+    }
+    this.featherTemplate = featherGeometry(
+      this.art.textures.get("heron-quill")!,
+      0.79,
+      1,
+    );
+    const stone = this.materials.stone,
+      flags = this.art.textures.get("rain-stones")!;
+    flags.wrapS = flags.wrapT = T.RepeatWrapping;
+    flags.repeat.set(25, 25);
+    stone.map = stone.bumpMap = flags;
+    stone.bumpScale = 0.055;
+    stone.normalMap = null;
+    stone.roughness = 0.71;
   }
   resize() {
     this.camera.aspect = innerWidth / innerHeight;
@@ -400,7 +459,7 @@ export class World {
             mm.onBeforeCompile = (shader) => {
               shader.fragmentShader = shader.fragmentShader.replace(
                 "#include <map_fragment>",
-                `#include <map_fragment>\n float lum=dot(diffuseColor.rgb, vec3(.299,.587,.114)); diffuseColor.rgb=${kind === 1 ? "vec3(.18,.23,.22)+vec3(lum)*.9" : "mix(vec3(lum),diffuseColor.rgb,.3)"};`,
+                `#include <map_fragment>\n float lum=dot(diffuseColor.rgb, vec3(.299,.587,.114)); diffuseColor.rgb=${kind === 1 ? "mix(vec3(lum)*vec3(.72,.88,.90),diffuseColor.rgb,.45)+vec3(.025)" : "mix(vec3(lum),diffuseColor.rgb,.3)"};`,
               );
             };
           }
@@ -423,8 +482,9 @@ export class World {
       if (kind < 0) {
         const fabric = new T.MeshStandardMaterial({
           side: T.DoubleSide,
-          map: this.art.textures.get("pilgrim-brocade-color"),
-          normalMap: this.art.textures.get("pilgrim-brocade-normal"),
+          map: this.art.textures.get("dragon-mantle"),
+          bumpMap: this.art.textures.get("dragon-mantle"),
+          bumpScale: 0.014,
           roughness: 0.83,
         });
         const robe = mesh(root, mantleGeometry(), fabric, 0, 1.13, 0);
@@ -463,42 +523,93 @@ export class World {
         if (upper && fore && a.rightHand)
           a.grip = new PilgrimGrip(root, upper, fore, a.rightHand, weapon);
       } else {
-        const robe = cloth(
+        const robe = mesh(
           root,
-          this.materials.cloth.clone(),
-          1.7,
-          2.8,
+          mantleGeometry().scale(2.16, 2.22, 1.8),
+          this.materials["tide-icon"],
           0,
-          1.7,
-          -0.24,
+          2.35,
+          0,
+        );
+        robe.userData.base = new Float32Array(
+          robe.geometry.attributes.position.array,
         );
         a.robe = robe;
-        const pos = robe.geometry.attributes.position;
-        const capeHeight = 2.8;
+        bones.get("Spine")?.attach(robe);
+
+        const face = new T.PlaneGeometry(0.49, 0.65, 24, 28);
+        const pos = face.attributes.position;
         for (let i = 0; i < pos.count; i++) {
-          const w = pos.getY(i) / capeHeight + 0.5;
-          pos.setX(i, pos.getX(i) * (1 - 0.38 * w));
-          pos.setZ(i, pos.getZ(i) - (1 - w) * 0.18);
-          pos.setY(
-            i,
-            pos.getY(i) + Math.cos(pos.getX(i) * 15) * 0.025 * (1 - w),
-          );
+          const x = pos.getX(i),
+            y = pos.getY(i),
+            bend = x / 0.26;
+          const nose = 0.07 * Math.exp(-110 * x * x - 50 * (y + 0.055) ** 2);
+          pos.setZ(i, 0.12 * (1 - bend * bend) + nose - 0.07 * (y / 0.36) ** 2);
         }
-        robe.userData.base = new Float32Array(pos.array);
-        robe.geometry.computeVertexNormals();
-        for (let i = 0; i < 12; i++) {
-          const ang = (i / 12) * Math.PI * 2;
-          const petal = mesh(
-            root,
-            new T.ConeGeometry(0.075, 0.8, 12),
-            this.materials.gold,
-            Math.sin(ang) * 0.4,
-            3.98,
-            Math.cos(ang) * 0.4,
-          );
-          petal.rotation.z = -Math.sin(ang) * 0.25;
-          petal.rotation.x = Math.cos(ang) * 0.25;
-        }
+        face.computeVertexNormals();
+        const mask = mesh(
+          root,
+          face,
+          new T.MeshStandardMaterial({
+            map: this.art.textures.get("warden-mask"),
+            alphaTest: 0.52,
+            metalness: 0.43,
+            roughness: 0.51,
+            bumpMap: this.art.textures.get("warden-mask"),
+            bumpScale: 0.012,
+            side: T.DoubleSide,
+          }),
+          0,
+          3.52,
+          0.23,
+        );
+        bones.get("Head")?.attach(mask);
+        const stole = mesh(
+          root,
+          mantleGeometry().scale(1.12, 1.48, 1.1),
+          this.materials["heron-silk"],
+          0,
+          2.05,
+          0.12,
+        );
+        stole.rotation.y = Math.PI;
+        bones.get("Spine")?.attach(stole);
+        // A repoussé aureole with hanging bead strands clears the gaze and weapon.
+        const halo = torus(
+          root,
+          this.materials.gold,
+          0.58,
+          0.043,
+          0,
+          3.58,
+          -0.2,
+        );
+        halo.scale.y = 1.14;
+        torus(root, this.materials.gold, 0.5, 0.015, 0, 3.58, -0.19).scale.y =
+          1.14;
+        for (const side of [-1, 1])
+          for (let j = 0; j < 4; j++) {
+            const x = side * (0.32 + j * 0.066),
+              top = 3.58 + Math.sqrt(0.58 ** 2 - x * x);
+            const drop = 0.75 + j * 0.085;
+            cylinder(
+              root,
+              this.materials.gold,
+              x,
+              top - drop / 2,
+              -0.17,
+              0.009,
+              drop,
+            );
+            mesh(
+              root,
+              new T.SphereGeometry(0.035, 10, 8),
+              this.materials.ivory,
+              x,
+              top - drop,
+              -0.17,
+            );
+          }
         cylinder(weapon, this.materials.wood, 0, 0.65, 0, 0.07, 2.8);
         this.bell(weapon, 0.64, 0, 1.4, 0);
         const mantle = mesh(
@@ -509,25 +620,58 @@ export class World {
           3.05,
           0,
         );
-        mantle.scale.set(0.76, 0.32, 0.55);
+        mantle.scale.set(0.7, 0.3, 0.48);
+        mantle.material = this.materials["cinder-mask"];
       }
     }
     if (kind === 1) {
-      a.robe = cloth(
+      const drape = mesh(
         root,
-        new T.MeshStandardMaterial({
-          color: 0xc4c3b3,
-          side: T.DoubleSide,
-          transparent: true,
-          opacity: 0.72,
-          roughness: 0.95,
-        }),
-        1.5,
-        2.2,
+        mantleGeometry().scale(1.7, 1.6, 1.5),
+        this.materials["heron-silk"],
         0,
-        1.6,
-        -0.3,
+        1.85,
+        -0.1,
       );
+      drape.userData.base = new Float32Array(
+        drape.geometry.attributes.position.array,
+      );
+      a.robe = drape;
+      const quill = new T.MeshStandardMaterial({
+        map: this.art.textures.get("heron-quill"),
+        alphaTest: 0.54,
+        side: T.DoubleSide,
+        roughness: 0.68,
+      });
+      a.pinions = [];
+      for (const side of [-1, 1]) {
+        const wing = new T.Group(),
+          feathers: T.BufferGeometry[] = [];
+        wing.position.set(side * 0.35, 2.14, -0.04);
+        for (let row = 0; row < 2; row++)
+          for (let j = 0; j < 14; j++) {
+            const u = j / 13,
+              length = (row ? 1.02 : 1.55) + u * 0.45;
+            const feather = this.featherTemplate!.clone().scale(
+              length,
+              length,
+              length,
+            );
+            feather.translate(0, length * 0.41, 0);
+            feather.rotateZ(side * (-2.72 + u * 1.34));
+            feather.translate(
+              side * u * 0.72,
+              u * 0.53,
+              (row ? 0.11 : -0.01) + 0.14 * u,
+            );
+            feathers.push(feather);
+          }
+        const plumage = mesh(wing, mergeGeometries(feathers), quill);
+        plumage.receiveShadow = true;
+        feathers.forEach((g) => g.dispose());
+        root.add(wing);
+        a.pinions.push(wing);
+      }
     }
     if (kind === 2) {
       const halo = new T.Group();
@@ -562,9 +706,11 @@ export class World {
     g.position.set(x, y, z);
     parent.add(g);
     const mat = new T.MeshStandardMaterial({
-      color: red ? 0x9a2821 : 0xc7a167,
-      emissive: red ? 0x9b2014 : 0xff982f,
-      emissiveIntensity: 1.8,
+      map: this.lampPaper,
+      emissiveMap: this.lampPaper,
+      color: red ? 0xad5430 : 0xb47335,
+      emissive: red ? 0xfc661e : 0xffa941,
+      emissiveIntensity: 0.7,
       roughness: 0.9,
       side: T.DoubleSide,
     });
@@ -593,6 +739,18 @@ export class World {
       0,
     );
     flame.scale.y = 2;
+    if (red) {
+      cylinder(g, this.materials.gold, 0, 0.13, 0, 0.052, 0.16);
+      const tassel = mesh(
+        g,
+        new T.ConeGeometry(0.045, 0.29, 12),
+        this.materials.wood,
+        0,
+        -0.065,
+        0,
+      );
+      tassel.rotation.z = 0.12;
+    }
     this.flames.push(flame);
     return g;
   }
@@ -696,29 +854,25 @@ export class World {
       }
     box(g, this.materials.wood, 0, 4.9, 0, 11, 0.3, 6);
     box(g, this.materials.wall, 0, 2.8, -2.7, 10, 3.8, 0.4);
+    const icon = foldingScreen(
+      this.materials["tide-icon"],
+      this.materials.gold,
+      6.1,
+      3.7,
+      5,
+    );
+    icon.position.set(0, 2.92, -2.12);
+    g.add(icon);
     for (const side of [-1, 1]) {
-      for (let i = 0; i < 14; i++)
-        box(
-          g,
-          this.materials.wood,
-          side * 3.7,
-          2.9,
-          -2.44 + (i % 2) * 0.03,
-          2.3,
-          0.025,
-          0.12,
-        ).position.y = 1.4 + i * 0.2;
-      for (let i = 0; i < 9; i++)
-        box(
-          g,
-          this.materials.wood,
-          side * 3.7 - 1.1 + i * 0.27,
-          2.8,
-          -2.43,
-          0.035,
-          3,
-          0.1,
-        );
+      const bay = foldingScreen(
+        this.materials["lacquer-bay"],
+        this.materials.wood,
+        2.1,
+        3.7,
+        1,
+      );
+      bay.position.set(side * 4.08, 2.92, -2.19);
+      g.add(bay);
     }
     this.roof(g, 14, 8, 5.5);
     // Raised clerestory, carved fascia and fretwork make the hall read at combat distance.
@@ -755,11 +909,18 @@ export class World {
     }
   }
   async prepareCourt(index: number) {
-    const scans = index === 2 ? ["rock_face_01", "chinese_chandelier"] : index === 1 ? ["rock_face_01"] : [];
+    const scans =
+      index === 2
+        ? ["rock_face_01", "chinese_chandelier"]
+        : index === 1
+          ? ["rock_face_01"]
+          : [];
     const [seal] = await Promise.all([
       this.art.courtSeal(["lotus", "plume", "cinder"][index]),
-      ...scans.map(name => this.art.loadLandmark(name)),
+      ...scans.map((name) => this.art.loadLandmark(name)),
     ]);
+    seal.color.setHex(0xa0a4a4);
+    seal.normalScale.set(0.5, 0.5);
     this.materials[`seal-${index}`] = seal;
   }
   setArena(index: number) {
@@ -782,27 +943,36 @@ export class World {
     this.telegraphKey = "";
     this.cameraInitialized = false;
     const colors = [0x23383b, 0x213737, 0x332a29];
-    this.scene.fog = new T.FogExp2(colors[index], 0.023);
+    this.scene.fog = new T.FogExp2(colors[index], 0.015);
     this.scene.background = new T.Color(colors[index]);
     this.materials.stone.color.setHex([0xffffff, 0xbdd0bd, 0xaaa398][index]);
     const ground = mesh(
       this.arena,
-      new T.PlaneGeometry(120, 120),
+      new T.CircleGeometry(43, 128),
       this.materials.stone,
       0,
       -0.06,
       0,
     );
+    // CircleGeometry uses the disc extent for UVs.
     ground.rotation.x = -Math.PI / 2;
-    const seal = mesh(this.arena, new T.CircleGeometry(6.35, 144), this.materials[`seal-${index}`]);
+    const seal = mesh(
+      this.arena,
+      new T.CircleGeometry(6.35, 144),
+      this.materials[`seal-${index}`],
+    );
     seal.name = "Engraved court seal";
     seal.position.y = -0.009;
     seal.rotation.x = -Math.PI / 2;
     seal.castShadow = false;
     const slabs = new T.MeshStandardMaterial({
-      color: [0x919994, 0x899a92, 0xa39890][index], vertexColors: true, roughness: 0.82,
-      map: this.art.textures.get("rock-color"), normalMap: this.art.textures.get("rock-normal"),
-      roughnessMap: this.art.textures.get("rock-rough"), normalScale: new T.Vector2(0.48, 0.48),
+      color: [0x919994, 0x899a92, 0xa39890][index],
+      vertexColors: true,
+      roughness: 0.82,
+      map: this.art.textures.get("rock-color"),
+      normalMap: this.art.textures.get("rock-normal"),
+      roughnessMap: this.art.textures.get("rock-rough"),
+      normalScale: new T.Vector2(0.48, 0.48),
     });
     const paving = mesh(this.arena, courtPaving(random(2137 + index)), slabs);
     paving.name = "Fitted apron stones";
@@ -822,20 +992,54 @@ export class World {
       );
       block.rotation.y = a;
     }
-    if (index === 0) this.temple(this.arena, 0, -23, 1.5);
-    else if (index === 1) this.arena.add(heronGarden(this.art, this.materials, random(1729)));
+    if (index === 0) this.temple(this.arena, 0, -24, 1.7);
+    else if (index === 1)
+      this.arena.add(heronGarden(this.art, this.materials, random(1729)));
     else this.arena.add(cinderReliquary(this.art, this.materials));
+    if (index === 2) {
+      const carving = foldingScreen(
+        this.materials["cinder-mask"],
+        this.materials.gold,
+        10.8,
+        7.8,
+        3,
+      );
+      carving.position.set(0, 4.2, -25.8);
+      this.arena.add(carving);
+    }
     for (const side of [-1, 1]) {
+      if (index === 1) {
+        const silk = foldingScreen(
+          this.materials["heron-silk"],
+          this.materials.gold,
+          4.6,
+          3.5,
+          3,
+        );
+        silk.position.set(side * 5.9, 3.6, -18.28);
+        this.arena.add(silk);
+      }
       if (index === 0) {
         const corridor = new T.Group();
         corridor.position.set(side * 18, 0, -1);
-        corridor.rotation.y = Math.PI / 2;
+        corridor.rotation.y = (-side * Math.PI) / 2;
         this.arena.add(corridor);
         for (let i = 0; i < 7; i++) {
           const x = -15 + i * 5;
           cylinder(corridor, this.materials.wood, x, 2.9, 0, 0.22, 5.8);
           box(corridor, this.materials.wood, x, 5.2, 0, 1.2, 0.22, 2);
           if (i % 2 === 0) this.lantern(corridor, x, 3.6, 1.5, true);
+        }
+        for (let i = 0; i < 6; i++) {
+          const bay = foldingScreen(
+            this.materials["lacquer-bay"],
+            this.materials.wood,
+            5.06,
+            4.45,
+            1,
+          );
+          bay.position.set(-12.5 + i * 5, 2.65, -0.65);
+          corridor.add(bay);
         }
         this.roof(corridor, 34, 4.5, 5.7);
       }
@@ -844,38 +1048,65 @@ export class World {
         const pillar = new T.Group();
         pillar.position.set(side * 13.8, 0, z);
         this.arena.add(pillar);
-        box(pillar, this.materials.wall, 0, 0.3, 0, 1.3, 0.6, 1.3);
+        const foot = mesh(
+          pillar,
+          new T.LatheGeometry(
+            [
+              new T.Vector2(0.62, 0),
+              new T.Vector2(0.64, 0.17),
+              new T.Vector2(0.52, 0.22),
+              new T.Vector2(0.5, 0.3),
+              new T.Vector2(0.41, 0.46),
+              new T.Vector2(0.36, 0.62),
+            ],
+            8,
+          ),
+          this.materials.rock,
+        );
+        foot.rotation.y = Math.PI / 8;
         cylinder(pillar, this.materials.wall, 0, 1.2, 0, 0.25, 1.3);
         this.lantern(pillar, 0, 1.7, 0);
-        box(pillar, this.materials.roof, 0, 2.85, 0, 0.85, 0.12, 0.85);
+        mesh(
+          pillar,
+          new T.LatheGeometry(
+            [
+              new T.Vector2(0.22, 0),
+              new T.Vector2(0.5, 0.09),
+              new T.Vector2(0.55, 0.14),
+              new T.Vector2(0.35, 0.2),
+              new T.Vector2(0.13, 0.38),
+              new T.Vector2(0.09, 0.47),
+              new T.Vector2(0.12, 0.54),
+              new T.Vector2(0, 0.71),
+            ],
+            8,
+          ),
+          this.materials.roof,
+          0,
+          2.63,
+          0,
+        );
       }
     }
     const rng = random(772 + index);
-    const mountainMaterial = this.materials.rock.clone();
-    mountainMaterial.color.setHex(0x3b5350);
-    for (let i = 0; i < 18; i++) {
-      const a = (i / 18) * Math.PI * 2,
-        r = 65 + rng() * 20;
-      const cliff = mesh(
-        this.decor,
-        new T.IcosahedronGeometry(1, 3),
-        mountainMaterial,
-        Math.sin(a) * r,
-        3,
-        Math.cos(a) * r,
-      );
-      cliff.scale.set(10 + rng() * 8, 10 + rng() * 20, 10 + rng() * 10);
-      cliff.castShadow = false;
-    }
-    const moon = mesh(
-      this.decor,
-      new T.SphereGeometry(3.5, 48, 32),
-      new T.MeshBasicMaterial({ color: 0xd7e3da, fog: false }),
-      -32,
-      40,
-      -90,
+    this.arena.add(leafDrifts(random(3248 + index), index === 1));
+    this.decor.add(
+      valleyHorizon(this.art.textures.get("karst-valley")!, index),
     );
-    moon.castShadow = moon.receiveShadow = false;
+    for (const [x, z, scale] of [
+      [-12.8, -13.5, 1.3],
+      [15, -9, 1.5],
+      [-16, 5, 0.96],
+      [12.5, -21, 1.4],
+      [15.7, 10, 1.22],
+      [-10, -26, 1.34],
+    ]) {
+      const tree = courtyardMaple(rng, this.materials.wood, index !== 1);
+      tree.position.set(x, 0, z);
+      tree.scale.setScalar(scale);
+      tree.rotation.y = rng() * 6;
+      this.decor.add(tree);
+    }
     const rockGeo = new T.IcosahedronGeometry(1, 4);
     const rp = rockGeo.attributes.position;
     for (let i = 0; i < rp.count; i++) {
@@ -925,7 +1156,7 @@ export class World {
     grassGeo.setAttribute(
       "position",
       new T.Float32BufferAttribute(
-        [-0.025, 0, 0, 0.025, 0, 0, 0.012, 0.43, 0.02],
+        [-0.016, 0, 0, 0.016, 0, 0, 0.045, 0.22, 0.04],
         3,
       ),
     );
@@ -948,7 +1179,15 @@ export class World {
       g.position.set(i % 2 ? -16 : 16, 0, -18 + Math.floor(i / 2) * 6);
       this.arena.add(g);
       cylinder(g, this.materials.wood, 0, 3.2, 0, 0.045, 6.4);
-      const c = cloth(g, this.materials.cloth, 0.65, 2.4, 0.35, 4.7, 0);
+      const c = cloth(
+        g,
+        this.materials[index === 1 ? "heron-silk" : "dragon-mantle"],
+        1.02,
+        3.4,
+        0.51,
+        4.35,
+        0,
+      );
       this.clothMeshes.push(c);
     }
     // Warm lantern light against cold moonlit stone; the spaces stay legible in play.
@@ -1087,6 +1326,16 @@ export class World {
       root.rotation.z = -Math.PI / 2;
       root.position.y = 0.2;
     }
+    a.pinions?.forEach((wing, i) => {
+      const spread =
+        action === "windup"
+          ? progress * 0.3
+          : action === "active"
+            ? 0.3 * (1 - progress)
+            : 0;
+      wing.rotation.z = (i ? 1 : -1) * (Math.sin(t * 1.7) * 0.055 + spread);
+      wing.rotation.y = (i ? 1 : -1) * Math.sin(t * 1.2) * 0.11;
+    });
     if (a.robe) {
       const pos = a.robe.geometry.attributes.position,
         base = a.robe.userData.base as Float32Array;
@@ -1367,8 +1616,17 @@ export class World {
           depthWrite: false,
         });
         if (h.type === "feather") {
-          const o = mesh(g, new T.ConeGeometry(0.07, 0.8, 8), m);
-          o.rotation.x = Math.PI / 2;
+          m.map = this.art.textures.get("heron-quill")!;
+          m.alphaTest = 0.45;
+          m.opacity = 1;
+          const vanes = [0, Math.PI / 2].map((angle) =>
+            this.featherTemplate!.clone()
+              .scale(0.95, 1.08, 1)
+              .rotateY(angle)
+              .rotateX(Math.PI / 2),
+          );
+          mesh(g, mergeGeometries(vanes), m);
+          vanes.forEach((v) => v.dispose());
         } else {
           const o = mesh(g, new T.RingGeometry(0.98, 1, 96), m);
           o.rotation.x = -Math.PI / 2;
