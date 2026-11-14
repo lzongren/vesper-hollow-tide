@@ -1743,7 +1743,14 @@ export class World {
     if (!this.cameraInitialized) {
       this.camera.position.copy(target);
       this.cameraInitialized = true;
-    } else this.camera.position.lerp(target, 1 - Math.exp(-dt * 5));
+    } else {
+      // A retreat covers several metres before the ordinary chase camera can
+      // follow. Track its radial component while preserving lateral parallax.
+      const retreat = p.action === "dodge"
+        ? Math.max(0, p.dodgeDir.x * Math.sin(this.yaw) + p.dodgeDir.z * Math.cos(this.yaw))
+        : 0;
+      this.camera.position.lerp(target, 1 - Math.exp(-dt * (5 + 17 * retreat)));
+    }
     this.shake = Math.max(0, this.shake - dt * 0.8);
     if (!this.reducedMotion) {
       this.camera.position.x += (Math.random() - 0.5) * this.shake;
