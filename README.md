@@ -6,9 +6,9 @@
 
 An original, playable 3D soulslike boss-rush chapter for the browser. Deliberate melee combat, weathered temple courtyards, detailed armoured and skeletal characters, pale feathers, and an adaptive dark-ambient score. Inspired by the tension and combat language of games such as Bloodborne and Wuchang: Fallen Feathers; no characters, music, models, or other assets from those games are used.
 
-![The Saint of Cinders raising fire beside the player during Falling Prayers](docs/runtime/firelight/falling-prayers.jpg)
+![The Veiled Heron drawing a curved blade before the moon gate](docs/runtime/moonbridge/duelist.jpg)
 
-[Firelight, draped shoulders and the ring staff](docs/runtime/firelight/) · [Complete Saint of Cinders fight with sound](docs/runtime/firelight/shrine.mp4) · [Shrine fire and belfry sweep comparisons](docs/runtime/embers/) · [Watch a complete Bellwarden victory with sound](docs/runtime/vigil/bellwarden.mp4) · [Three courts in gameplay](docs/runtime/vigil/) · [Rain courts in motion](docs/runtime/rain/) · [Three encounter galleries](docs/runtime/sanctuary/) · [Bellwarden combat with game audio](docs/runtime/bronze/bellwarden.mp4)
+[The masked duelist and the moon bridge](docs/runtime/moonbridge/) · [Firelight, draped shoulders and the ring staff](docs/runtime/firelight/) · [Complete Saint of Cinders fight with sound](docs/runtime/firelight/shrine.mp4) · [Shrine fire and belfry sweep comparisons](docs/runtime/embers/) · [Watch a complete Bellwarden victory with sound](docs/runtime/vigil/bellwarden.mp4) · [Three courts in gameplay](docs/runtime/vigil/) · [Rain courts in motion](docs/runtime/rain/) · [Three encounter galleries](docs/runtime/sanctuary/) · [Bellwarden combat with game audio](docs/runtime/bronze/bellwarden.mp4)
 
 ## Play locally
 
