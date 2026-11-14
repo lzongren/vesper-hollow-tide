@@ -2,7 +2,7 @@ import * as T from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
 /** The valley keeps a cylindrical horizon and a continuous crown above it. */
-export function valleyHorizon(texture: T.Texture, encounter: number) {
+export function valleyHorizon(texture: T.Texture, clouds: T.Texture, encounter: number) {
   texture.wrapS = T.MirroredRepeatWrapping;
   texture.repeat.x = 4;
   const material = new T.MeshBasicMaterial({
@@ -12,8 +12,21 @@ export function valleyHorizon(texture: T.Texture, encounter: number) {
     fog: false,
     depthWrite: false,
   });
-  // Keep the existing elevation and UVs at the horizon. Curve a crown above
-  // the upper rim, carrying the cloud band over the edge of an elevated view.
+  // Preserve the valley at eye level. Planar mapping over the vaulted roof
+  // avoids repeating the ridgeline through the zenith or pinching a sky pole.
+  material.onBeforeCompile = shader => {
+    shader.uniforms.cloudCeiling = {value:clouds};
+    shader.vertexShader = shader.vertexShader.replace("#include <common>",
+      "#include <common>\nvarying vec3 vaultPosition;").replace("#include <begin_vertex>",
+      "#include <begin_vertex>\nvaultPosition=position;");
+    shader.fragmentShader = shader.fragmentShader.replace("#include <common>",
+      "#include <common>\nuniform sampler2D cloudCeiling;varying vec3 vaultPosition;")
+      .replace("#include <map_fragment>", `#include <map_fragment>
+        vec2 cloudUv=vaultPosition.xz/230.+.5;
+        vec3 ceiling=texture2D(cloudCeiling,cloudUv).rgb*diffuse;
+        float blend=smoothstep(15.,39.,vaultPosition.y);
+        diffuseColor.rgb=mix(diffuseColor.rgb,ceiling,blend);`);
+  };
   const rings = [new T.Vector2(104, -31), new T.Vector2(104, 31)];
   const elevations = [0, 1];
   for (let i = 1; i <= 12; i++) {

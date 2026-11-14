@@ -1,4 +1,5 @@
 import * as T from "three";
+import { RectAreaLightUniformsLib } from "three/addons/lights/RectAreaLightUniformsLib.js";
 import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
@@ -102,12 +103,14 @@ export class CourtLight {
   readonly moon = new T.DirectionalLight();
   readonly sky = new T.HemisphereLight(0xffffff, 0x635044, 0.63);
   readonly veil: ShaderPass;
+  private readonly bounce = new T.RectAreaLight();
   constructor(
     private scene: T.Scene,
     camera: T.PerspectiveCamera,
     depth: T.Texture,
     clock: { value: number },
   ) {
+    RectAreaLightUniformsLib.init();
     this.veil = airPass(camera, depth, clock);
     this.moon.intensity = 1.55;
     this.moon.castShadow = true;
@@ -130,7 +133,7 @@ export class CourtLight {
     this.spot.shadow.camera.near = 0.45;
     this.spot.shadow.normalBias = 0.025;
     this.spot.shadow.bias = -0.00018;
-    scene.add(this.spot, this.spot.target, this.moon, this.sky);
+    scene.add(this.spot, this.spot.target, this.moon, this.sky, this.bounce);
   }
   setCourt(index: number) {
     const s = studies[index];
@@ -141,7 +144,20 @@ export class CourtLight {
     this.moon.color.setHex(s.moon);
     this.moon.position.set(index === 1 ? -13 : 13, 18, -13);
     this.sky.color.setHex(s.sky);
-    this.scene.environmentIntensity = 0.64;
+    // Broad patches of reflected light across the open walks put a soft band
+    // on curved metals. The carved recesses stay dark as the character turns.
+    const sources = [
+      {x:14, y:6.2, z:4, w:6.8, h:3.5, tint:0xc9dff6, power:5.4},
+      {x:-13, y:3.4, z:-3, w:5.0, h:2.1, tint:0xffd7a9, power:2.8},
+      {x:12, y:7.8, z:2.5, w:7.2, h:3.8, tint:0xc7d7ef, power:5.1},
+    ];
+    const bounce = sources[index];
+    this.bounce.position.set(bounce.x,bounce.y,bounce.z);
+    this.bounce.lookAt(0,1.8,0);
+    this.bounce.width=bounce.w;
+    this.bounce.height=bounce.h;
+    this.bounce.color.setHex(bounce.tint);
+    this.bounce.intensity=bounce.power;
     this.scene.fog = new T.FogExp2(s.fog, index === 1 ? 0.022 : 0.019);
     this.scene.background = new T.Color(s.fog);
     const u = this.veil.uniforms;

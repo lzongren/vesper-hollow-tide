@@ -362,8 +362,6 @@ export class World {
     );
     this.composer.addPass(new OutputPass());
     this.ready = this.art.load().then(() => {
-      this.scene.environment = this.art.environment!;
-      this.scene.environmentIntensity = 0.48;
       this.createMaterials();
       this.player = this.actor(-1);
       this.scene.add(this.player.root);
@@ -1089,20 +1087,25 @@ export class World {
       this.lantern(g, xx, 3.2, 3.05, true);
     }
   }
-  async prepareCourt(index: number) {
+  private courtEnvironments: (T.DataTexture | undefined)[] = [];
+
+  async prepareCourt(index: number, captureEnvironment = false) {
     const scans =
       index === 2
         ? ["rock_face_01", "chinese_chandelier", "cinder-relief", "cinder-ascetic"]
         : index === 1
           ? ["rock_face_01"]
           : [];
-    const [seal] = await Promise.all([
+    const name = ["belfry","garden","shrine"][index];
+    const [seal, environment] = await Promise.all([
       this.art.courtSeal(["belfry", "heron", "cinder"][index]),
+      this.art.environment(captureEnvironment ? "moonlight" : name+"-court"),
       index === 0 ? this.art.loadBelfryFrieze() : undefined,
       index === 1 ? this.art.loadCraneFresco() : undefined,
       index === 2 ? this.art.loadCinderBrocade() : undefined,
       ...scans.map((name) => this.art.loadLandmark(name)),
     ]);
+    this.courtEnvironments[index] = environment;
     seal.color.setHex(index === 0 ? 0xf1eee2 : 0xf5f1e7);
     this.rainCourt.finishStone(seal, true);
 
@@ -1147,6 +1150,8 @@ export class World {
     this.cameraInitialized = false;
     if (index === 2) this.arena.add(this.cinderLights);
     this.lighting.setCourt(index);
+    this.scene.environment = this.courtEnvironments[index]!;
+    this.scene.environmentIntensity = [2.35,1.55,2.45][index];
     this.arena.add(vigilLamp(index, this.materials));
     this.materials.stone.color.setHex([0xffffff, 0xbdd0bd, 0xaaa398][index]);
     const ground = mesh(
@@ -1271,7 +1276,7 @@ export class World {
     const rng = random(772 + index);
     this.arena.add(leafDrifts(random(3248 + index), index === 1));
     this.decor.add(
-      valleyHorizon(this.art.textures.get("karst-valley")!, index),
+      valleyHorizon(this.art.textures.get("karst-valley")!, this.art.textures.get("clearing-clouds")!, index),
       karstSpurs(index, this.art.textures.get("karst-limestone")!),
     );
     for (const [x, z, scale] of [

@@ -9,8 +9,27 @@ import { clone } from "three/addons/utils/SkeletonUtils.js";
 export class ArtLibrary {
   models = new Map<string, GLTF>();
   textures = new Map<string, T.Texture>();
-  environment?: T.DataTexture;
+
   private seals = new Map<string, T.MeshStandardMaterial>();
+
+  private environments = new Map<string, Promise<T.DataTexture>>();
+
+  environment(name: string) {
+    const existing = this.environments.get(name);
+    if (existing) return existing;
+    const loading = new HDRLoader()
+      .loadAsync(`${import.meta.env.BASE_URL}textures/${name}.hdr`)
+      .then(map => {
+        map.mapping = T.EquirectangularReflectionMapping;
+        return map;
+      })
+      .catch(error => {
+        this.environments.delete(name);
+        throw error;
+      });
+    this.environments.set(name, loading);
+    return loading;
+  }
 
   async courtSeal(name: string) {
     const existing = this.seals.get(name);
@@ -115,6 +134,7 @@ export class ArtLibrary {
       }),
       ...[
         "karst-valley",
+        "clearing-clouds",
         "karst-limestone",
         "tide-icon",
         "lacquer-bay",
@@ -136,10 +156,7 @@ export class ArtLibrary {
         if (name === "karst-limestone") map.wrapS = map.wrapT = T.MirroredRepeatWrapping;
         this.textures.set(name, map);
       }),
-      new HDRLoader().loadAsync(`${base}textures/moonlight.hdr`).then((t) => {
-        t.mapping = T.EquirectangularReflectionMapping;
-        this.environment = t;
-      }),
+
     ]);
   }
   model(name: string, height: number) {
