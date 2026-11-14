@@ -10,6 +10,26 @@ export class ArtLibrary {
   models = new Map<string, GLTF>();
   textures = new Map<string, T.Texture>();
   environment?: T.DataTexture;
+  private seals = new Map<string, T.MeshStandardMaterial>();
+
+  async courtSeal(name: string) {
+    const existing = this.seals.get(name);
+    if (existing) return existing;
+    const loader = new T.TextureLoader();
+    const base = `${import.meta.env.BASE_URL}textures/seal-${name}`;
+    const [color, normal, orm] = await Promise.all(
+      ["color", "normal", "orm"].map(channel => loader.loadAsync(`${base}-${channel}.jpg`)),
+    );
+    for (const map of [color, normal, orm]) map.anisotropy = 8;
+    color.colorSpace = T.SRGBColorSpace;
+    const material = new T.MeshStandardMaterial({
+      name: `${name} engraved stone and bronze`, map: color, normalMap: normal,
+      roughness: 1, metalness: 1, roughnessMap: orm, metalnessMap: orm, aoMap: orm,
+    });
+    this.seals.set(name, material);
+    return material;
+  }
+
   async load() {
     const gltf = new GLTFLoader(),
       images = new T.TextureLoader();

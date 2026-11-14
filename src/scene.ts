@@ -13,6 +13,7 @@ import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { Combat, angleDiff, type GameEvent, type Vec } from "./combat";
 import { ArtLibrary } from "./assets";
+import { courtPaving } from "./court";
 
 const Y = new T.Vector3(0, 1, 0);
 const standard = (color: number, metalness = 0, roughness = 0.6) =>
@@ -299,7 +300,7 @@ export class World {
       this.player = this.actor(-1);
       this.scene.add(this.player.root);
       this.loaded = true;
-      this.setArena(0);
+
     });
     this.resize();
   }
@@ -725,6 +726,9 @@ export class World {
       this.lantern(g, xx, 3.2, 3.05, true);
     }
   }
+  async prepareCourt(index: number) {
+    this.materials[`seal-${index}`] = await this.art.courtSeal(["lotus", "plume", "cinder"][index]);
+  }
   setArena(index: number) {
     if (!this.loaded || this.bossIndex === index) return;
     this.bossIndex = index;
@@ -750,17 +754,26 @@ export class World {
     this.materials.stone.color.setHex([0xffffff, 0xbdd0bd, 0xaaa398][index]);
     const ground = mesh(
       this.arena,
-      new T.PlaneGeometry(120, 120, 128, 128),
+      new T.PlaneGeometry(120, 120),
       this.materials.stone,
       0,
       -0.06,
       0,
     );
     ground.rotation.x = -Math.PI / 2;
-    const ringMat = this.materials.gold.clone();
-    ringMat.color.setHex(0x8e7f58);
-    torus(this.arena, ringMat, 12.2, 0.025, 0, 0.04, 0, true);
-    torus(this.arena, ringMat, 5.3, 0.018, 0, 0.04, 0, true);
+    const seal = mesh(this.arena, new T.CircleGeometry(6.35, 144), this.materials[`seal-${index}`]);
+    seal.name = "Engraved court seal";
+    seal.position.y = -0.009;
+    seal.rotation.x = -Math.PI / 2;
+    seal.castShadow = false;
+    const slabs = new T.MeshStandardMaterial({
+      color: [0x919994, 0x899a92, 0xa39890][index], vertexColors: true, roughness: 0.82,
+      map: this.art.textures.get("rock-color"), normalMap: this.art.textures.get("rock-normal"),
+      roughnessMap: this.art.textures.get("rock-rough"), normalScale: new T.Vector2(0.48, 0.48),
+    });
+    const paving = mesh(this.arena, courtPaving(random(2137 + index)), slabs);
+    paving.name = "Fitted apron stones";
+    paving.castShadow = false;
     // Hand-laid raised perimeter, with a traversable central court and no chessboard tiling.
     for (let i = 0; i < 48; i++) {
       const a = (i / 48) * Math.PI * 2;

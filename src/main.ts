@@ -130,6 +130,7 @@ async function begin(index = selected) {
       world.setQuality(save.quality);
       world.reducedMotion = save.reducedMotion;
     }
+    await world.prepareCourt(index);
     game = new Combat(index, save.difficulty);
     selected = index;
     world.setArena(index);
