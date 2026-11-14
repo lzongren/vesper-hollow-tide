@@ -39,9 +39,7 @@ class Bellwarden:
         pawn = self.step.pawn
         if not unreal.SystemLibrary.is_valid(pawn):
             return
-        if self.pc_target is not None and not unreal.SystemLibrary.is_valid(
-            self.pc_target
-        ):
+        if self.pc_target is not None and self.pc_target != pawn:
             self.actor = self.pc_target = None
             self.state, self.turn, self.deadline, self.request_at = (
                 "waiting",
@@ -49,12 +47,17 @@ class Bellwarden:
                 0.0,
                 0.0,
             )
+        # Death destroys the enemy actor. Avoid passing its stale Python
+        # wrapper back into Unreal while the player explores the cleared court.
+        if self.state == "defeated":
+            return
         if self.actor is None and not self.acquire(pawn):
             return
         if (
             not unreal.SystemLibrary.is_valid(self.actor)
             or self.actor.get_editor_property("Current HP") <= 0
         ):
+            self.actor = None
             self.state = "defeated"
             return
         now = unreal.GameplayStatics.get_time_seconds(pawn)

@@ -47,9 +47,13 @@ foreach ($model in @('pine.glb','rock_face_01.glb','pilgrim.glb','tide-bell.glb'
     Stage-Source $models $model
 }
 $courtArt = Join-Path (Split-Path $project -Parent) 'public\art'
-foreach ($piece in @('warden-mask.png','dragon-mantle.jpg')) {
+foreach ($piece in @('warden-mask.png','dragon-mantle.jpg','belfry-plaque.jpg','belfry-paper.jpg','belfry-dragon-beam.jpg','tide-icon.jpg')) {
     Stage-Source $courtArt $piece
 }
 foreach ($channel in @('color','normal')) {
     Stage-Source $source "metal-$channel.jpg"
+}
+
+foreach ($channel in @('color','normal')) {
+    Stage-Source $source "wood-$channel.jpg"
 }
