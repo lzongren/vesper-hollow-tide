@@ -50,3 +50,5 @@ The importer verifies the complete source set, imports under `/Game/External/Pol
 The browser screenshots in the root README document the earlier prototype. They are not evidence for this rebuild, and title artwork is not gameplay.
 
 The original [Tide Bell GLB](../public/models/tide-bell.glb) is shared with the playable browser encounter. To inspect it in Unreal, import the GLB as a static mesh using Interchange with material and texture import enabled. The asset uses glTF meters. Native import and native combat placement still need editor verification.
+
+The [Saint's ring staff](Art/SaintsRingStaff.glb) uses the playable staff geometry in metres. Its six ring nodes retain separate pivots at the tops of the hoops so they can swing on the bronze rails. The export contains four named PBR material slots with base factors. The court's shared texture maps and the runtime spring simulation stay in the browser project. Regenerate the asset from the repository root with `npx tsx art/export_ring_staff.ts`. Import and animation inside Unreal still need editor verification.
