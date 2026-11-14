@@ -61,7 +61,8 @@ if ($fitReport.locomotion_revision -ne 2 -or $fitReport.palm_revision -ne 1) {
 $duelReport = if (Test-Path "$project\Saved\BelfryDuel.json") {
     Get-Content -Raw "$project\Saved\BelfryDuel.json" | ConvertFrom-Json
 }
-if ($duelReport.revision -ne 3 -or !(Test-Path "$project\Content\Vesper\Duel\BP_BelfryMode.uasset")) {
+$rebuildDuel = $duelReport.revision -ne 3 -or !(Test-Path "$project\Content\Vesper\Duel\BP_BelfryMode.uasset")
+if ($rebuildDuel) {
     Invoke-MapPass 'build_bellwarden' 'VESPER_BELFRY_READY'
 }
 if (!(Test-Path "$project\Saved\BellHall.json")) {
@@ -81,6 +82,12 @@ $cinderReport = if (Test-Path "$project\Saved\CinderDuel.json") {
 }
 if ($cinderReport.revision -ne 2) {
     Invoke-MapPass 'build_cinder' 'VESPER_CINDER_READY'
+}
+$outfitReport = if (Test-Path "$project\Saved\WayfarerOutfit.json") {
+    Get-Content -Raw "$project\Saved\WayfarerOutfit.json" | ConvertFrom-Json
+}
+if ($rebuildDuel -or $outfitReport.revision -ne 1 -or !(Test-Path "$project\Content\Vesper\Duel\CraneWayfarerCourt\CraneWayfarerCourt\SkeletalMeshes\CraneWayfarerCourt.uasset")) {
+    Invoke-MapPass 'fit_wayfarer' 'VESPER_WAYFARER_READY'
 }
 Start-Process "$bin\UnrealEditor.exe" -WorkingDirectory $project -ArgumentList @(
     "`"$descriptor`"", "$map`?game=$gameMode", '-game', '-windowed', '-ResX=1600', '-ResY=900', '-NoP4',

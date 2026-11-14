@@ -1,0 +1,314 @@
+"""Fit the crane coat, sash, wrapped hair and a projected portrait to the combat rig."""
+
+import json
+from math import atan2, cos, pi, sin, sqrt, tau
+
+from bind_pilgrim import cross, unit
+from garment_surfaces import garment_surfaces
+
+
+def dress(out, bones, rest, art):
+    def material(name, rgb, roughness, metallic=0, texture=None):
+        pbr = dict(
+            baseColorFactor=[*rgb, 1],
+            metallicFactor=metallic,
+            roughnessFactor=roughness,
+        )
+        if texture:
+            pbr["baseColorTexture"] = out.image(
+                (art / texture).read_bytes(), "image/jpeg", name
+            )
+        out.doc["materials"].append(
+            dict(name=name, doubleSided=True, pbrMetallicRoughness=pbr)
+        )
+        return len(out.doc["materials"]) - 1
+
+    face = material("WayfarerSkin", (1, 1, 1), 0.60, texture="face.jpg")
+    silk = material("CraneSilk", (1, 1, 1), 0.66, texture="crane-silk.jpg")
+    lining = material("MidnightSilk", (1, 1, 1), 0.76, texture="lining.jpg")
+    crimson = material("MadderBinding", (1, 1, 1), 0.71, texture="binding.jpg")
+    brass = material("ChasedBrass", (1, 1, 1), 0.38, 0.64, "brass.jpg")
+    hair = material("InkHair", (1, 1, 1), 0.63, texture="hair.jpg")
+    jade = material("CloudJade", (0.16, 0.40, 0.32), 0.27, 0.12)
+    patch, finish = garment_surfaces(out, bones)
+    head = [("head", 1)]
+    waist = [("pelvis", 1)]
+
+    def face_uv(x, y):
+        return (0.502 + 0.376 * x, 0.508 - 0.353 * (y - 7.284))
+
+    # Preserve the open eyelids and lips of the CC0 human mesh. Only the face
+    # receives the frontal projection; the back of the skull carries wrapped hair.
+    source = json.loads((art / "head.json").read_text())
+    verts = source["vertices"]
+    normals = [[0.0, 0.0, 0.0] for _ in verts]
+    batches = {face: [], hair: []}
+    for f in source["faces"]:
+        a, b, c = (verts[i] for i in f[:3])
+        normal = cross([j - i for i, j in zip(a, b)], [j - i for i, j in zip(a, c)])
+        for i in f:
+            for k in range(3):
+                normals[i][k] += normal[k]
+        x, y, z = [sum(verts[i][k] for i in f) / len(f) for k in range(3)]
+        hairline = 6.75 + 1.28 * min(1, max(0, (z - 0.26) / 1.12))
+        slot = (
+            hair if y > hairline and (abs(x) < 0.72 or y > 7.52 or z < 0.32) else face
+        )
+        # Keep the natural irregular photographed hairline at the forehead.
+        if z > 0.84 and 7.32 < y < 8.09 and abs(x) < 0.72:
+            slot = face
+        for j in range(1, len(f) - 1):
+            batches[slot].extend([f[0], f[j], f[j + 1]])
+
+    def pos(x, y, z):
+        return (0.104 * x, 1.625 + 0.103 * (y - 7.0), 0.104 * (z - 0.32))
+
+    coords = [pos(*v) for v in verts]
+    uv = [face_uv(x, y) if y > 6.22 and z > 0.53 else (0.61, 0.81) for x, y, z in verts]
+    attrs = dict(
+        POSITION=out.data(coords, "VEC3", bounds=True),
+        NORMAL=out.data([unit(n) for n in normals], "VEC3"),
+        TEXCOORD_0=out.data(uv, "VEC2"),
+        JOINTS_0=out.data([(bones["head"], 0, 0, 0)] * len(verts), "VEC4", 5123),
+        WEIGHTS_0=out.data([(1, 0, 0, 0)] * len(verts), "VEC4"),
+    )
+    for mat, indices in batches.items():
+        material_attrs = dict(attrs)
+        if mat == hair:
+            # Brush the scalp in the direction of the knot instead of projecting
+            # the face image over the hairline and rear of the head.
+            hair_uv = [
+                (atan2(x, z - 0.44) / tau * 5 + 0.5 + 0.26 * (y - 7), (8.5 - y) * 0.65)
+                for x, y, z in verts
+            ]
+            material_attrs["TEXCOORD_0"] = out.data(hair_uv, "VEC2")
+        out.doc["meshes"][0]["primitives"].append(
+            dict(
+                attributes=material_attrs,
+                indices=out.data([(i,) for i in indices], "SCALAR", 5125),
+                material=mat,
+            )
+        )
+
+    def globe(mat, centre, radii, skin, texture_eyes=False, grooves=0):
+        def surface(u, v):
+            a, b = u * tau, (v - 0.5) * pi
+            ridges = 1 + 0.06 * cos(27 * a + 8 * b) * grooves
+            x = centre[0] + radii[0] * cos(b) * sin(a) * ridges
+            y = centre[1] + radii[1] * sin(b)
+            z = centre[2] + radii[2] * cos(b) * cos(a) * ridges
+            uv = face_uv(x / 0.104, 7 + (y - 1.625) / 0.103) if texture_eyes else (u, v)
+            return (x, y, z), uv, skin
+
+        patch(mat, 48, 24, surface)
+
+    for side in (-1, 1):
+        globe(
+            face, pos(side * 0.308, 7.284, 1.245), (0.0128, 0.0125, 0.0126), head, True
+        )
+    globe(hair, (0, 1.778, -0.048), (0.062, 0.050, 0.058), head, grooves=1)
+    globe(hair, (0.003, 1.803, -0.066), (0.050, 0.037, 0.042), head, grooves=1)
+
+    def strand(mat, path, width, skin, steps=22):
+        def surface(u, v):
+            p = path(v)
+            a, b = path(max(0, v - 0.001)), path(min(1, v + 0.001))
+            tangent = unit([j - i for i, j in zip(a, b)])
+            up = (0, 1, 0) if abs(tangent[1]) < 0.9 else (1, 0, 0)
+            n = unit(cross(tangent, up))
+            m = cross(tangent, n)
+            w = width(v)
+            return (
+                tuple(
+                    p[i] + w * (n[i] * cos(tau * u) + m[i] * sin(tau * u))
+                    for i in range(3)
+                ),
+                (u, v),
+                skin,
+            )
+
+        patch(mat, 8, steps, surface)
+
+    for side in (-1, 1):
+        for j in range(6):
+
+            def wisp(t):
+                return (
+                    side * (0.067 + 0.018 * sin(pi * t) + 0.003 * j),
+                    1.696 - (0.135 + 0.009 * j) * t + 0.0008 * j,
+                    0.053 - 0.048 * t + 0.007 * sin(4 * t + j * 0.36),
+                )
+
+            strand(hair, wisp, lambda t: 0.00165 * (1 - t * 0.97), head)
+    for j in range(4):
+
+        def wrap(t):
+            a = t * tau
+            return (
+                0.059 * cos(a),
+                1.791 + 0.005 * j + 0.007 * sin(a),
+                -0.048 + 0.049 * sin(a),
+            )
+
+        strand(crimson if j % 2 else brass, wrap, lambda t: 0.0028, head, 56)
+    strand(
+        brass,
+        lambda t: (-0.097 + 0.207 * t, 1.791 + 0.048 * t, -0.049 + 0.019 * t),
+        lambda t: 0.0032 * (0.55 + t),
+        head,
+    )
+    globe(jade, (0.113, 1.841, -0.029), (0.009, 0.013, 0.009), head)
+
+    # Eight slightly overlapping panels put slits between the moving thighs.
+    # The crane is centred on the uninterrupted back panel above the belt.
+    def cloth(a, t):
+        y = 0.43 + 1.035 * t
+        flare = max(0, 1 - (y - 0.43) / 0.59)
+        chest = max(0, min(1, (y - 1.06) / 0.35))
+        shoulder = max(0, min(1, (y - 1.40) / 0.065))
+        folds = (0.008 + 0.022 * flare) * cos(13 * a + 0.6 * t)
+        x = (0.155 + 0.112 * flare + 0.081 * chest - 0.038 * shoulder + folds) * sin(a)
+        z = (0.135 + 0.060 * flare + 0.036 * chest + folds * 0.66) * cos(a) + 0.011
+        leg = min(0.80, flare * 0.87)
+        thigh = "thigh_l" if sin(a) > 0 else "thigh_r"
+        skin = (
+            [("pelvis", 1 - leg), (thigh, leg)]
+            if y < 1.06
+            else [("spine_02", 1 - chest), ("spine_05", chest)]
+        )
+        return (x, y - 0.022 * flare * cos(6 * a), z), skin
+
+    def shoulder_yoke(u, v):
+        a = tau * u
+        edge, _ = cloth(a, 1)
+        spread = abs(sin(a)) ** 3
+        x = edge[0] + 0.065 * sin(a) * spread
+        y = edge[1] - 0.062 * spread
+        z = edge[2]
+        collar_height = 1.510 - 0.035 * max(0, cos(a))
+        p = (
+            x * (1 - v) + 0.059 * sin(a) * v,
+            y * (1 - v) + collar_height * v + 0.013 * sin(pi * v),
+            z * (1 - v) + (0.007 + 0.062 * cos(a)) * v,
+        )
+        return p, (0.09 + 0.82 * u, 0.17 + 0.28 * v), [("spine_05", 1)]
+
+    patch(silk, 72, 12, shoulder_yoke)
+    for j in range(8):
+
+        def panel(u, v):
+            a = tau * (j + (u - 0.5) * 1.025) / 8
+            p, skin = cloth(a, v)
+            return p, (0.05 + 0.90 * u, 0.995 - 0.91 * v), skin
+
+        patch(silk if j in (0, 4) else lining, 18, 38, panel)
+
+        def trim(u, v):
+            p, tex, skin = panel(0.026 * u, v)
+            x, y, z = p
+            return (x * 1.009, y, z * 1.01), tex, skin
+
+        patch(brass if j % 2 == 0 else crimson, 2, 26, trim)
+
+    def yoke(u, v):
+        a = pi * (0.54 + 0.92 * u)
+        (x, y, z), skin = cloth(a, 0.60 + 0.4 * v)
+        return (x * 1.02, y, z * 1.035), (0.03 + 0.94 * u, 0.95 - 0.91 * v), skin
+
+    patch(silk, 54, 24, yoke)
+
+    for side, suffix in [(-1, "r"), (1, "l")]:
+        chain = [k + "_" + suffix for k in ("upperarm", "lowerarm", "hand")]
+
+        def arm(u, v):
+            seg = min(1, int(2 * v))
+            t = 2 * v - seg
+            a, b = (rest[k] for k in chain[seg : seg + 2])
+            axis = unit([j - i for i, j in zip(a, b)])
+            n = unit(cross(axis, (0, 0, 1)))
+            m = cross(axis, n)
+            width = (
+                0.084 * (1 - v)
+                + 0.043 * v
+                + 0.0025 * sin(10 * pi * v + 2 * cos(tau * u))
+            )
+            p = tuple(
+                a[k] * (1 - t)
+                + b[k] * t
+                + width * (n[k] * cos(tau * u) + m[k] * sin(tau * u))
+                for k in range(3)
+            )
+            return p, (u, 1 - v), [(chain[seg], 1 - t), (chain[seg + 1], t)]
+
+        patch(lining, 36, 32, arm)
+
+        def sleeve_cap(u, v):
+            ring, _, skin = arm(u, 0)
+            centre = rest[chain[0]]
+            p = tuple(centre[i] + (ring[i] - centre[i]) * (1 - v) for i in range(3))
+            return (
+                (p[0], p[1] + 0.040 * sin(pi * v / 2), p[2]),
+                (u * 0.5, v * 0.45),
+                skin,
+            )
+
+        patch(silk, 36, 10, sleeve_cap)
+        patch(silk, 36, 12, lambda u, v: arm(u, 0.26 * v))
+        for band in (0.11, 0.17, 0.67, 0.73, 0.82, 0.88, 0.94):
+
+            def cuff(u, v):
+                p, uv, skin = arm(u, band + 0.022 * v)
+                a = tau * u
+                return (p[0] + 0.002 * cos(a), p[1] + 0.002 * sin(a), p[2]), uv, skin
+
+            patch(brass if band in (0.17, 0.67, 0.94) else crimson, 36, 3, cuff)
+
+        def collar(u, v):
+            x = side * (0.078 - 0.208 * v) + (0.5 - u) * 0.064
+            y = 1.533 - 0.354 * v
+            z = 0.060 + 0.139 * min(1, v * 4) + 0.025 * sin(pi * v)
+            return (x, y, z), (0.1 + u * 0.13, v), [("spine_05", 1)]
+
+        patch(crimson, 9, 20, collar)
+        for edge in (0, 0.92):
+
+            def braid(u, v):
+                (x, y, z), uv, skin = collar(edge + 0.075 * u, v)
+                return (x, y, z + 0.002), uv, skin
+
+            patch(brass, 2, 20, braid)
+
+    def belt(u, v):
+        a = tau * u
+        return (
+            (
+                0.178 * sin(a),
+                1.01 + 0.094 * v + 0.007 * sin(a * 3),
+                0.160 * cos(a) + 0.015,
+            ),
+            (u, v),
+            waist,
+        )
+
+    patch(crimson, 72, 8, belt)
+    for band in (0.05, 0.88):
+        patch(brass, 72, 2, lambda u, v: belt(u, band + 0.045 * v))
+    globe(jade, (0.025, 1.065, 0.182), (0.036, 0.024, 0.011), waist)
+    for side in (-1, 1):
+
+        def tail(u, v):
+            return (
+                (
+                    side * (0.113 + 0.083 * v) + (0.5 - u) * (0.047 - 0.015 * v),
+                    1.055 - 0.36 * v,
+                    -0.169 - 0.085 * v + 0.018 * sin(6 * v),
+                ),
+                (u, v),
+                [
+                    ("pelvis", 1 - 0.34 * v),
+                    ("thigh_l" if side > 0 else "thigh_r", 0.34 * v),
+                ],
+            )
+
+        patch(crimson, 9, 25, tail)
+    finish()

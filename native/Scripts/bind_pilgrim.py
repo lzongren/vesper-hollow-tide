@@ -151,7 +151,7 @@ def joint_positions(asset):
     }
 
 
-def build(reference, body_path, art, textures, output, *, bellwarden=False, armed=False, heron=False, cinder=False):
+def build(reference, body_path, art, textures, output, *, bellwarden=False, armed=False, heron=False, cinder=False, wayfarer=False):
     base, rig, out = Glb(body_path), Glb(reference), Output()
     skin = rig.doc["skins"][0]
     source = joint_positions(base)
@@ -260,6 +260,11 @@ def build(reference, body_path, art, textures, output, *, bellwarden=False, arme
                 m["pbrMetallicRoughness"].update(baseColorTexture=patina,
                     baseColorFactor=[.74,.71,.61,1], roughnessFactor=.52, metallicFactor=.67)
                 m["normalTexture"] = dict(pitting, scale=.47)
+            if wayfarer and prefix == "Pilgrim":
+                m["pbrMetallicRoughness"]["baseColorTexture"] = out.image(
+                    (art / "Wayfarer" / "leather.jpg").read_bytes(), "image/jpeg", "TravelLeather")
+                m.pop("emissiveTexture", None)
+                m["emissiveFactor"] = [0,0,0]
             if bellwarden and prefix == "Pilgrim":
                 m.pop("emissiveTexture", None)
                 m["emissiveFactor"] = [0, 0, 0]
@@ -322,12 +327,28 @@ def build(reference, body_path, art, textures, output, *, bellwarden=False, arme
         primitive(
             base, prim, vertices, normals, joints, weights, offset + prim["material"]
         )
+        if wayfarer:
+            # Keep the original gloves, trousers and boots underneath the tailoring.
+            keep = []
+            for position, joint_ids, influence in zip(vertices, base.values(a["JOINTS_0"]), weights):
+                glove = any("Hand" in source_names[i] and w > 0.44
+                            for i, w in zip(joint_ids, influence))
+                keep.append(position[1] < 0.98 or glove)
+            indices = base.values(prim["indices"])
+            kept = []
+            for i in range(0, len(indices), 3):
+                face = indices[i:i + 3]
+                if all(keep[index] for index, in face):
+                    kept.extend(face)
+            out.doc["meshes"][0]["primitives"][-1]["indices"] = out.data(kept, "SCALAR", 5125)
 
     gear = [
         ("PilgrimRainHat", "Bamboo", "head"),
         ("PilgrimScabbard", "SwordCase", "pelvis"),
         ("PilgrimMantle", "Mantle", "spine_05"),
     ]
+    if wayfarer:
+        gear = [item for item in gear if item[1] == "SwordCase"]
     if armed:
         gear.append(("PilgrimJian", "Jian", "hand_r"))
     if bellwarden:
@@ -488,4 +509,7 @@ def build(reference, body_path, art, textures, output, *, bellwarden=False, arme
     if cinder:
         add_stole = runpy.run_path(str(Path(__file__).with_name("cinder_vestment.py")))["stole"]
         add_stole(out, lookup, textures)
+    if wayfarer:
+        from wayfarer_outfit import dress
+        dress(out, lookup, target, art / "Wayfarer")
     out.save(output)
