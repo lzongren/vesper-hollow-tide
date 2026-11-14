@@ -1,4 +1,5 @@
 import * as T from "three";
+import { GroundRite, riteSurface } from "./rites";
 import { Reflector } from "three/addons/objects/Reflector.js";
 
 /** A single reflected view is projected into the wet parts of the stone's PBR
@@ -32,6 +33,7 @@ vec2 rainRing(vec2 p, float t) {
 `;
 
 export class RainCourt {
+  readonly rite = new GroundRite();
   readonly floor = new T.Group();
   private mirror = new Reflector(new T.PlaneGeometry(1, 1), {
     textureWidth: 640,
@@ -74,6 +76,9 @@ export class RainCourt {
         courtSeed: this.seed,
         courtSteps: { value: this.step },
         courtSoles: { value: this.soles },
+        ritePose: this.rite.pose,
+        riteExtent: this.rite.extent,
+        riteCharge: this.rite.charge,
       });
       shader.vertexShader =
         "varying vec3 courtPoint;\n" +
@@ -82,7 +87,7 @@ export class RainCourt {
           "#include <project_vertex>\n courtPoint=(modelMatrix*vec4(transformed,1.)).xyz;",
         );
       shader.fragmentShader =
-        surface +
+        surface + riteSurface +
         shader.fragmentShader
           .replace(
             "#include <roughnessmap_fragment>",
@@ -127,6 +132,7 @@ export class RainCourt {
             vec2 offset=(p-courtSoles[i].xy)/courtSoles[i].z;
             occlusion=max(occlusion,courtSoles[i].w*exp(-dot(offset,offset)*1.7));
           }
+          outgoingLight += waterWriting(p,pool,diffuseColor.rgb);
           outgoingLight*=1.-occlusion;
           #include <opaque_fragment>`,
           );

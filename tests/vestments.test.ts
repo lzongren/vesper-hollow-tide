@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import * as T from "three";
-import { BOSSES } from "../src/combat";
+import { BOSSES, Combat, DASH_SPEED, DASH_REACH, inSector, SLAM_MARGIN } from "../src/combat";
 import { mantleGeometry } from "../src/pilgrim";
 import { bellStroke, MantleMotion } from "../src/vestments";
-import { warningFiligree } from "../src/rites";
+import { GroundRite } from "../src/rites";
 
 test("the bell pose matches on both sides of the damage and recovery transitions", () => {
   for (const attack of BOSSES[0].attacks) {
@@ -33,25 +33,33 @@ test("mantle pins the shoulders and drags the hem away from a lateral step", () 
   assert.ok(Math.abs(p.getX(bottom) - base[bottom * 3]) < 0.001);
 });
 
-test("sweep filigree lies on the floor and its outer endpoints match the combat sector", () => {
-  const attack = BOSSES[0].attacks[0];
-  const warning = warningFiligree(attack);
-  const first = warning.children[0] as T.Mesh;
-  const p = first.geometry.attributes.position;
-  for (let i = 0; i < p.count; i++) {
-    const x = p.getX(i),
-      z = p.getZ(i);
-    assert.ok(Math.abs(p.getY(i)) < 1e-5);
-    assert.ok(Math.abs(Math.atan2(x, z)) <= attack.arc / 2 + 0.0001);
-    assert.ok(Math.hypot(x, z) <= attack.range + 0.0001);
+test("paving wave follows boss facing, hit reach and remaining charge travel", () => {
+  const game = new Combat(0), rite = new GroundRite(), boss = game.boss;
+  game.mode = "combat";
+  for (const attack of [0, 1, 2]) {
+    game.beginAttack(attack);
+    boss.facing = 0.7;
+    rite.update(game);
+    const [radius, width, shape] = rite.extent.value.toArray();
+    assert.deepEqual(rite.pose.value.toArray(), [boss.x, boss.z, Math.sin(.7), Math.cos(.7)]);
+    if (shape === 1) {
+      for (const direction of [-1, 1]) {
+        const a = boss.facing + direction * (width - 1e-5);
+        const point = (r: number) => ({x: boss.x + r * Math.sin(a), z: boss.z + r * Math.cos(a)});
+        assert.ok(inSector(boss, point(radius - .001), boss.facing, game.attack.range, game.attack.arc));
+        assert.ok(!inSector(boss, point(radius + .001), boss.facing, game.attack.range, game.attack.arc));
+      }
+    } else if (shape === 0) {
+      assert.equal(radius, game.attack.range + SLAM_MARGIN);
+    } else {
+      assert.equal(width, DASH_REACH);
+      boss.state = "active";
+      boss.timer = .2;
+      rite.update(game);
+      assert.equal(rite.extent.value.x, (game.attack.active - .2) * DASH_SPEED);
+    }
+    boss.state = "recover";
+    rite.update(game);
+    assert.equal(rite.charge.value, 0);
   }
-  for (const sign of [-1, 1])
-    assert.ok(
-      Array.from({ length: p.count }, (_, i) => i).some(
-        (i) =>
-          Math.abs(Math.hypot(p.getX(i), p.getZ(i)) - attack.range) < 0.0001 &&
-          Math.abs(Math.atan2(p.getX(i), p.getZ(i)) - (sign * attack.arc) / 2) <
-            0.0001,
-      ),
-    );
 });

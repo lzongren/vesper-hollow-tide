@@ -137,7 +137,6 @@ async function begin(index = selected) {
     selected = index;
     world.setArena(index);
     world.player.root.visible = true;
-    world.telegraphKey = "";
     world.cameraInitialized = false;
     world.yaw = 0;
     save.attempts[index]++;
@@ -488,7 +487,7 @@ function menuController() {
 }
 function frame(now: number) {
   requestAnimationFrame(frame);
-  const dt = Math.min((now - last) / 1000 || 0.016, 0.05);
+  const dt = Math.max(0, Math.min((now - last) / 1000, 0.05));
   last = now;
   if (!inGame || modal) {
     menuController();

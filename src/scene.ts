@@ -19,7 +19,6 @@ import {
   lamellarShoulder,
   MantleMotion,
 } from "./vestments";
-import { warningFiligree } from "./rites";
 import type { Attack } from "./combat";
 import { WeaponGrip, mantleGeometry, BladeTrail } from "./pilgrim";
 import {
@@ -30,6 +29,7 @@ import {
   leafDrifts,
   valleyHorizon,
 } from "./sanctuary";
+import { CinderFire } from "./cinder-fire";
 import { CourtLight, vigilLamp } from "./vigil-light";
 import { batchCourt } from "./static-court";
 import { incenseVessel, incenseSmoke } from "./incense";
@@ -223,8 +223,6 @@ export class World {
   boss: Actor = { root: new T.Group() } as Actor;
   bossIndex = -1;
   bladeTrail = new BladeTrail();
-  telegraphKey = "";
-  telegraph = new T.Group();
   hazards = new Map<number, T.Group>();
   lock = new T.Group();
   particles: Effect[] = [];
@@ -284,7 +282,6 @@ export class World {
       this.arena,
       this.rainCourt.floor,
       this.decor,
-      this.telegraph,
       this.lock,
       this.bladeTrail,
     );
@@ -1096,7 +1093,6 @@ export class World {
       this.clear(g);
     });
     this.hazards.clear();
-    this.telegraphKey = "";
     this.cameraInitialized = false;
     this.lighting.setCourt(index);
     this.arena.add(vigilLamp(index, this.materials));
@@ -1271,7 +1267,9 @@ export class World {
         leaf,
         this.environmentTime,
       );
-      tree.position.set(x, 0, z);
+      // Leave the outer chase-camera path inside the two foreground crowns.
+      const clearance = index === 1 && z > 0 ? Math.max(1, 24 / Math.hypot(x, z)) : 1;
+      tree.position.set(x * clearance, 0, z * clearance);
       tree.scale.setScalar(scale);
       tree.rotation.y = rng() * 6;
       this.decor.add(tree);
@@ -1738,7 +1736,7 @@ export class World {
     this.lock.visible = locked && game.mode === "combat";
     this.lock.position.set(b.x, this.boss.height * 0.7, b.z);
     this.lock.lookAt(this.camera.position);
-    this.drawTelegraph(game);
+    this.rainCourt.rite.update(game);
     this.drawHazards(game);
     for (const list of [this.particles, this.trails])
       for (let i = list.length - 1; i >= 0; i--) {
@@ -1800,28 +1798,6 @@ export class World {
     if (this.quality === "low") this.renderer.render(this.scene, this.camera);
     else this.composer.render();
   }
-  drawTelegraph(game: Combat) {
-    const b = game.boss,
-      a = game.attack;
-    this.telegraph.visible =
-      (b.state === "windup" || b.state === "active") && game.mode === "combat";
-    if (!this.telegraph.visible) return;
-    const key = `${game.bossIndex}-${b.attack}`;
-    if (key !== this.telegraphKey) {
-      this.clear(this.telegraph);
-      this.telegraphKey = key;
-      this.telegraph.add(warningFiligree(a));
-    }
-    this.telegraph.position.set(b.x, 0.025, b.z);
-    this.telegraph.rotation.y = b.facing;
-    this.telegraph.traverse((o) => {
-      if (!isMesh(o)) return;
-      const material = o.material as T.MeshBasicMaterial;
-      const bright =
-        b.state === "active" ? 1 : 0.4 + (0.6 * b.timer) / b.duration;
-      material.opacity = material.userData.strength * bright;
-    });
-  }
   drawHazards(game: Combat) {
     const ids = new Set(game.hazards.map((h) => h.id));
     for (const [id, g] of this.hazards)
@@ -1863,17 +1839,7 @@ export class World {
         } else {
           const o = mesh(g, new T.RingGeometry(0.98, 1, 96), m);
           o.rotation.x = -Math.PI / 2;
-          if (h.type === "eruption") {
-            const fire = mesh(
-              g,
-              new T.ConeGeometry(0.7, 3, 24),
-              m.clone(),
-              0,
-              1.5,
-              0,
-            );
-            fire.name = "eruption";
-          }
+          if (h.type === "eruption") g.add(new CinderFire(h.id * 1.67));
         }
       }
       g.position.set(h.x, h.type === "feather" ? 1 : 0.03, h.z);
@@ -1882,7 +1848,7 @@ export class World {
       else {
         g.scale.set(h.radius, 1, h.radius);
         if (h.type === "eruption")
-          g.getObjectByName("eruption")!.visible = h.age >= h.delay;
+          (g.getObjectByName("eruption") as CinderFire).burn(h.age - h.delay, h.life - h.delay);
       }
     }
   }

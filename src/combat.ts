@@ -240,6 +240,11 @@ export const distance = (a: Vec, b: Vec) => Math.hypot(a.x - b.x, a.z - b.z);
 export const angleTo = (a: Vec, b: Vec) => Math.atan2(b.x - a.x, b.z - a.z);
 export const angleDiff = (a: number, b: number) =>
   Math.atan2(Math.sin(a - b), Math.cos(a - b));
+export const SWEEP_MARGIN = 0.32;
+export const SLAM_MARGIN = 0.3;
+export const DASH_REACH = 1.8;
+export const DASH_SPEED = 20;
+
 export function inSector(
   origin: Vec,
   target: Vec,
@@ -248,7 +253,7 @@ export function inSector(
   arc: number,
 ) {
   return (
-    distance(origin, target) <= range + 0.32 &&
+    distance(origin, target) <= range + SWEEP_MARGIN &&
     Math.abs(angleDiff(angleTo(origin, target), facing)) <= arc / 2
   );
 }
@@ -611,16 +616,16 @@ export class Combat {
     if (b.state === "active") {
       const a = this.attack;
       if (a.shape === "dash") {
-        b.x += b.dashDir.x * 20 * dt;
-        b.z += b.dashDir.z * 20 * dt;
+        b.x += b.dashDir.x * DASH_SPEED * dt;
+        b.z += b.dashDir.z * DASH_SPEED * dt;
         this.constrain(b, 1);
       }
       if (!b.hit) {
         const hit =
           a.shape === "circle"
-            ? distance(b, p) < a.range + 0.3
+            ? distance(b, p) < a.range + SLAM_MARGIN
             : a.shape === "dash"
-              ? distance(b, p) < 1.8
+              ? distance(b, p) < DASH_REACH
               : a.shape === "sector"
                 ? inSector(b, p, b.facing, a.range, a.arc)
                 : false;
