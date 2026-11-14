@@ -10,6 +10,7 @@ import unreal
 
 sys.path.insert(0, str(Path(__file__).parent))
 from court_encounter import CourtEncounter, live
+from sash_motion import SashMotion
 from heron_combat import Heron
 from cinder_combat import Saint
 
@@ -83,6 +84,7 @@ class Bellwarden(CourtEncounter):
 
 
 step = runpy.run_path(str(Path(__file__).with_name("belfry_step.py")))["step"]
+sash = SashMotion()
 boss = Bellwarden(step)
 heron = Heron(step)
 saint = Saint(step)
@@ -95,6 +97,7 @@ def update_encounters(dt):
     pawn = step.pawn
     if not live(pawn):
         return
+    sash.update(pawn, dt)
     if pawn.get_editor_property("Current HP") <= 0:
         now = unreal.GameplayStatics.get_time_seconds(pawn)
         if fallen_pawn != pawn:
@@ -115,6 +118,7 @@ def update_encounters(dt):
             saint.clear()
             heron.active = []
             heron.feathers = []
+            sash.pawn = sash.material = None
             step.release_world()
             fallen_at = fallen_pawn = None
             unreal.GameplayStatics.open_level(pawn, "MountainPilgrimage")

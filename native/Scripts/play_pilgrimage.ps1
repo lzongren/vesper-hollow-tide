@@ -40,7 +40,10 @@ if (!(Test-Path "$project\Saved\RouteMeshes.json")) {
 if (!(Test-Path "$project\Saved\Procession.json")) {
     Invoke-MapPass 'dress_procession' 'VESPER_PROCESSION_SAVED'
 }
-if (!(Test-Path "$project\Saved\MountainEvening.json")) {
+$lightingReport = if (Test-Path "$project\Saved\MountainEvening.json") {
+    Get-Content -Raw "$project\Saved\MountainEvening.json" | ConvertFrom-Json
+}
+if ($lightingReport.sun_forward_priority -ne 1) {
     Invoke-MapPass 'light_mountain' 'VESPER_MOUNTAIN_EVENING'
 }
 if (!(Test-Path "$project\Saved\Pines.json")) {
@@ -86,7 +89,7 @@ if ($cinderReport.revision -ne 2) {
 $outfitReport = if (Test-Path "$project\Saved\WayfarerOutfit.json") {
     Get-Content -Raw "$project\Saved\WayfarerOutfit.json" | ConvertFrom-Json
 }
-if ($rebuildDuel -or $outfitReport.revision -ne 3 -or !(Test-Path "$project\Content\Vesper\Duel\MagnoliaCourtDress\MagnoliaCourtDress\SkeletalMeshes\MagnoliaCourtDress.uasset")) {
+if ($rebuildDuel -or $outfitReport.revision -ne 4 -or !(Test-Path "$project\Content\Vesper\Duel\MagnoliaStreamers\MagnoliaStreamers\SkeletalMeshes\MagnoliaStreamers.uasset")) {
     Invoke-MapPass 'fit_wayfarer' 'VESPER_WAYFARER_READY'
 }
 if (!(Test-Path "$project\Saved\WestPass.json")) {

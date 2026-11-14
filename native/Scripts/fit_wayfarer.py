@@ -9,8 +9,9 @@ project = Path(unreal.Paths.convert_relative_path_to_full(unreal.Paths.project_d
 sys.path.insert(0, str(project / "Scripts"))
 from build_bellwarden import mesh_for, fit, lib, combat
 from keeper_materials import surface
+from sash_material import silk_motion
 
-mesh = mesh_for("MagnoliaCourtDress", "pilgrim.glb", armed=True, wayfarer=True)
+mesh = mesh_for("MagnoliaStreamers", "pilgrim.glb", armed=True, wayfarer=True)
 bp = lib.load_asset(combat + "BP_CombatCharacter")
 reference = unreal.get_default_object(
     bp.generated_class()
@@ -31,6 +32,8 @@ for slot in slots:
     if name in finishes:
         metal, rough = finishes[name]
         slot.material_interface = surface(root, name + "Surface", name, metal, rough)
+    elif name == "RiverBrocade":
+        slot.material_interface = silk_motion(root)
     elif name == "InkHair":
         slot.material_interface = surface(
             root, "BrushedInk", name, 0, 0.82, specular=0.065
@@ -52,6 +55,6 @@ mesh.set_editor_property("materials", slots)
 lib.save_loaded_asset(mesh, only_if_is_dirty=False)
 fit("BP_CombatCharacter", "BP_BelfryPilgrim", mesh, {})
 (project / "Saved" / "WayfarerOutfit.json").write_text(
-    json.dumps({"mesh": mesh.get_path_name(), "revision": 3})
+    json.dumps({"mesh": mesh.get_path_name(), "revision": 4})
 )
 unreal.log("VESPER_WAYFARER_READY")

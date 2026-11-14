@@ -32,6 +32,7 @@ def dress(out, bones, rest, art):
     jade = material("CloudJade", (0.16, 0.40, 0.32), 0.27, 0.12)
     pearl = material("SeedPearl", (0.84, 0.75, 0.62), 0.28, 0.09)
     petal = material("MagnoliaJade", (0.55, 0.76, 0.61), 0.34, 0.04)
+    river = material("RiverBrocade", (1, 1, 1), 0.65, texture="river-sash.jpg")
     patch, finish = garment_surfaces(out, bones)
     head = [("head", 1)]
     waist = [("pelvis", 1)]
@@ -427,21 +428,37 @@ def dress(out, bones, rest, art):
     for band in (0.05, 0.88):
         patch(brass, 72, 2, lambda u, v: belt(u, band + 0.045 * v))
     globe(jade, (0.025, 1.065, 0.182), (0.036, 0.024, 0.011), waist)
+    # Two folded loops gather the streamers against the rear waistband.
     for side in (-1, 1):
 
-        def tail(u, v):
+        def loop(u, v):
+            a = tau * v
+            width = 0.018 * (2 * u - 1)
             return (
                 (
-                    side * (0.113 + 0.083 * v) + (0.5 - u) * (0.047 - 0.015 * v),
-                    1.055 - 0.36 * v,
-                    -0.169 - 0.085 * v + 0.018 * sin(6 * v),
+                    side * (0.018 + 0.075 * (1 - cos(a)) / 2) + width * sin(a),
+                    1.066 + 0.024 * sin(a) + width * cos(a),
+                    -0.157 - 0.025 * sin(pi * v) - 0.008 * cos(tau * u),
                 ),
                 (u, v),
-                [
-                    ("pelvis", 1 - 0.34 * v),
-                    ("thigh_l" if side > 0 else "thigh_r", 0.34 * v),
-                ],
+                waist,
             )
 
-        patch(crimson, 9, 25, tail)
+        patch(lining, 12, 40, loop)
+
+        def streamer(u, v):
+            # Each warp row has a slightly different roll and a forked hem.
+            # UV V is also the lever arm for motion, zero at the fastening.
+            length = 0.54 if side > 0 else 0.44
+            roll = side * (0.18 + 0.70 * v + 0.27 * sin(5 * v))
+            half_width = 0.023 + 0.017 * sin(pi * v * 0.86)
+            crosswise = (2 * u - 1) * half_width
+            spread = 0.033 + 0.068 * sin(pi * v * 0.65)
+            x = side * spread + crosswise * cos(roll)
+            z = -0.164 - 0.096 * v + 0.012 * sin(5 * v) + crosswise * sin(roll)
+            y = 1.062 - length * v + 0.022 * (1 - abs(2 * u - 1)) * v**12
+            return (x, y, z), (u, v), waist
+
+        patch(river, 16, 48, streamer)
+    globe(jade, (0, 1.064, -0.175), (0.020, 0.019, 0.012), waist)
     finish()

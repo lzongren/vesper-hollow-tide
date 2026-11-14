@@ -84,6 +84,7 @@ def one(cls):
 sun = one(unreal.DirectionalLight)
 sun.set_actor_rotation(unreal.Rotator(0, -26, 32), False)
 sun.light_component.set_editor_property("atmosphere_sun_light", False)
+sun.light_component.set_editor_property("forward_shading_priority", 1)
 sun.light_component.set_editor_property("intensity", 3.4)
 sun.light_component.set_editor_property("light_source_angle", 2.3)
 sun.light_component.set_light_color(unreal.LinearColor(1, 0.86, 0.66, 1))
@@ -181,6 +182,7 @@ report = {
     "sky": cube.get_path_name(),
     "summit_pine_groups": ridge_count,
     "sun_lux": 3.4,
+    "sun_forward_priority": sun.light_component.get_editor_property("forward_shading_priority"),
     "skylight_intensity": 5.0,
     "bounce_lux": 1.55,
     "fog_density": 0.012,
