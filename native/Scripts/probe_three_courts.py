@@ -4,6 +4,7 @@ import json
 import math
 from pathlib import Path
 import runpy
+import time
 import unreal
 
 runtime = runpy.run_path(str(Path(__file__).with_name("belfry_combat.py")))
@@ -21,6 +22,9 @@ stages = [
 ]
 stage = 0
 rows = []
+frame_intervals = []
+previous_frame = None
+player_mesh = None
 wins = []
 start = last_sample = original = None
 last_attack = -1.0
@@ -31,10 +35,26 @@ saved = Path(
 
 
 def finish(reason):
+    if runtime["live"](step.pc):
+        unreal.SystemLibrary.execute_console_command(step.pc, "CsvProfile STOP", step.pc)
+    times = sorted(frame_intervals)
+
+    def percentile(p):
+        return round(times[math.ceil(p * len(times)) - 1], 2) if times else None
+
     (saved / "ThreeCourtTrial.json").write_text(
         json.dumps(
             dict(
                 outcome=reason,
+                player_mesh=player_mesh,
+                callback_intervals_ms=dict(
+                    frames=len(times),
+                    median=percentile(0.50),
+                    p95=percentile(0.95),
+                    p99=percentile(0.99),
+                    maximum=round(times[-1], 2) if times else None,
+                    over_33ms=sum(t > 1000 / 30 for t in times),
+                ),
                 columns=[
                     "seconds",
                     "stage",
@@ -55,10 +75,17 @@ def finish(reason):
 
 def tick(dt):
     global stage, start, original, last_sample, last_attack, pressed
+    global player_mesh, previous_frame
     pawn = step.pawn
     if not runtime["live"](pawn):
         return
+    wall_time = time.perf_counter()
+    if previous_frame is not None:
+        frame_intervals.append((wall_time - previous_frame) * 1000)
+    previous_frame = wall_time
     if start is None:
+        player_mesh = pawn.mesh.skeletal_mesh_asset.get_name()
+        unreal.SystemLibrary.execute_console_command(pawn, "CsvProfile START", step.pc)
         start = unreal.GameplayStatics.get_time_seconds(pawn)
         original = pawn
         last_sample = -1

@@ -3,7 +3,7 @@
 import unreal
 
 
-def surface(root, name, color, metal, rough, *, normal=None, cutout=False):
+def surface(root, name, color, metal, rough, *, normal=None, cutout=False, specular=None):
     library = unreal.EditorAssetLibrary
     edit = unreal.MaterialEditingLibrary
     prop = unreal.MaterialProperty
@@ -47,10 +47,13 @@ def surface(root, name, color, metal, rough, *, normal=None, cutout=False):
     if normal:
         relief = sample(normal, 240, unreal.MaterialSamplerType.SAMPLERTYPE_NORMAL)
         connect(relief, "RGB", prop.MP_NORMAL)
-    for y, value, channel in (
+    channels = [
         (480, metal, prop.MP_METALLIC),
         (560, rough, prop.MP_ROUGHNESS),
-    ):
+    ]
+    if specular is not None:
+        channels.append((640, specular, prop.MP_SPECULAR))
+    for y, value, channel in channels:
         node = edit.create_material_expression(
             mat, unreal.MaterialExpressionConstant, -300, y
         )

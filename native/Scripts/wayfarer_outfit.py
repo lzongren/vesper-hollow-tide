@@ -1,7 +1,7 @@
 """Fit the magnolia coat, crisscross sash, coiled hair and mapped portrait to the combat rig."""
 
 import json
-from math import asin, atan2, cos, pi, sin, tau
+from math import atan2, cos, pi, sin, tau
 
 from bind_pilgrim import cross, unit
 from garment_surfaces import garment_surfaces
@@ -36,6 +36,10 @@ def dress(out, bones, rest, art):
     head = [("head", 1)]
     waist = [("pelvis", 1)]
 
+    def smooth(t):
+        t = min(1, max(0, t))
+        return t * t * (3 - 2 * t)
+
     def face_uv(x, y):
         # Place the eyeballs and lip seam on the corresponding portrait landmarks.
         v = 0.459 - (y - 7.284) * (0.400 if y < 7.284 else 0.354)
@@ -49,7 +53,7 @@ def dress(out, bones, rest, art):
     def sculpt(x, y, z):
         jaw = min(1, max(0, (7.14 - y) / 0.80))
         return (
-            x * (1 - 0.13 * jaw),
+            x * (1 - 0.13 * jaw) * (0.78 + 0.22 * smooth((y - 5.76) / 0.30)),
             y - 0.034 * jaw,
             z - 0.054 * jaw * max(0, z - 0.5),
         )
@@ -64,13 +68,13 @@ def dress(out, bones, rest, art):
             for k in range(3):
                 normals[i][k] += normal[k]
         x, y, z = [sum(verts[i][k] for i in f) / len(f) for k in range(3)]
-        hairline = 6.75 + 1.28 * min(1, max(0, (z - 0.26) / 1.12))
-        slot = (
-            hair if y > hairline and (abs(x) < 0.72 or y > 7.52 or z < 0.32) else face
-        )
-        # Keep the natural irregular photographed hairline at the forehead.
-        if z > 1.10 and 7.32 < y < 8.09 and abs(x) < 0.60:
-            slot = face
+        # Keep the photographed forehead, with the scalp continuing in one
+        # sweep from the temple past the ear to the nape.
+        angle = abs(atan2(x, z - 0.55))
+        hairline = 8.14 - 0.40 * smooth((angle - 0.50) / 0.57)
+        hairline -= 0.59 * smooth((angle - 1.07) / 0.40)
+        hairline -= 0.59 * smooth((angle - 1.53) / 0.95)
+        slot = hair if y > hairline else face
         for j in range(1, len(f) - 1):
             batches[slot].extend([f[0], f[j], f[j + 1]])
 
@@ -78,13 +82,23 @@ def dress(out, bones, rest, art):
         return (0.104 * x, 1.625 + 0.103 * (y - 7.0), 0.104 * (z - 0.32))
 
     coords = [pos(*v) for v in shaped]
-    uv = [face_uv(x, y) if y > 6.22 and z > 0.53 else (0.61, 0.81) for x, y, z in verts]
+    uv = []
+    neck_weights = []
+    for x, y, z in verts:
+        u, v = face_uv(x, y)
+        portrait = smooth((z - 0.72) / 0.37) * smooth((y - 6.04) / 0.26)
+        # The rear neck and ears sample clean skin, away from the portrait edge.
+        uv.append((0.62 + (u - 0.62) * portrait, 0.70 + (v - 0.70) * portrait))
+        neck = 1 - smooth((y - 5.78) / 0.63)
+        neck_weights.append((1 - neck, neck, 0, 0))
     attrs = dict(
         POSITION=out.data(coords, "VEC3", bounds=True),
         NORMAL=out.data([unit(n) for n in normals], "VEC3"),
         TEXCOORD_0=out.data(uv, "VEC2"),
-        JOINTS_0=out.data([(bones["head"], 0, 0, 0)] * len(verts), "VEC4", 5123),
-        WEIGHTS_0=out.data([(1, 0, 0, 0)] * len(verts), "VEC4"),
+        JOINTS_0=out.data(
+            [(bones["head"], bones["neck_01"], 0, 0)] * len(verts), "VEC4", 5123
+        ),
+        WEIGHTS_0=out.data(neck_weights, "VEC4"),
     )
     for mat, indices in batches.items():
         material_attrs = dict(attrs)
@@ -143,17 +157,41 @@ def dress(out, bones, rest, art):
 
         patch(mat, 8, steps, surface)
 
+    # An asymmetric oval follows the cranial vault from the nape to a
+    # displaced crown. Both radii vary continuously across the temple.
+    def hair_shell(a, v):
+        temple = abs(atan2(sin(a), cos(a)))
+        edge = 8.045 - 0.39 * smooth((temple - 0.32) / 0.77)
+        edge -= 0.44 * smooth((temple - 1.06) / 0.45)
+        edge -= 0.53 * smooth((temple - 1.62) / 0.95)
+        h = edge + (8.57 - edge) * sin(v * pi / 2)
+        t = (h - 7.42) / (1.15 if h >= 7.42 else 1.32)
+        radius = max(0, 1 - t * t) ** 0.5
+        wave = 0.009 * cos(15 * a + 2.8 * v) * sin(pi * v)
+        width = (0.82 + wave) * radius
+        depth = (1.03 + wave) * radius
+        return pos(width * sin(a), h, 0.56 + depth * cos(a))
+
+    def swept_hair(u, v):
+        a = tau * u
+        # Offset each upper row towards the coil, visually combing the strands.
+        angle = a + 0.26 * sin(a) * sin(pi * v)
+        p = hair_shell(angle, v)
+        return p, (u * 4 + 0.22 * sin(a) * v, 0.94 - 0.88 * v), head
+
+    patch(hair, 128, 38, swept_hair)
     for side in (-1, 1):
-        for j in range(6):
+        for j in range(4):
+            root = hair_shell(side * (1.03 + 0.055 * j), 0.08)
 
             def wisp(t):
                 return (
-                    side * (0.067 + 0.018 * sin(pi * t) + 0.003 * j),
-                    1.696 - (0.135 + 0.009 * j) * t + 0.0008 * j,
-                    0.053 - 0.048 * t + 0.007 * sin(4 * t + j * 0.36),
+                    root[0] + side * (0.009 * sin(pi * t) - 0.003 * t),
+                    root[1] - (0.073 + 0.011 * j) * t,
+                    root[2] - 0.013 * t + 0.002 * sin(pi * t),
                 )
 
-            strand(hair, wisp, lambda t: 0.00165 * (1 - t * 0.97), head)
+            strand(hair, wisp, lambda t: 0.0012 * (1 - 0.95 * t), head)
     # Coiled lengths traverse the back of the knot in opposite directions.
     for k in range(4):
 
@@ -213,63 +251,95 @@ def dress(out, bones, rest, art):
     for side in (-1, 1):
         globe(pearl, (side * 0.082, 1.628, 0.028), (0.0038, 0.0051, 0.0038), head)
 
-    # Eight slightly overlapping panels put slits between the moving thighs.
-    # The embroidered branch spans the uninterrupted back panel.
-    def cloth(a, t):
-        y = 0.43 + 1.035 * t
-        flare = max(0, 1 - (y - 0.43) / 0.59)
-        chest = max(0, min(1, (y - 1.06) / 0.35))
-        shoulder = max(0, min(1, (y - 1.40) / 0.065))
-        folds = (0.008 + 0.022 * flare) * cos(13 * a + 0.6 * t)
-        x = (0.155 + 0.112 * flare + 0.081 * chest - 0.038 * shoulder + folds) * sin(a)
-        z = (0.135 + 0.060 * flare + 0.036 * chest + folds * 0.66) * cos(a) + 0.011
-        leg = min(0.80, flare * 0.87)
-        thigh = "thigh_l" if sin(a) > 0 else "thigh_r"
-        skin = (
-            [("pelvis", 1 - leg), (thigh, leg)]
-            if y < 1.06
-            else [("spine_02", 1 - chest), ("spine_05", chest)]
-        )
-        return (x, y - 0.022 * flare * cos(6 * a), z), skin
+    # The bodice, skirt and lapel share one surface from hem to neckline.
+    # Ring radii are half-width and half-depth in the skeleton's rest pose.
+    rings = (
+        (0.425, 0.281, 0.226),
+        (0.67, 0.251, 0.205),
+        (0.83, 0.233, 0.198),
+        (0.99, 0.177, 0.151),
+        (1.09, 0.158, 0.127),
+        (1.21, 0.163, 0.123),
+        (1.32, 0.179, 0.142),
+        (1.385, 0.183, 0.135),
+        (1.431, 0.179, 0.108),
+        (1.465, 0.146, 0.089),
+        (1.488, 0.097, 0.074),
+        (1.508, 0.062, 0.064),
+    )
 
-    def shoulder_yoke(u, v):
+    def cloth(a, y, lift=0):
+        k = next(
+            (i for i in range(len(rings) - 1) if y <= rings[i + 1][0]), len(rings) - 2
+        )
+        lo, hi = rings[k : k + 2]
+        t = (y - lo[0]) / (hi[0] - lo[0])
+
+        # Hermite slopes pass smoothly through each measured section.
+        def radius(i):
+            prev = rings[max(0, k - 1)]
+            after = rings[min(len(rings) - 1, k + 2)]
+            dt = hi[0] - lo[0]
+            m0 = dt * (hi[i] - prev[i]) / (hi[0] - prev[0])
+            m1 = dt * (after[i] - lo[i]) / (after[0] - lo[0])
+            return (
+                lo[i] * (2 * t**3 - 3 * t * t + 1)
+                + hi[i] * (3 * t * t - 2 * t**3)
+                + m0 * t * (1 - t) ** 2
+                + m1 * t * t * (t - 1)
+            )
+
+        flare = 1 - smooth((y - 0.43) / 0.64)
+        fold = (0.0025 + 0.015 * flare) * cos(12 * a + 2 * y) + 0.006 * flare * cos(
+            7 * a - 3 * y
+        )
+        x = (radius(1) + fold + lift) * sin(a)
+        z = (radius(2) + 0.65 * fold + lift) * cos(a) + 0.010
+        depth = 0.025 * smooth((y - 1.43) / 0.078) * max(0, cos(a))
+        leg = 0.83 * flare
+        rib = smooth((y - 0.99) / 0.19)
+        chest = smooth((y - 1.15) / 0.20)
+        skin = [
+            ("thigh_l" if sin(a) > 0 else "thigh_r", leg),
+            ("pelvis", 1 - leg - rib),
+            ("spine_02", rib - chest),
+            ("spine_05", chest),
+        ]
+        return (x, y - depth - 0.011 * flare * cos(6 * a), z), skin
+
+    def bodice(u, v):
+        a = tau * (u - 0.5)
+        p, skin = cloth(a, 0.982 + 0.526 * v)
+        return p, (u, 0.94 - 0.87 * v), skin
+
+    def neckband(u, v):
         a = tau * u
-        edge, _ = cloth(a, 1)
-        spread = abs(sin(a)) ** 3
-        x = edge[0] + 0.036 * sin(a) * spread
-        y = edge[1] - 0.048 * spread
-        z = edge[2]
-        collar_height = 1.510 - 0.035 * max(0, cos(a))
-        p = (
-            x * (1 - v) + 0.059 * sin(a) * v,
-            y * (1 - v) + collar_height * v + 0.013 * sin(pi * v),
-            z * (1 - v) + (0.007 + 0.062 * cos(a)) * v,
-        )
-        return p, (0.09 + 0.82 * u, 0.17 + 0.28 * v), [("spine_05", 1)]
+        bottom, _ = cloth(a, 1.503)
+        # A shallow standing collar covers the open neck boundary while
+        # flexing with the first neck joint during turns.
+        x = bottom[0] * (1 - v) + 0.057 * sin(a) * v
+        z = bottom[2] * (1 - v) + (0.016 + 0.063 * cos(a)) * v
+        y = bottom[1] + (1.521 - 0.012 * max(0, cos(a)) - bottom[1]) * v
+        w = 0.52 * v
+        return (x, y, z), (u, 0.40 + 0.12 * v), [("spine_05", 1 - w), ("neck_01", w)]
 
-    patch(silk, 72, 12, shoulder_yoke)
+    patch(lining, 72, 10, neckband)
+    patch(silk, 96, 52, bodice)
     for j in range(8):
 
         def panel(u, v):
             a = tau * (j + (u - 0.5) * 1.025) / 8
-            p, skin = cloth(a, v)
+            p, skin = cloth(a, 0.425 + 0.573 * v)
             return p, (0.05 + 0.90 * u, 0.995 - 0.91 * v), skin
 
-        patch(lining if j in (2, 6) else silk, 18, 38, panel)
+        patch(lining if j in (2, 6) else silk, 20, 36, panel)
 
         def trim(u, v):
-            p, tex, skin = panel(0.026 * u, v)
+            p, tex, skin = panel(0.022 * u, v)
             x, y, z = p
-            return (x * 1.009, y, z * 1.01), tex, skin
+            return (x * 1.007, y, z * 1.008), tex, skin
 
-        patch(brass if j % 2 == 0 else crimson, 2, 26, trim)
-
-    def yoke(u, v):
-        a = pi * (0.54 + 0.92 * u)
-        (x, y, z), skin = cloth(a, 0.60 + 0.4 * v)
-        return (x * 1.02, y, z * 1.035), (0.03 + 0.94 * u, 0.95 - 0.91 * v), skin
-
-    patch(silk, 54, 24, yoke)
+        patch(brass if j % 2 == 0 else crimson, 2, 36, trim)
 
     for side, suffix in [(-1, "r"), (1, "l")]:
         chain = [k + "_" + suffix for k in ("upperarm", "lowerarm", "hand")]
@@ -282,7 +352,7 @@ def dress(out, bones, rest, art):
             n = unit(cross(axis, (0, 0, 1)))
             m = cross(axis, n)
             width = (
-                0.084 * (1 - v)
+                0.071 * (1 - v)
                 + 0.043 * v
                 + 0.0025 * sin(10 * pi * v + 2 * cos(tau * u))
             )
@@ -297,16 +367,21 @@ def dress(out, bones, rest, art):
         patch(silk, 36, 32, arm)
 
         def sleeve_cap(u, v):
-            ring, _, skin = arm(u, 0)
+            ring, _, _ = arm(u, 0)
             centre = rest[chain[0]]
-            p = tuple(centre[i] + (ring[i] - centre[i]) * (1 - v) for i in range(3))
-            return (
-                (p[0], p[1] + 0.040 * sin(pi * v / 2), p[2]),
-                (u * 0.5, v * 0.45),
-                skin,
+            angle = v * pi / 2
+            # The shoulder dome extends out of the sleeve opening along the
+            # upper-arm axis, then joins the sloping bodice close to the neck.
+            axis = unit([a - b for a, b in zip(centre, rest[chain[1]])])
+            dome = 0.048 * sin(angle)
+            p = tuple(
+                centre[k] + (ring[k] - centre[k]) * cos(angle) + axis[k] * dome
+                for k in range(3)
             )
+            blend = 0.60 * smooth(v)
+            return p, (u, 0.06 + 0.22 * v), [(chain[0], 1 - blend), ("spine_05", blend)]
 
-        patch(silk, 36, 10, sleeve_cap)
+        patch(silk, 36, 16, sleeve_cap)
 
         for band in (0.11, 0.17, 0.67, 0.73, 0.82, 0.88, 0.94):
 
@@ -318,31 +393,23 @@ def dress(out, bones, rest, art):
             patch(brass if band in (0.17, 0.67, 0.94) else crimson, 36, 3, cuff)
 
         def collar(u, v):
-            # The inner lapel ends under the crossing; the outer one continues
-            # toward the right side fastening instead of forming a second tail.
-            t = v * (0.40 if side < 0 else 1.0)
-            if t < 0.22:
-                along = t / 0.22
-                a = side * (1.32 - 0.99 * along) + (u - 0.5) * 0.29
-                (x, y, z), tex, skin = shoulder_yoke(a / tau, 1 - along)
-                return (x, y + 0.0015, z + 0.003), tex, skin
-            along = (t - 0.22) / 0.78
-            height = 1 - along * 0.34
-            edge, _ = cloth(side * 0.33, height)
-            x = edge[0] * (1 - along) - side * 0.126 * along + (0.5 - u) * 0.042
-            half_width = cloth(pi / 2, height)[0][0]
-            a = asin(max(-0.99, min(0.99, x / half_width)))
-            (x, y, z), skin = cloth(a, height)
-            return (x, y, z + 0.006 + 0.002 * side), (0.1 + u * 0.13, v), skin
+            end = 1.34 if side < 0 else 1.045
+            y = 1.508 + (end - 1.508) * v
+            drop = (1.508 - y) / 0.463
+            a = side * (0.93 - 2.02 * drop**0.73)
+            span = 0.39 - 0.15 * smooth(drop * 2)
+            a += (u - 0.5) * span
+            p, skin = cloth(a, y, 0.0035 if side < 0 else 0.0055)
+            return p, (0.12 + 0.20 * u, 0.92 * v), skin
 
-        patch(lining, 9, 20, collar)
-        for edge in (0, 0.92):
+        patch(lining, 10, 52, collar)
+        for edge in (0, 0.935):
 
             def braid(u, v):
-                (x, y, z), uv, skin = collar(edge + 0.075 * u, v)
-                return (x, y, z + 0.004 + 0.001 * side), uv, skin
+                (x, y, z), uv, skin = collar(edge + 0.065 * u, v)
+                return (x * 1.007, y + 0.0004, z + 0.0011), uv, skin
 
-            patch(brass, 2, 20, braid)
+            patch(brass, 2, 52, braid)
 
     def belt(u, v):
         a = tau * u

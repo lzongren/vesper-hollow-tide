@@ -86,7 +86,7 @@ if ($cinderReport.revision -ne 2) {
 $outfitReport = if (Test-Path "$project\Saved\WayfarerOutfit.json") {
     Get-Content -Raw "$project\Saved\WayfarerOutfit.json" | ConvertFrom-Json
 }
-if ($rebuildDuel -or $outfitReport.revision -ne 2 -or !(Test-Path "$project\Content\Vesper\Duel\MagnoliaLady\MagnoliaLady\SkeletalMeshes\MagnoliaLady.uasset")) {
+if ($rebuildDuel -or $outfitReport.revision -ne 3 -or !(Test-Path "$project\Content\Vesper\Duel\MagnoliaCourtDress\MagnoliaCourtDress\SkeletalMeshes\MagnoliaCourtDress.uasset")) {
     Invoke-MapPass 'fit_wayfarer' 'VESPER_WAYFARER_READY'
 }
 if (!(Test-Path "$project\Saved\WestPass.json")) {
@@ -94,5 +94,5 @@ if (!(Test-Path "$project\Saved\WestPass.json")) {
 }
 Start-Process "$bin\UnrealEditor.exe" -WorkingDirectory $project -ArgumentList @(
     "`"$descriptor`"", "$map`?game=$gameMode", '-game', '-windowed', '-ResX=1600', '-ResY=900', '-NoP4',
-    '-ForceEnablePython', '-ExecCmds="py __import__(''runpy'').run_path(__import__(''unreal'').Paths.convert_relative_path_to_full(__import__(''unreal'').Paths.project_dir())+''Scripts/belfry_combat.py'')"'
+    '-ForceEnablePython', '-ExecCmds="t.MaxFPS 60,py __import__(''runpy'').run_path(__import__(''unreal'').Paths.convert_relative_path_to_full(__import__(''unreal'').Paths.project_dir())+''Scripts/belfry_combat.py'')"'
 )
