@@ -221,11 +221,24 @@ export class Soundscape {
         this.noise(t, 0.2, 0.15, 1000);
         this.tone(160, t, 0.18, 0.045, "triangle", pan);
         break;
-      case "hit":
-        this.noise(t, 0.15, 0.38, 850);
-        this.tone(78, t, 0.17, 0.26, "triangle", pan);
-        this.tone(740, t, 0.15, 0.07, "sine", pan);
+      case "hit": {
+        const weight = (e.value ?? 24) >= 47 ? 1.25 : 1;
+        this.tone(82, t, 0.11, 0.19 * weight, "triangle", pan);
+        if (this.boss === 0) {
+          this.noise(t, 0.055, 0.19, 1700);
+          this.tone(534, t, 0.22, 0.09 * weight, "sine", pan);
+          this.tone(1378, t + 0.004, 0.12, 0.047, "sine", pan);
+        } else if (this.boss === 1) {
+          this.noise(t, 0.038, 0.14, 3800);
+          this.tone(1435, t, 0.11, 0.083, "sine", pan);
+          this.tone(2218, t + 0.014, 0.065, 0.042, "sine", pan);
+        } else {
+          this.noise(t, 0.12, 0.27 * weight, 930);
+          this.noise(t + 0.028, 0.065, 0.074, 2900);
+          this.tone(186, t, 0.14, 0.08, "triangle", pan);
+        }
         break;
+      }
       case "hurt":
         this.tone(44, t, 0.5, 0.3, "triangle");
         this.noise(t, 0.32, 0.26, 240);

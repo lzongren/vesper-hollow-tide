@@ -41,6 +41,7 @@ import { batchCourt } from "./static-court";
 import { incenseVessel, incenseSmoke } from "./incense";
 import { ceremonialSilks, type SilkPanel } from "./silk";
 import { travelHat } from "./travel-hat";
+import { BladeImpact } from "./blade-impact";
 import { Footwork } from "./footwork";
 import { RainCourt } from "./raincourt";
 import { courtPaving, runoffChannel } from "./court";
@@ -232,6 +233,8 @@ export class World {
   boss: Actor = { root: new T.Group() } as Actor;
   bossIndex = -1;
   bladeTrail = new BladeTrail();
+  private readonly impacts = new BladeImpact();
+  private readonly pendingStrikes: GameEvent[] = [];
   cinderLights = new CinderLights();
   hazards = new Map<number, T.Group>();
   lock = new T.Group();
@@ -295,6 +298,7 @@ export class World {
       this.decor,
       this.lock,
       this.bladeTrail,
+      this.impacts,
     );
     const ring = mesh(
       this.lock,
@@ -1075,6 +1079,8 @@ export class World {
     this.materials[`seal-${index}`] = seal;
   }
   async prepareOpening(game: Combat) {
+    this.impacts.clearBursts();
+    this.pendingStrikes.length = 0;
     this.moving = false;
     this.shake = 0;
     // Clear short-lived effects from the previous attempt, including a retry in
@@ -1621,6 +1627,11 @@ export class World {
       victim.impactSide = Math.sin(direction);
       victim.impactForward = Math.cos(direction);
     }
+    if (e.kind === "hit" || e.kind === "parry") {
+      this.pendingStrikes.push(e);
+      if (!this.reducedMotion) this.shake = Math.max(this.shake, 0.045);
+      return;
+    }
     if (e.kind === "slam") {
       const actor = this.boss;
       const r = 3.9;
@@ -1717,6 +1728,12 @@ export class World {
       dt,
       game.attack.shape,
     );
+    this.impacts.track(this.player.weapon);
+    for (const event of this.pendingStrikes) {
+      this.impacts.strike(this.player.weapon, this.boss.root.position, this.boss.height,
+        game.bossIndex, event.value ?? 0, event.kind === "parry", this.reducedMotion);
+    }
+    this.pendingStrikes.length = 0;
     this.player.root.visible = true;
     // A close chase camera frames the combatants rather than displaying a tabletop.
     const dx = b.x - p.x,
@@ -1757,6 +1774,7 @@ export class World {
       this.camera.position.y += (Math.random() - 0.5) * this.shake;
     }
     this.camera.lookAt(look);
+    this.impacts.advance(dt, this.camera.position);
 
     this.lock.visible = locked && game.mode === "combat";
     this.lock.position.set(b.x, this.boss.height * 0.7, b.z);
