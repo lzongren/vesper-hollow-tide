@@ -90,6 +90,7 @@ for i in range(7):
     )
     a.static_mesh_component.set_mobility(unreal.ComponentMobility.MOVABLE)
     a.static_mesh_component.set_static_mesh(quill)
+    a.static_mesh_component.set_editor_property("disallow_nanite", True)
     a.static_mesh_component.set_material(0, vane)
     a.set_actor_enable_collision(False)
     a.set_actor_hidden_in_game(True)
@@ -113,6 +114,6 @@ if not route or route.is_partial() or len(route.path_points) < 2:
 if not levels.save_current_level():
     raise RuntimeError("Could not save Heron encounter")
 (project / "Saved" / "HeronDuel.json").write_text(
-    json.dumps({"boss": cls.get_name(), "mesh": skin.get_path_name()})
+    json.dumps({"revision": 2, "boss": cls.get_name(), "mesh": skin.get_path_name()})
 )
 unreal.log("VESPER_HERON_READY")

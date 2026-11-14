@@ -70,10 +70,16 @@ if (!(Test-Path "$project\Saved\BellHall.json")) {
 if (!(Test-Path "$project\Saved\Forecourt.json")) {
     Invoke-MapPass 'lay_belfry_court' 'VESPER_FORECOURT_SAVED'
 }
-if (!(Test-Path "$project\Saved\HeronDuel.json")) {
+$heronReport = if (Test-Path "$project\Saved\HeronDuel.json") {
+    Get-Content -Raw "$project\Saved\HeronDuel.json" | ConvertFrom-Json
+}
+if ($heronReport.revision -ne 2) {
     Invoke-MapPass 'build_heron' 'VESPER_HERON_READY'
 }
-if (!(Test-Path "$project\Saved\CinderDuel.json")) {
+$cinderReport = if (Test-Path "$project\Saved\CinderDuel.json") {
+    Get-Content -Raw "$project\Saved\CinderDuel.json" | ConvertFrom-Json
+}
+if ($cinderReport.revision -ne 2) {
     Invoke-MapPass 'build_cinder' 'VESPER_CINDER_READY'
 }
 Start-Process "$bin\UnrealEditor.exe" -WorkingDirectory $project -ArgumentList @(

@@ -157,8 +157,26 @@ for original in actors.get_all_level_actors():
         continue
     comp = original.static_mesh_component
     part = comp.static_mesh
-    if part and "/WestWaterGallery/" in part.get_path_name():
-        gallery[part.get_path_name()] = comp
+    if not part:
+        continue
+    path = part.get_path_name()
+    if "/MoonGatePorch/" in path:
+        # The road leaves this court on a diagonal. The open central bay
+        # straddles that line, with the posts and their stone feet to the sides.
+        road_angle = math.degrees(math.atan2(-2400, 3300))
+        original.set_actor_rotation(unreal.Rotator(yaw=90 + road_angle), False)
+        original.set_actor_location(
+            unreal.Vector(12400, 1600 - 900 * 2400 / 3300, 8), False, True
+        )
+    if "/MoonGatePorch/" in path or "/WestWaterGallery/" in path:
+        body = part.get_editor_property("body_setup")
+        body.set_editor_property(
+            "collision_trace_flag", unreal.CollisionTraceFlag.CTF_USE_COMPLEX_AS_SIMPLE
+        )
+        if not lib.save_loaded_asset(part, only_if_is_dirty=False):
+            raise RuntimeError("Could not save architectural collision for " + path)
+    if "/WestWaterGallery/" in path:
+        gallery[path] = comp
         # The gallery extends along its local X axis. Turn existing galleries
         # parallel to their roads so their footings do not cross the playable lane.
         dx, dy = (
@@ -254,6 +272,6 @@ if not route or route.is_partial() or len(route.path_points) < 2:
 if not levels.save_current_level():
     raise RuntimeError("Could not save final court")
 (project / "Saved" / "CinderDuel.json").write_text(
-    json.dumps({"boss": cls.get_name(), "mesh": skin.get_path_name(), "effects": 3})
+    json.dumps({"revision": 2, "boss": cls.get_name(), "mesh": skin.get_path_name(), "effects": 3})
 )
 unreal.log("VESPER_CINDER_READY")
