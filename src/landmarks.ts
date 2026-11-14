@@ -1,5 +1,6 @@
 import * as T from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
+import { moonGatePorch } from "./moon-gate";
 import { ArtLibrary } from "./assets";
 
 type Palette = Record<string, T.MeshStandardMaterial>;
@@ -234,32 +235,19 @@ export function heronGarden(art: ArtLibrary, m: Palette, rand: () => number) {
       }
     }
   }
-  for (let j = 0; j < 4; j++)
-    stone.block(
-      m.roof,
-      0,
-      6.47 + 0.11 * j,
-      -19.09,
-      16.85 + 0.07 * j,
-      0.13,
-      1.45 - j * 0.16,
-    );
-  // Individual fired barrel tiles carry a scalloped eave across the gate.
-  for (let i = 0; i < 65; i++) {
-    const tile = new T.CylinderGeometry(
-      0.13,
-      0.16,
-      1.46,
-      10,
-      1,
-      true,
-      0,
-      Math.PI,
-    );
-    tile.rotateZ(Math.PI / 2);
-    tile.rotateY(Math.PI / 2);
-    stone.add(tile, m.roof, -8.38 + i * 0.262, 6.84, -19.1);
-  }
+  const ceramic = new T.MeshPhysicalMaterial({
+    color: 0x506e68, roughness: 0.44, clearcoat: 0.46, clearcoatRoughness: 0.31,
+    bumpMap: art.textures.get("rock-rough"), bumpScale: 0.012,
+  });
+  const timber = new T.MeshStandardMaterial({
+    map: art.textures.get("wood-color"), color: 0x994832, roughness: 0.61,
+  });
+  const lampPaper = new T.MeshStandardMaterial({
+    color: 0xf2bc83, emissive: 0xff8f42, emissiveIntensity: 1.28, roughness: 0.89,
+  });
+  const porch = moonGatePorch({timber, ceramic, bronze:m.gold, stone:m.rock, paper:lampPaper});
+  porch.position.z = -19.09;
+  garden.add(porch);
   const paper = new T.MeshStandardMaterial({
     color: 0xddcba3, emissive: 0xffbb68, emissiveIntensity: .85, roughness: .88,
   });

@@ -41,6 +41,7 @@ import { travelHat } from "./travel-hat";
 import { Footwork } from "./footwork";
 import { RainCourt } from "./raincourt";
 import { courtPaving, runoffChannel } from "./court";
+import { porchLamp } from "./moon-gate";
 import { heronGarden, cinderReliquary } from "./landmarks";
 
 const Y = new T.Vector3(0, 1, 0);
@@ -1384,6 +1385,13 @@ export class World {
         2,
       );
       light.position.set(x, 2.7, z);
+      if (index === 1 && x === 0) {
+        light.position.copy(porchLamp);
+        light.position.z += -19.09;
+        light.color.setHex(0xffbb82);
+        light.power = 820;
+        light.distance = 13;
+      }
       this.arena.add(light);
     }
     const fogTexture = textureCanvas((c) => {
