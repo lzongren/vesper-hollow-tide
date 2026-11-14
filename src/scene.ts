@@ -45,6 +45,7 @@ import { BladeImpact } from "./blade-impact";
 import { Footwork } from "./footwork";
 import { RainCourt } from "./raincourt";
 import { courtPaving, runoffChannel } from "./court";
+import { lotusGarden } from "./lotus-garden";
 import { porchLamp } from "./moon-gate";
 import { heronGarden, cinderReliquary } from "./landmarks";
 
@@ -1159,8 +1160,13 @@ export class World {
     paving.castShadow = false;
     this.arena.add(runoffChannel(this.materials.gold, this.materials.rock));
     if (index === 0) this.temple(this.arena, 0, -24, 1.7);
-    else if (index === 1)
+    else if (index === 1) {
       this.arena.add(heronGarden(this.art, this.materials, random(1729)));
+      const garden = lotusGarden(this.rainCourt.gardenWater(), this.materials.rock, this.art.textures.get("karst-limestone")!, random(9017));
+      this.arena.add(garden.banks);
+      // Exclude the pool surface from its own shared planar reflection.
+      this.rainCourt.floor.add(garden.pools);
+    }
     else this.arena.add(cinderReliquary(this.art, this.materials));
     if (index === 2) {
       const carving = this.art.model("cinder-relief", 7.8);
@@ -1364,6 +1370,13 @@ export class World {
         0,
       );
       this.clothMeshes.push(c);
+    }
+    if (index === 1) {
+      // The open water gallery faces east. Its three lanterns share one warm
+      // bounce, confined to the seats, colonnade and the water immediately below.
+      const galleryGlow = new T.PointLight(0xffbf82, 60, 8, 2);
+      galleryGlow.position.set(-19.2, 2.82, -3.4);
+      this.arena.add(galleryGlow);
     }
     // Low pools of light at the outer stations leave dark intervals in the gallery.
     for (const [x, z] of [

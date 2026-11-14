@@ -68,6 +68,38 @@ export class RainCourt {
     this.lastCapture = -10;
     this.step.forEach((s) => (s.z = -10));
   }
+  gardenWater() {
+    const material = new T.MeshStandardMaterial({
+      color: 0x243b32, roughness: 0.19, metalness: 0.14, side: T.DoubleSide,
+    });
+    material.customProgramCacheKey = () => "garden-pool-water";
+    material.onBeforeCompile = shader => {
+      Object.assign(shader.uniforms, {
+        courtMirror: { value: this.mirror.getRenderTarget().texture },
+        courtProject: { value: this.project }, courtTime: this.clock,
+      });
+      shader.vertexShader = "varying vec3 courtPoint;\n" + shader.vertexShader.replace(
+        "#include <project_vertex>",
+        "#include <project_vertex>\n courtPoint=(modelMatrix*vec4(transformed,1.)).xyz;",
+      );
+      shader.fragmentShader = surface + shader.fragmentShader.replace(
+        "#include <opaque_fragment>", `
+          vec2 p=courtPoint.xz;
+          vec2 wind=vec2(sin(p.x*3.7+p.y*1.5+courtTime*1.8),cos(p.y*5.1+p.x*.9+courtTime*1.2));
+          vec2 ripple=rainRing(p*1.17,courtTime)+rainRing(p*1.63+9.7,courtTime*.83);
+          vec4 projected=courtProject*vec4(courtPoint,1.);
+          vec2 uv=projected.xy/max(projected.w,.001);
+          float edge=smoothstep(.0,.035,min(min(uv.x,1.-uv.x),min(uv.y,1.-uv.y)));
+          vec2 ones=clamp(uv+wind*.0012+ripple*.002,.002,.998);
+          vec3 sky=texture2D(courtMirror,ones).rgb;
+          float grazing=1.-clamp(normalize(cameraPosition-courtPoint).y,.0,1.);
+          outgoingLight=mix(outgoingLight,sky,edge*(.28+.58*grazing*grazing));
+          #include <opaque_fragment>`,
+      );
+    };
+    return material;
+  }
+
   finishStone(material: T.MeshStandardMaterial, inlay = false) {
     material.customProgramCacheKey = () =>
       inlay ? "wet-bronze-inlay" : "wet-paving";

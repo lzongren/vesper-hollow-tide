@@ -168,6 +168,93 @@ function moonBridge(stone: Masonry, m: Palette, lantern: T.Material) {
   place(new T.SphereGeometry(.074,10,8),m.gold,x,y+2.30,z);
 }
 
+/** An open water gallery at the west bank. The projecting timber brackets
+ * support overlapping tile courses, with seats and open lattice below. */
+export function waterGallery(m: Palette, tiles: T.Material, timber: T.Material, paper: T.Material) {
+  const gallery = new T.Group(), build = new Masonry();
+  const half = 7.85, span = 3.55, plinth = 0.66;
+  build.block(m.rock,0,0.16,0,15.75,0.37,span);
+  build.block(m.wall,0,0.50,0,15.91,0.30,span+0.13);
+  build.block(timber,0,3.78,0,15.78,0.30,3.15);
+  const strut = (a:T.Vector3,b:T.Vector3,width:number,depth:number) => {
+    const d=b.clone().sub(a),mid=a.clone().lerp(b,0.5);
+    const g=new T.BoxGeometry(width,d.length(),depth);
+    g.applyQuaternion(new T.Quaternion().setFromUnitVectors(new T.Vector3(0,1,0),d.normalize()));
+    build.add(g,timber,mid.x,mid.y,mid.z);
+  };
+  for(let bay=0;bay<=5;bay++){
+    const x=-7.5+bay*3;
+    for(const side of [-1,1]){
+      const z=side*1.44;
+      build.add(new T.CylinderGeometry(0.25,0.34,0.21,12),m.wall,x,plinth+0.095,z);
+      build.add(new T.CylinderGeometry(0.128,0.158,2.91,14),timber,x,2.22,z);
+      build.block(timber,x,3.34,z,0.65,0.18,0.43);
+      build.block(timber,x,3.51,z,1.01,0.17,0.61);
+      strut(new T.Vector3(x,3.05,z),new T.Vector3(x,3.86,side*2.04),0.13,0.15);
+      if(bay===5)continue;
+      build.block(timber,x+1.5,1.26,z,2.9,0.13,0.30);
+      build.block(timber,x+1.5,0.93,z,2.9,0.09,0.15);
+      for (let k=0;k<4;k++) {
+        const xx=x+0.24+0.67*k;
+        build.block(timber,xx,1.09,z,0.09,0.30,0.095);
+      }
+      if(side<0){
+        build.block(timber,x+1.5,2.68,z,2.93,0.075,0.1);
+        build.block(timber,x+1.5,1.62,z,2.93,0.075,0.1);
+        for(let k=0;k<4;k++){
+          const xx=x+0.39+k*0.74;
+          for(const sign of [-1,1]){
+            strut(new T.Vector3(xx,2.65,z),new T.Vector3(xx+sign*0.345,2.15,z),0.055,0.07);
+            strut(new T.Vector3(xx,1.65,z),new T.Vector3(xx+sign*0.345,2.15,z),0.055,0.07);
+          }
+        }
+      }
+    }
+    if(bay%2===0 && bay<5){
+      const cx=x+1.5;
+      build.add(new T.CylinderGeometry(0.012,0.012,0.40,6),m.dark,cx,3.49,0.66);
+      build.add(new T.LatheGeometry([new T.Vector2(0.14,0),new T.Vector2(0.32,0.10),
+        new T.Vector2(0.37,0.37),new T.Vector2(0.30,0.60),new T.Vector2(0.14,0.68)],12),paper,cx,2.63,0.66);
+      for (const y of [2.66,3.28]) build.add(new T.CylinderGeometry(0.20,0.20,0.065,12),timber,cx,y,0.66);
+      for(let rib=0;rib<8;rib++){
+        const a=rib*Math.PI/4;
+        const profile=[[0.16,2.67],[0.32,2.76],[0.378,3.0],[0.30,3.23],[0.15,3.29]];
+        const path=profile.map(([r,y])=>new T.Vector3(cx+r*Math.cos(a),y,0.66+r*Math.sin(a)));
+        build.add(new T.TubeGeometry(new T.CatmullRomCurve3(path),10,0.012,4,false),timber,0,0,0);
+      }
+    }
+  }
+  // The last tile on each slope turns up towards the end of the ridge.
+  const roofPoint=(u:number,t:number,side:number) => new T.Vector3(u*(half+0.62),
+    3.86+1.51*Math.max(0,1-t)**1.65+0.51*Math.abs(u)**7*t**2,side*(0.05+2.34*t));
+  for(const side of [-1,1]){
+    for(let course=0;course<7;course++){
+      const tile=new T.PlaneGeometry(1,1,240,3);
+      const pos=tile.attributes.position,uv=tile.attributes.uv;
+      for(let i=0;i<pos.count;i++){
+        const u=uv.getX(i),v=uv.getY(i),t=(course+v*1.045)/7;
+        const p=roofPoint(2*u-1,t,side);
+        p.y+=0.054*Math.cos(tau*60*u)+0.062*v;
+        pos.setXYZ(i,p.x,p.y,p.z);
+      }
+      tile.computeVertexNormals();
+      build.add(tile,tiles,0,0,0);
+    }
+    const edge=Array.from({length:25},(_,k)=>roofPoint(k/12-1,1,side));
+    build.add(new T.TubeGeometry(new T.CatmullRomCurve3(edge),32,0.083,8),tiles,0,0,0);
+  }
+  build.block(tiles,0,5.44,0,half*2+1.15,0.16,0.28);
+  for(const side of [-1,1]){
+    const ridge=new T.CatmullRomCurve3([new T.Vector3(side*7.6,5.43,0),new T.Vector3(side*8.1,5.46,0),
+      new T.Vector3(side*8.47,5.63,0),new T.Vector3(side*8.64,5.98,0)]);
+    build.add(new T.TubeGeometry(ridge,16,0.078,7),tiles,0,0,0);
+  }
+  build.finish(gallery);
+  gallery.position.set(-20.8,0,-3.5);
+  gallery.rotation.y=Math.PI/2-0.09;
+  return gallery;
+}
+
 /** Weathered garden wall with a circular opening cut through its entire thickness. */
 export function heronGarden(art: ArtLibrary, m: Palette, rand: () => number) {
   const garden = new T.Group(),
@@ -276,6 +363,8 @@ export function heronGarden(art: ArtLibrary, m: Palette, rand: () => number) {
   const paper = new T.MeshStandardMaterial({
     color: 0xddcba3, emissive: 0xffbb68, emissiveIntensity: .85, roughness: .88,
   });
+  ceramic.side = T.DoubleSide;
+  garden.add(waterGallery(m, ceramic, timber, paper));
   moonBridge(stone, m, paper);
   stone.finish(garden);
   rock(art, garden, -8.4, -21, 6.8, 0.55, 1.05);
