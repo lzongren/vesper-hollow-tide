@@ -4,7 +4,7 @@ $project = Split-Path $PSScriptRoot -Parent
 $descriptor = Join-Path $project 'Vesper.uproject'
 $bin = Join-Path $EngineRoot 'Engine\Binaries\Win64'
 $map = '/Game/Vesper/Maps/MountainPilgrimage'
-$gameMode = '/Game/Vesper/Pilgrim/BP_PilgrimageMode.BP_PilgrimageMode_C'
+$gameMode = '/Game/Vesper/Duel/BP_BelfryMode.BP_BelfryMode_C'
 if (!(Test-Path "$bin\UnrealEditor.exe")) { throw "Unreal Editor missing at $bin" }
 . "$PSScriptRoot\local_storage.ps1"
 $localCache = Join-Path $env:LOCALAPPDATA 'VesperDevelopment\DerivedDataCache'
@@ -58,6 +58,13 @@ $fitReport = if (Test-Path "$project\Saved\FittedPilgrim.json") {
 if ($fitReport.locomotion_revision -ne 2 -or $fitReport.palm_revision -ne 1) {
     Invoke-MapPass 'fit_pilgrim' 'VESPER_PILGRIM_FITTED'
 }
+$duelReport = if (Test-Path "$project\Saved\BelfryDuel.json") {
+    Get-Content -Raw "$project\Saved\BelfryDuel.json" | ConvertFrom-Json
+}
+if ($duelReport.revision -ne 2 -or !(Test-Path "$project\Content\Vesper\Duel\BP_BelfryMode.uasset")) {
+    Invoke-MapPass 'build_bellwarden' 'VESPER_BELFRY_READY'
+}
 Start-Process "$bin\UnrealEditor.exe" -WorkingDirectory $project -ArgumentList @(
-    "`"$descriptor`"", "$map`?game=$gameMode", '-game', '-windowed', '-ResX=1600', '-ResY=900', '-NoP4'
+    "`"$descriptor`"", "$map`?game=$gameMode", '-game', '-windowed', '-ResX=1600', '-ResY=900', '-NoP4',
+    '-ForceEnablePython', '-ExecCmds="py __import__(''runpy'').run_path(__import__(''unreal'').Paths.convert_relative_path_to_full(__import__(''unreal'').Paths.project_dir())+''Scripts/belfry_combat.py'')"'
 )

@@ -1,8 +1,8 @@
 # Native Unreal project
 
-Mountain Pilgrimage links three courtyards with a 205.4-metre stone road. Two bends break the sightline between the belfry, garden and shrine. Each court has a staircase down to a 432 × 432 metre valley floor with outcrops and groups of mountain pines. UE 5.8.4 generated the level on Windows with an RTX 5080. The native player wears Vesper’s woven hat, mantle and scabbard over the credited CC0 armour. The fitting step uses skeleton transforms and locomotion animations from the locally installed Epic third-person template. The browser build contains the three playable boss encounters.
+Mountain Pilgrimage links three courtyards with a 205.4-metre stone road. Two bends break the sightline between the belfry, garden and shrine. Each court has a staircase down to a 432 × 432 metre valley floor with outcrops and groups of mountain pines. UE 5.8.4 generated the level on Windows with an RTX 5080. The native player wears Vesper’s woven hat, mantle and scabbard over the credited CC0 armour. The fitting step uses skeleton transforms and locomotion animations from the locally installed Epic third-person template. The first courtyard hosts the Bellwarden duel. The browser build contains all three boss encounters.
 
-## Run the native traversal
+## Play the mountain route and Bellwarden duel
 
 Keep the checkout on a physical local drive outside OneDrive. The launcher checks the project path and places its filesystem cache under `%LOCALAPPDATA%\VesperDevelopment\DerivedDataCache`. Generated assets, map packages, logs and captures stay beside the local project. From the repository root in Windows PowerShell:
 
@@ -10,9 +10,9 @@ Keep the checkout on a physical local drive outside OneDrive. The launcher check
 .\native\Scripts\play_pilgrimage.ps1 -EngineRoot 'C:\Program Files\Epic Games\UE_5.8'
 ```
 
-Install the engine’s Templates and Feature Packs component. The first launch imports the repository’s GLBs and paving textures and creates the map. Subsequent launches reuse the saved level. Use WASD to move, the mouse to look and Space to jump. Generated project content stays on the machine. The project runs in standalone game mode through Unreal Editor and requires the editor installation.
+Install the engine’s Templates and Feature Packs component. The first launch imports the repository’s GLBs and paving textures and creates the map. Subsequent launches reuse the saved level. Follow the road to the first lantern court. Use WASD to move and the mouse to look. Left click chains strikes, right click charges an attack, and Space steps in the movement direction or backwards from a standstill. The controller bindings are right shoulder, right trigger and the bottom face button. Generated project content stays on the machine. The project runs in standalone game mode through Unreal Editor and requires the editor installation.
 
-[Valley forest floor and ferns](../docs/runtime/valley-understory/) · [Evening light on the mountain route](../docs/runtime/mountain-evening/) · [Mountain pine gameplay comparison](../docs/runtime/mountain-pines/) · [Retaining walls and valley stair](../docs/runtime/mountain-masonry/) · [Procession road gameplay](../docs/runtime/procession-road/) · [Traversal measurements](../docs/runtime/mountain-pilgrimage/) · [Art direction and acceptance target](Art/quality-target.json)
+[Bellwarden combat captures and timings](../docs/runtime/belfry-duel/) · [Valley forest floor and ferns](../docs/runtime/valley-understory/) · [Evening light on the mountain route](../docs/runtime/mountain-evening/) · [Mountain pine gameplay comparison](../docs/runtime/mountain-pines/) · [Retaining walls and valley stair](../docs/runtime/mountain-masonry/) · [Procession road gameplay](../docs/runtime/procession-road/) · [Traversal measurements](../docs/runtime/mountain-pilgrimage/) · [Art direction and acceptance target](Art/quality-target.json)
 
 The mountain lighting pass uses the bundled HDR cloud deck for the sky and diffuse fill. Regenerate it with Python and NumPy using `python art/bake_mountain_sky.py native/Art/MountainOvercast.hdr`.
 

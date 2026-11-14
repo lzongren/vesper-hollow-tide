@@ -149,7 +149,7 @@ def joint_positions(asset):
     }
 
 
-def build(reference, body_path, art, textures, output):
+def build(reference, body_path, art, textures, output, *, bellwarden=False, armed=False):
     base, rig, out = Glb(body_path), Glb(reference), Output()
     skin = rig.doc["skins"][0]
     source = joint_positions(base)
@@ -250,6 +250,12 @@ def build(reference, body_path, art, textures, output):
                     "image/jpeg",
                     "HeronStitch",
                 )
+            if bellwarden and prefix == "Pilgrim":
+                m.pop("emissiveTexture", None)
+                m["emissiveFactor"] = [0, 0, 0]
+                m.pop("extensions", None)
+                m["pbrMetallicRoughness"].update(baseColorFactor=[.30, .20, .13, 1],
+                                                 roughnessFactor=.84, metallicFactor=.04)
             out.doc["materials"].append(m)
         return first
 
@@ -307,12 +313,21 @@ def build(reference, body_path, art, textures, output):
             base, prim, vertices, normals, joints, weights, offset + prim["material"]
         )
 
-    for file, prefix, bone in [
+    gear = [
         ("PilgrimRainHat", "Bamboo", "head"),
         ("PilgrimScabbard", "SwordCase", "pelvis"),
         ("PilgrimMantle", "Mantle", "spine_05"),
-    ]:
-        asset = Glb(art / (file + ".glb"))
+    ]
+    if armed:
+        gear.append(("PilgrimJian", "Jian", "hand_r"))
+    if bellwarden:
+        gear = [
+            ("BellwardenLeftPauldron", "LeftPlate", "upperarm_l"),
+            ("BellwardenRightPauldron", "RightPlate", "upperarm_r"),
+            ("tide-bell", "Toll", "hand_r"),
+        ]
+    for file, prefix, bone in gear:
+        asset = Glb((textures if prefix == "Toll" else art) / (file + ".glb"))
         offset = materials(asset, prefix)
         for node in asset.doc["nodes"]:
             if "mesh" not in node:
@@ -354,7 +369,17 @@ def build(reference, body_path, art, textures, output):
                     normal = axis(n)
                     bones = [bone]
                     w = [1.0]
-                    if prefix == "Bamboo":
+                    if bellwarden:
+                        # Shoulder castings sit over the upper arms. The bell hangs
+                        # mouth down with the fingers gripping its crown.
+                        scale = 0.32 if prefix == "Toll" else 0.48
+                        x, y, z = [v * scale + a for v, a in zip((x, y, z), target[bone])]
+                        y += -0.57 if prefix == "Toll" else 0.045
+                    elif prefix == "Jian":
+                        turn = align((0, 1, 0), (0, .16, 1))
+                        x, y, z = [v + a for v, a in zip(rotate(turn, (x, y, z)), target[bone])]
+                        normal = rotate(turn, normal)
+                    elif prefix == "Bamboo":
                         x += target["head"][0]
                         y += target["head"][1] + 0.216
                         z += target["head"][2]
