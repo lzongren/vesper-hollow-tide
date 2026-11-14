@@ -1,10 +1,10 @@
 # Native Unreal project
 
-Mountain Pilgrimage links three courtyards with a 205.4-metre stone road. Two bends break the sightline between the belfry, garden and shrine. Each court has a staircase down to a 432 × 432 metre valley floor with outcrops and groups of mountain pines. UE 5.8.4 generated the level on Windows with an RTX 5080. The native player uses the locally installed Epic third-person template. The browser build contains the three playable boss encounters.
+Mountain Pilgrimage links three courtyards with a 205.4-metre stone road. Two bends break the sightline between the belfry, garden and shrine. Each court has a staircase down to a 432 × 432 metre valley floor with outcrops and groups of mountain pines. UE 5.8.4 generated the level on Windows with an RTX 5080. The native player wears Vesper’s woven hat, mantle and scabbard over the credited CC0 armour. The fitting step uses skeleton transforms and locomotion animations from the locally installed Epic third-person template. The browser build contains the three playable boss encounters.
 
 ## Run the native traversal
 
-From the repository root in Windows PowerShell:
+Keep the checkout on a physical local drive outside OneDrive. The launcher checks the project path and places its filesystem cache under `%LOCALAPPDATA%\VesperDevelopment\DerivedDataCache`. Generated assets, map packages, logs and captures stay beside the local project. From the repository root in Windows PowerShell:
 
 ```powershell
 .\native\Scripts\play_pilgrimage.ps1 -EngineRoot 'C:\Program Files\Epic Games\UE_5.8'

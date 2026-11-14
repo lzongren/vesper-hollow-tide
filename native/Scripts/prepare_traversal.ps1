@@ -1,6 +1,11 @@
 param([Parameter(Mandatory=$true)][string]$EngineRoot)
 $ErrorActionPreference = 'Stop'
 $project = Split-Path $PSScriptRoot -Parent
+. "$PSScriptRoot\local_storage.ps1"
+Assert-VesperLocalPath $project
+foreach ($subdir in @('Content','Art','SourceAssets','Saved','Intermediate','DerivedDataCache')) {
+    Assert-VesperLocalPath (Join-Path $project $subdir)
+}
 $templates = Join-Path $EngineRoot 'Templates'
 # The locally installed Epic template supplies its own movement blueprint,
 # animation graph and enhanced input. Only source for the Vesper map is published.
@@ -27,6 +32,9 @@ foreach ($channel in @('color','normal','rough')) {
     Stage-Source $source "stone-$channel.jpg"
 }
 $models = Join-Path (Split-Path $project -Parent) 'public\models'
-foreach ($model in @('pine.glb','rock_face_01.glb')) {
+foreach ($channel in @('color','normal')) {
+    Stage-Source $source "pilgrim-brocade-$channel.jpg"
+}
+foreach ($model in @('pine.glb','rock_face_01.glb','pilgrim.glb')) {
     Stage-Source $models $model
 }

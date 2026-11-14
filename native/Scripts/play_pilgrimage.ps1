@@ -4,8 +4,13 @@ $project = Split-Path $PSScriptRoot -Parent
 $descriptor = Join-Path $project 'Vesper.uproject'
 $bin = Join-Path $EngineRoot 'Engine\Binaries\Win64'
 $map = '/Game/Vesper/Maps/MountainPilgrimage'
-$gameMode = '/Game/ThirdPerson/Blueprints/BP_ThirdPersonGameMode.BP_ThirdPersonGameMode_C'
+$gameMode = '/Game/Vesper/Pilgrim/BP_PilgrimageMode.BP_PilgrimageMode_C'
 if (!(Test-Path "$bin\UnrealEditor.exe")) { throw "Unreal Editor missing at $bin" }
+. "$PSScriptRoot\local_storage.ps1"
+$localCache = Join-Path $env:LOCALAPPDATA 'VesperDevelopment\DerivedDataCache'
+Assert-VesperLocalPath $project
+Assert-VesperLocalPath $localCache
+[Environment]::SetEnvironmentVariable('UE-LocalDataCachePath', $localCache, 'Process')
 & "$PSScriptRoot\prepare_traversal.ps1" -EngineRoot $EngineRoot
 
 function Invoke-MapPass([string]$Script, [string]$SuccessMarker) {
@@ -34,6 +39,9 @@ if (!(Test-Path "$project\Saved\RouteMeshes.json")) {
 }
 if (!(Test-Path "$project\Saved\Procession.json")) {
     Invoke-MapPass 'dress_procession' 'VESPER_PROCESSION_SAVED'
+}
+if (!(Test-Path "$project\Saved\FittedPilgrim.json") -or (Get-Content -Raw "$project\Saved\FittedPilgrim.json" | ConvertFrom-Json).locomotion_revision -ne 2) {
+    Invoke-MapPass 'fit_pilgrim' 'VESPER_PILGRIM_FITTED'
 }
 Start-Process "$bin\UnrealEditor.exe" -WorkingDirectory $project -ArgumentList @(
     "`"$descriptor`"", "$map`?game=$gameMode", '-game', '-windowed', '-ResX=1600', '-ResY=900', '-NoP4'
