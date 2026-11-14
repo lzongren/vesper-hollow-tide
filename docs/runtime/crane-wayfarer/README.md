@@ -12,3 +12,5 @@ The player on the mountain route now wears an indigo coat embroidered with an eg
 | Walking | [Before](before-walk.jpg) | [After](after-walk.jpg) |
 
 All images come from the possessed player in the standalone Unreal Editor game on the Windows RTX 5080. The comparison uses identical camera offsets, lens settings, spawn position and lighting at 2560 × 1440. The wardrobe comparison uses the approach road, away from incoming attacks. [Mesh attribution and texture sources](../../../native/Art/Wayfarer/)
+
+In a separate 1280 × 720 game-window recording the new player attacks, dodges and defeats the Saint of Cinders. The first defeated sample is at 24.70 seconds. The recording runs for 43 seconds and is silent. [Watch the combat sequence](duel.mp4) · [Combat trace](duel.json)
