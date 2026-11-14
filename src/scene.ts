@@ -29,6 +29,7 @@ import {
   leafDrifts,
   valleyHorizon,
 } from "./sanctuary";
+import { RingStaff } from "./ring-staff";
 import { CinderFire, CinderLights } from "./cinder-fire";
 import { CourtLight, vigilLamp } from "./vigil-light";
 import { batchCourt } from "./static-court";
@@ -197,6 +198,7 @@ interface Actor {
   grip?: WeaponGrip;
   rightHand?: T.Bone;
   halo?: T.Group;
+  staff?: RingStaff;
   pinions?: T.Group[];
 }
 interface Effect {
@@ -696,8 +698,8 @@ export class World {
         );
       }
       a.halo = halo;
-      cylinder(weapon, this.materials.gold, 0, 1, 0, 0.045, 3);
-      torus(weapon, this.materials.gold, 0.28, 0.035, 0, 2.4, 0);
+      a.staff = new RingStaff(this.materials.wood, this.materials.gold, this.materials.dark, this.materials.fire);
+      weapon.add(a.staff);
     }
     if (a.robe) a.clothMotion = new MantleMotion(a.robe);
     return a;
@@ -1601,6 +1603,7 @@ export class World {
         -0.3,
       );
     if (action === "windup") a.weapon.rotation.x = -2.5 * progress;
+    a.staff?.update(a.weapon.rotation.x, dt);
     if (a.halo) a.halo.rotation.z = t * 0.13;
   }
   burst(e: GameEvent) {
