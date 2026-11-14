@@ -1,0 +1,23 @@
+{
+  "results": [
+    {
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+      "boss": "The Bellwarden",
+      "mode": "PILGRIM",
+      "timing": {
+        "samples": 1715,
+        "median": 16.7,
+        "p95": 16.8,
+        "max": 116.7
+      },
+      "title": "Vigil released",
+      "stats": "0:29TIME3PARRIES0HITS TAKEN",
+      "bossHealth": "0%",
+      "playerHealth": 100,
+      "awakened": true,
+      "elapsed": 28.88600000009498,
+      "terminal": true
+    }
+  ],
+  "errors": []
+}
