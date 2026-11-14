@@ -1,4 +1,5 @@
 import * as T from "three";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { angleDiff, type Attack } from "./combat";
 import type { GripKey } from "./pilgrim";
 
@@ -139,86 +140,173 @@ export class MantleMotion {
   }
 }
 
-/** Overlapping plates fan out from a rounded cap, leaving the elbow free. */
-export function lamellarShoulder(
-  side: number,
-  bronze: T.Material,
-  border: T.Material,
-  lining: T.Material,
-) {
-  const shoulder = new T.Group();
-  const cap = new T.Mesh(
-    new T.SphereGeometry(1, 32, 18, 0, Math.PI * 2, 0, 1.5),
-    bronze,
-  );
-  cap.scale.set(0.385, 0.3, 0.39);
-  shoulder.add(cap);
-  for (let row = 0; row < 4; row++) {
-    const vertices: number[] = [],
-      uvs: number[] = [],
-      indices: number[] = [];
-    const trimPoints: T.Vector3[] = [];
-    for (let i = 0; i <= 32; i++) {
-      const u = i / 32,
-        angle = (u - 0.5) * 3.36;
-      const edge = Math.cos(angle * 0.89),
-        radius = 0.31 + row * 0.034;
-      for (let j = 0; j <= 4; j++) {
-        const v = j / 4,
-          r = radius + 0.073 * v;
-        const x = side * (Math.cos(angle) * r + 0.016 * row);
-        const y =
-          0.14 -
-          0.13 * row -
-          0.194 * v -
-          0.09 * edge -
-          0.048 * Math.sin(Math.PI * u * 3) ** 2 * v;
-        const z = Math.sin(angle) * r;
-        vertices.push(x, y, z);
-        uvs.push(u, 1 - v);
-        if (j === 4) trimPoints.push(new T.Vector3(x, y, z));
-        if (i && j) {
-          const b = i * 5 + j;
-          if (side === 1) indices.push(b - 6, b - 1, b, b - 6, b, b - 5);
-          else indices.push(b - 6, b, b - 1, b - 6, b - 5, b);
+/** The collar carries the crown. Successive lames are tied progressively
+ * closer to the upper arm so the guard opens when the elbow rises. */
+export class BellPauldron {
+  readonly mount = new T.Group();
+  private readonly bands: T.Group[] = [];
+  private readonly rest = new T.Quaternion();
+  private readonly change = new T.Quaternion();
+  private readonly identity = new T.Quaternion();
+  private readonly base = new T.Quaternion();
+
+  constructor(root: T.Group, private arm: T.Bone, side: number, metal: T.MeshStandardMaterial,
+    border: T.Material, lacquer: T.Material, lining: T.Material) {
+    const collar = arm.parent!;
+    root.add(this.mount);
+    arm.getWorldPosition(this.mount.position);
+    root.worldToLocal(this.mount.position);
+    collar.attach(this.mount);
+    this.base.copy(this.mount.quaternion);
+    this.rest.copy(arm.quaternion).invert();
+    const crown = new T.Group();
+    const shell = new T.SphereGeometry(1,40,20,0,Math.PI*2,0,1.58);
+    shell.scale(.438,.32,.43);
+    crown.add(new T.Mesh(shell, metal));
+    const rim = new T.TorusGeometry(1,.025,7,52).rotateX(Math.PI/2)
+      .scale(.437,.34,.431);
+    crown.add(new T.Mesh(rim,border));
+    const padding = new T.Mesh(new T.SphereGeometry(1,20,14),lining);
+    padding.scale.set(.34,.34,.33);
+    padding.position.y=-.13;
+    crown.add(padding);
+
+    // A horned river guardian in repoussé on the outward-facing crown.
+    // A single deformed surface gives the eyes, jaw and brow shared highlights.
+    const relief = new T.SphereGeometry(1,64,40);
+    const pos=relief.attributes.position;
+    const colors=new Float32Array(pos.count*3);
+    const bronzeTone=new T.Color(0xffdfaa), patina=new T.Color(0x48645a);
+    const tint=new T.Color();
+
+    const hill=(u:number,v:number,w:number,h:number)=>Math.exp(-((u/w)**2+(v/h)**2));
+    for(let i=0;i<pos.count;i++){
+      const u=pos.getX(i), v=pos.getY(i), z=pos.getZ(i), abs=Math.abs(u);
+      const brow=hill(abs-.40,v-.27-.15*abs,.33,.15);
+      const eye=hill(abs-.39,v-.13,.21,.10);
+      const muzzle=hill(abs-.24,v+.22,.22,.20);
+      const nose=hill(u,v+.02,.20,.35);
+      const lip=hill(u,v+.53,.43,.09);
+      const cheek=hill(abs-.71,v+.03,.12,.45);
+      const depth=.122*z+T.MathUtils.smoothstep(z,.04,.55)*
+        (.082*brow-.041*eye+.076*muzzle+.106*nose+.030*lip+.029*cheek);
+      const tarnish = .20 + .36*eye + .15*hill(abs-.57,v+.38,.19,.19)
+        + .13*Math.sin(8*u+3*v)*Math.cos(7*v-z);
+      tint.copy(bronzeTone).lerp(patina,tarnish).multiplyScalar(.93+.09*brow+.08*nose);
+      tint.toArray(colors,3*i);
+      pos.setXYZ(i,.263*u*(1+.15*v),.257*v,depth);
+    }
+    relief.setAttribute("color",new T.BufferAttribute(colors,3));
+    relief.computeVertexNormals();
+    const badge=new T.Group();badge.position.set(side*.20,.12,.255);
+    badge.rotation.y=side*.61;
+    const casting=metal.clone();
+    casting.vertexColors=true;
+    badge.add(new T.Mesh(relief,casting));
+    const ornaments:T.BufferGeometry[]=[];
+    const wire=(pts:number[][],r:number,taper=false)=>{
+      const path=new T.CatmullRomCurve3(pts.map(([x,y,z])=>new T.Vector3(x,y,z)));
+      const tube=new T.TubeGeometry(path,18,r,7,false);
+      if (taper) {
+        const center=new T.Vector3(), point=new T.Vector3();
+        const attr=tube.attributes.position;
+        for (let ring=0;ring<=18;ring++) {
+          const t=ring/18;
+          path.getPointAt(t,center);
+          for(let j=0;j<=7;j++){
+            const k=ring*8+j;
+            point.fromBufferAttribute(attr,k).sub(center).multiplyScalar(1.65*(1-t)**.72+.04).add(center);
+            attr.setXYZ(k,point.x,point.y,point.z);
+          }
+        }
+        tube.computeVertexNormals();
+      }
+      ornaments.push(tube);
+    };
+    for(const sign of [-1,1]){
+      wire([[sign*.052,.218,.08],[sign*.124,.307,.092],[sign*.234,.331,.067],
+        [sign*.262,.351,.03],[sign*.288,.382,-.014]],.026,true);
+      wire([[sign*.025,.074,.177],[sign*.084,.101,.192],[sign*.158,.132,.150],
+        [sign*.207,.164,.088]],.014);
+      wire([[sign*.056,-.062,.170],[sign*.141,-.093,.161],[sign*.238,-.071,.087],
+        [sign*.261,-.016,.061]],.012);
+      ornaments.push(new T.SphereGeometry(1,13,8).scale(.031,.015,.018)
+        .translate(sign*.104,.039,.113));
+    }
+    const crest=new T.Mesh(mergeGeometries(ornaments)!,border);
+    ornaments.forEach(g=>g.dispose());
+    badge.add(crest);crown.add(badge);
+    this.bands.push(crown);
+    for (let row = 0; row < 4; row++) {
+      const band = new T.Group();
+      const vertices: number[] = [],
+        uvs: number[] = [],
+        indices: number[] = [];
+      const trimPoints: T.Vector3[] = [];
+      for (let i = 0; i <= 32; i++) {
+        const u = i / 32,
+          angle = (u - 0.5) * 3.36;
+        const edge = Math.cos(angle * 0.89),
+          radius = .357 + row * .026;
+        for (let j = 0; j <= 4; j++) {
+          const v = j / 4,
+            r = radius + 0.073 * v;
+          const x = side * (Math.cos(angle) * r + 0.016 * row);
+          const y =
+            0.14 -
+            .144 * row -
+            .211 * v -
+            0.09 * edge -
+            0.048 * Math.sin(Math.PI * u * 3) ** 2 * v;
+          const z = Math.sin(angle) * r;
+          vertices.push(x, y, z);
+          uvs.push(u, 1 - v);
+          if (j === 4) trimPoints.push(new T.Vector3(x, y, z));
+          if (i && j) {
+            const b = i * 5 + j;
+            if (side === 1) indices.push(b - 6, b - 1, b, b - 6, b, b - 5);
+            else indices.push(b - 6, b, b - 1, b - 6, b - 5, b);
+          }
         }
       }
+      const geometry = new T.BufferGeometry();
+      geometry.setAttribute(
+        "position",
+        new T.Float32BufferAttribute(vertices, 3),
+      );
+      geometry.setAttribute("uv", new T.Float32BufferAttribute(uvs, 2));
+      geometry.setIndex(indices);
+      geometry.computeVertexNormals();
+      band.add(new T.Mesh(geometry,row % 2 === 0 ? lacquer : metal));
+      const fittings:T.BufferGeometry[]=[
+        new T.TubeGeometry(new T.CatmullRomCurve3(trimPoints),32,.012,6,false)
+      ];
+      // Overlaid arches on each plate echo the mouths of the votive bells.
+      for(const k of [4,10,16,22,28]){
+        const points=trimPoints.slice(k-2,k+3).map((point,j)=>{
+          const v=point.clone();
+          v.y+=.034+.060*Math.sin(j*Math.PI/4);
+          v.x+=side*.011;
+          return v;
+        });
+        fittings.push(new T.TubeGeometry(new T.CatmullRomCurve3(points),8,.007,5,false));
+        const stud=trimPoints[k];
+        fittings.push(new T.SphereGeometry(.021,10,7).translate(stud.x,stud.y+.11,stud.z));
+      }
+      band.add(new T.Mesh(mergeGeometries(fittings)!,border));
+      fittings.forEach(g=>g.dispose());
+      this.bands.push(band);
     }
-    const geometry = new T.BufferGeometry();
-    geometry.setAttribute(
-      "position",
-      new T.Float32BufferAttribute(vertices, 3),
-    );
-    geometry.setAttribute("uv", new T.Float32BufferAttribute(uvs, 2));
-    geometry.setIndex(indices);
-    geometry.computeVertexNormals();
-    const plate = new T.Mesh(geometry, bronze);
-    shoulder.add(plate);
-    shoulder.add(
-      new T.Mesh(
-        new T.TubeGeometry(
-          new T.CatmullRomCurve3(trimPoints),
-          32,
-          0.012,
-          6,
-          false,
-        ),
-        border,
-      ),
-    );
-    for (const k of [4, 12, 20, 28]) {
-      const stud = new T.Mesh(new T.SphereGeometry(0.023, 9, 7), border);
-      stud.position.copy(trimPoints[k]);
-      stud.position.y += 0.072;
-      shoulder.add(stud);
-    }
+    this.mount.add(...this.bands);
+    this.mount.traverse(o=>{if(o instanceof T.Mesh)o.castShadow=o.receiveShadow=true;});
   }
-  const padding = new T.Mesh(new T.SphereGeometry(1, 20, 14), lining);
-  padding.scale.set(0.3, 0.33, 0.3);
-  padding.position.y = -0.13;
-  shoulder.add(padding);
-  shoulder.traverse((o) => {
-    o.castShadow = o.receiveShadow = true;
-  });
-  return shoulder;
+
+  pose() {
+    // Convert the arm's pose relative to its parent into the guard's bind
+    // frame. Torso rotation and the source rig's centimetre scale cancel.
+    this.change.copy(this.base).invert().multiply(this.arm.quaternion)
+      .multiply(this.rest).multiply(this.base);
+    for(let i=0;i<this.bands.length;i++)
+      this.bands[i].quaternion.slerpQuaternions(this.identity,this.change,.27+i*.155);
+  }
 }

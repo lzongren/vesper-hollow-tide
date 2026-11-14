@@ -16,7 +16,7 @@ import { ArtLibrary } from "./assets";
 import {
   bellGuard,
   bellStroke,
-  lamellarShoulder,
+  BellPauldron,
   MantleMotion,
 } from "./vestments";
 import type { Attack } from "./combat";
@@ -204,6 +204,7 @@ interface Actor {
   impactSide: number;
   impactForward: number;
   silks?: SilkPanel[];
+  pauldrons?: BellPauldron[];
   robe?: T.Mesh;
   clothMotion?: MantleMotion;
   weapon: T.Group;
@@ -556,14 +557,24 @@ export class World {
         if (upper && fore && a.rightHand)
           a.grip = new WeaponGrip(root, upper, fore, a.rightHand, weapon);
       } else {
-        const face = new T.PlaneGeometry(0.49, 0.65, 24, 28);
+        const face = new T.PlaneGeometry(.49,.65,64,72);
         const pos = face.attributes.position;
+        const ridge = (x:number,y:number,w:number,h:number) => Math.exp(-((x/w)**2+(y/h)**2));
         for (let i = 0; i < pos.count; i++) {
-          const x = pos.getX(i),
-            y = pos.getY(i),
-            bend = x / 0.26;
-          const nose = 0.07 * Math.exp(-110 * x * x - 50 * (y + 0.055) ** 2);
-          pos.setZ(i, 0.12 * (1 - bend * bend) + nose - 0.07 * (y / 0.36) ** 2);
+          const x=pos.getX(i), y=pos.getY(i), cheek=Math.abs(x);
+          const temple=x/.245, angle=temple*1.22;
+          const dome=.112*Math.cos(angle)-.066*temple*temple-.055*(y/.33)**2;
+          const brow=ridge(cheek-.092,y-.109-.12*cheek,.063,.029);
+          const socket=ridge(cheek-.090,y-.071,.058,.026);
+          const bridge=ridge(x,y-.011,.031,.095);
+          const nose=ridge(x,y+.055,.037,.030);
+          const nostril=ridge(cheek-.042,y+.062,.019,.015);
+          const jaw=ridge(x,y+.216,.083,.042);
+          const lips=ridge(x,y+.135,.07,.015)-.42*ridge(x,y+.146,.064,.008);
+          const cheekbone=ridge(cheek-.132,y+.018,.058,.069);
+          pos.setXYZ(i,.245*Math.sin(angle)/Math.sin(1.22),y,
+            dome+.033*brow-.021*socket+.045*bridge+.066*nose+.022*nostril
+              +.036*jaw+.026*lips+.030*cheekbone);
         }
         face.computeVertexNormals();
         const mask = mesh(
@@ -624,23 +635,18 @@ export class World {
         bones.get("Head")?.attach(crown);
         cylinder(weapon, this.materials.wood, 0, 0.65, 0, 0.07, 2.8);
         this.bell(weapon, 0.64, 0, 1.4, 0);
-        const bronze = this.materials["cinder-mask"];
-        for (const [side, joint] of [
-          [-1, "RightArm"],
-          [1, "LeftArm"],
-        ] as const) {
-          const pauldron = lamellarShoulder(
-            side,
-            bronze,
-            this.materials.gold,
-            this.materials.dark,
-          );
-          root.add(pauldron);
-          const upper = bones.get(joint)!;
-          upper.getWorldPosition(pauldron.position);
-          root.worldToLocal(pauldron.position);
-          upper.attach(pauldron);
-        }
+        const bronze = this.materials.gold.clone();
+        bronze.color.setHex(0xc7a777);
+        bronze.roughness = .62;
+        bronze.metalness = .57;
+        const lacquer = new T.MeshStandardMaterial({
+          color: 0x68372b, metalness: .24, roughness: .39,
+          normalMap: this.art.textures.get("metal-normal"), normalScale: new T.Vector2(.21,.21),
+        });
+        a.pauldrons = ([-1,1] as const).map(side => new BellPauldron(
+          root,bones.get(side < 0 ? "RightArm" : "LeftArm")!,side,
+          bronze,this.materials.gold,lacquer,this.materials.dark,
+        ));
         const upper = bones.get("RightArm")!,
           fore = bones.get("RightForeArm")!;
         a.grip = new WeaponGrip(
@@ -1618,6 +1624,7 @@ export class World {
       if (a.kind === 0 && shape)
         a.grip.poseKeys(bellStroke(shape, action), progress);
       else a.grip.pose(action, progress);
+      a.pauldrons?.forEach(guard => guard.pose());
       a.silks?.forEach((panel) => panel.update(dt, t));
       return;
     }

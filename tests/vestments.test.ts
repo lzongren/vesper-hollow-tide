@@ -3,7 +3,7 @@ import test from "node:test";
 import * as T from "three";
 import { BOSSES, Combat, DASH_SPEED, DASH_REACH, inSector, SLAM_MARGIN } from "../src/combat";
 import { mantleGeometry } from "../src/pilgrim";
-import { bellStroke, MantleMotion } from "../src/vestments";
+import { BellPauldron, bellStroke, MantleMotion } from "../src/vestments";
 import { GroundRite } from "../src/rites";
 
 test("the bell pose matches on both sides of the damage and recovery transitions", () => {
@@ -62,4 +62,35 @@ test("paving wave follows boss facing, hit reach and remaining charge travel", (
     rite.update(game);
     assert.equal(rite.charge.value, 0);
   }
+});
+
+test("shoulder plates share the collar pivot but progressively follow a solved arm", () => {
+  const root = new T.Group(), collar = new T.Bone(), arm = new T.Bone();
+  root.add(collar);
+  collar.add(arm);
+  collar.rotation.set(.34,-.71,.16);
+  collar.scale.setScalar(.021);
+  arm.position.set(13,8,-5);
+  arm.rotation.set(-.22,.41,-.51);
+  const mat = new T.MeshStandardMaterial();
+  const guard = new BellPauldron(root,arm,-1,mat,mat,mat,mat);
+  const bind = arm.quaternion.clone();
+  const origin = new T.Vector3();
+  guard.pose();
+  const bands = guard.mount.children;
+  assert.equal(bands.length,5);
+  for (const item of bands) assert.ok(item.quaternion.angleTo(new T.Quaternion()) < 1e-6);
+  arm.rotateZ(1.18);
+  root.rotation.y = 1.2;
+  guard.pose();
+  let previousAngle = 0;
+  for (const item of bands) {
+    const angle = item.quaternion.angleTo(new T.Quaternion());
+    assert.ok(angle > previousAngle && angle < 1.18);
+    assert.ok(item.getWorldPosition(origin).distanceTo(arm.getWorldPosition(new T.Vector3())) < 1e-6);
+    previousAngle = angle;
+  }
+  arm.quaternion.copy(bind);
+  guard.pose();
+  for (const item of bands) assert.ok(item.quaternion.angleTo(new T.Quaternion()) < 1e-6);
 });

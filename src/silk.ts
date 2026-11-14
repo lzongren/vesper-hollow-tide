@@ -16,7 +16,7 @@ export interface Cut {
   back: boolean;
   shoulder: boolean;
 }
-function pattern(cut: Cut, u: number, t: number, h: number) {
+function pattern(cut: Cut, u: number, t: number, h: number, brocade = false) {
   const across = 2 * u - 1,
     s = cut.side;
   const pleat =
@@ -52,9 +52,17 @@ function pattern(cut: Cut, u: number, t: number, h: number) {
     z = Math.cos(a) * (0.096 + 0.055 * t) + 0.004 + pleat;
     y = 0.617 - t * (0.398 - 0.07 * u) - 0.016 * Math.sin(Math.PI * u) * t;
   }
+  if (brocade && cut.back) {
+    // Extra cloth gathered into the neck and waist opens towards the hem.
+    const gather = Math.sin((u * 4.5 + .18 * Math.sin(t * 3) + .22 * t * across) * 2 * Math.PI);
+    const fullness = Math.sin(Math.PI * u) * (.18 + .82 * t);
+    z -= (.023 * gather + .012 * gather * gather) * fullness;
+    y += .028 * t * t * (gather * .55 + across * across);
+    x += .013 * fullness * Math.sin(Math.PI * 2 * (u * 3 - t * .22));
+  }
   return new T.Vector3(x * h, y * h, z * h);
 }
-function silkMaterial(map: T.Texture, lining: T.Color, trim: T.Color) {
+function silkMaterial(map: T.Texture, lining: T.Color, trim: T.Color, brocade: boolean) {
   const mat = new T.MeshPhysicalMaterial({
     map,
     side: T.DoubleSide,
@@ -63,6 +71,7 @@ function silkMaterial(map: T.Texture, lining: T.Color, trim: T.Color) {
     sheenColor: 0xb99e81,
     sheenRoughness: 0.74,
   });
+  mat.customProgramCacheKey = () => brocade ? "votive-silk" : "travel-silk";
   mat.onBeforeCompile = (shader) => {
     shader.uniforms.silkLining = { value: lining };
     shader.uniforms.silkEdge = { value: trim };
@@ -78,7 +87,18 @@ function silkMaterial(map: T.Texture, lining: T.Color, trim: T.Color) {
         float hem=min(min(p.x,1.-p.x),p.y);
         float band=1.-smoothstep(.006,.012,hem);
         float couch=(1.-smoothstep(.002,.005,abs(hem-.025)))*.84;
-        if(!gl_FrontFacing){diffuseColor.rgb=silkLining*(.72+.38*dot(diffuseColor.rgb,vec3(.25,.6,.15)));}
+        if(!gl_FrontFacing){
+          ${brocade ? `
+          vec3 ink=texture2D(map,vec2(1.-p.x,p.y)).rgb;
+          float motif=smoothstep(.018,.40,dot(ink,vec3(.28,.58,.14)));
+          vec2 repeatUv=p*vec2(9.,14.);
+          repeatUv.x+=.5*mod(floor(repeatUv.y),2.);
+          vec2 cell=abs(fract(repeatUv)-.5);
+          float lozenge=1.-smoothstep(.035,.12,abs(cell.x+cell.y-.29));
+          diffuseColor.rgb=mix(silkLining,vec3(.44,.19,.067),motif*.67)
+            *(.82+.27*lozenge);`
+          : `diffuseColor.rgb=silkLining*(.72+.38*dot(diffuseColor.rgb,vec3(.25,.6,.15)));`}
+        }
         diffuseColor.rgb=mix(diffuseColor.rgb,silkEdge,max(band,couch));`,
       );
   };
@@ -109,12 +129,13 @@ export class SilkPanel {
     private knees: readonly T.Bone[],
     private elbows: readonly T.Bone[] = [],
     withRainCape = false,
+    brocade = false,
   ) {
     root.updateWorldMatrix(true, true);
     this.bind = anchor.matrixWorld.clone().invert().multiply(root.matrixWorld);
     for (let j = 0; j <= rows; j++)
       for (let i = 0; i <= cols; i++) {
-        const p = pattern(cut, i / cols, j / rows, height);
+        const p = pattern(cut, i / cols, j / rows, height, brocade);
         this.base.push(p);
         this.current.push(p.clone());
         this.previous.push(p.clone());
@@ -140,7 +161,7 @@ export class SilkPanel {
     for (let i = 0; i < attr.count; i++) {
       const u = uv.getX(i),
         t = 1 - uv.getY(i);
-      const p = pattern(cut, u, t, height);
+      const p = pattern(cut, u, t, height, brocade);
       // Continue one embroidered motif across both front skirts.
       if (!cut.back) uv.setX(i, 0.5 + 0.5 * cut.side * u);
       attr.setXYZ(i, p.x, p.y, p.z);
@@ -414,8 +435,9 @@ export function ceremonialSilks(
 ) {
   const silk = silkMaterial(
     face,
-    new T.Color(warden ? 0x752934 : 0x313b41),
+    new T.Color(warden ? 0x883b38 : 0x313b41),
     new T.Color(warden ? 0xc0a36b : 0x976547),
+    warden,
   );
   const lining = new T.MeshPhysicalMaterial({
     map: face,
@@ -447,6 +469,7 @@ export function ceremonialSilks(
           ? [bones.get("RightForeArm")!, bones.get("LeftForeArm")!]
           : [],
         !warden && c.shoulder,
+        warden,
       ),
   );
 }
