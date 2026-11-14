@@ -1,0 +1,872 @@
+{
+  "results": [
+    {
+      "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5080 (0x00002C02) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "boss": "The Veiled Heron",
+      "mode": "PILGRIM",
+      "timing": {
+        "samples": 1701,
+        "median": 16.7,
+        "p95": 16.8,
+        "max": 2385.8
+      },
+      "title": "Vigil released",
+      "stats": "0:28TIME5PARRIES0HITS TAKEN",
+      "bossHealth": "0%",
+      "playerHealth": 100,
+      "awakened": true,
+      "elapsed": 30.207499999951885,
+      "terminal": true,
+      "frames": [
+        {
+          "start": 937.5,
+          "duration": 5341.8,
+          "blocking": 5285.1,
+          "render": 6278.9,
+          "intro": "1",
+          "tell": "Observe. Endure. Answer.",
+          "scripts": [
+            {
+              "duration": 5333.4,
+              "fn": "",
+              "source": "scene-DN2dIOtC.js",
+              "char": 237538,
+              "invoker": "resolve-promise"
+            }
+          ]
+        },
+        {
+          "start": 25983.5,
+          "duration": 2388.7,
+          "blocking": 0,
+          "render": 28365.3,
+          "intro": "0",
+          "tell": "LOW STAMINA \u00b7 MAKE SPACE",
+          "scripts": [
+            {
+              "duration": 6.2,
+              "fn": "",
+              "source": "",
+              "char": -1,
+              "invoker": "user-callback"
+            }
+          ]
+        },
+        {
+          "start": 50342.4,
+          "duration": 1003.2,
+          "blocking": 0,
+          "render": 51339.2,
+          "intro": "0",
+          "tell": "AN OPENING. ANSWER.",
+          "scripts": [
+            {
+              "duration": 5.8,
+              "fn": "",
+              "source": "",
+              "char": -1,
+              "invoker": "user-callback"
+            }
+          ]
+        },
+        {
+          "start": 47873.8,
+          "duration": 948,
+          "blocking": 0,
+          "render": 48816.1,
+          "intro": "0",
+          "tell": "LOW STAMINA \u00b7 MAKE SPACE",
+          "scripts": [
+            {
+              "duration": 5.3,
+              "fn": "",
+              "source": "",
+              "char": -1,
+              "invoker": "user-callback"
+            }
+          ]
+        },
+        {
+          "start": 39246.5,
+          "duration": 929.4,
+          "blocking": 0,
+          "render": 40169.9,
+          "intro": "0",
+          "tell": "Feather litany \u00b7 RED / EVADE",
+          "scripts": [
+            {
+              "duration": 5.6,
+              "fn": "",
+              "source": "",
+              "char": -1,
+              "invoker": "user-callback"
+            }
+          ]
+        },
+        {
+          "start": 13353.3,
+          "duration": 890.9,
+          "blocking": 0,
+          "render": 14234.1,
+          "intro": "0",
+          "tell": "AN OPENING. ANSWER.",
+          "scripts": [
+            {
+              "duration": 9,
+              "fn": "",
+              "source": "",
+              "char": -1,
+              "invoker": "user-callback"
+            }
+          ]
+        },
+        {
+          "start": 20661.5,
+          "duration": 867.4,
+          "blocking": 0,
+          "render": 21522.6,
+          "intro": "0",
+          "tell": "AN OPENING. ANSWER.",
+          "scripts": [
+            {
+              "duration": 5.9,
+              "fn": "",
+              "source": "",
+              "char": -1,
+              "invoker": "user-callback"
+            }
+          ]
+        },
+        {
+          "start": 40965.2,
+          "duration": 846.5,
+          "blocking": 0,
+          "render": 41805.5,
+          "intro": "0",
+          "tell": "Observe. Endure. Answer.",
+          "scripts": [
+            {
+              "duration": 5.9,
+              "fn": "",
+              "source": "",
+              "char": -1,
+              "invoker": "user-callback"
+            }
+          ]
+        },
+        {
+          "start": 9449.7,
+          "duration": 819.1,
+          "blocking": 0,
+          "render": 10260.4,
+          "intro": "0",
+          "tell": "Observe. Endure. Answer.",
+          "scripts": [
+            {
+              "duration": 7.9,
+              "fn": "",
+              "source": "",
+              "char": -1,
+              "invoker": "user-callback"
+            }
+          ]
+        },
+        {
+          "start": 51826.6,
+          "duration": 799.8,
+          "blocking": 0,
+          "render": 52620.4,
+          "intro": "0",
+          "tell": "AN OPENING. ANSWER.",
+          "scripts": [
+            {
+              "duration": 5.4,
+              "fn": "",
+              "source": "",
+              "char": -1,
+              "invoker": "user-callback"
+            }
+          ]
+        },
+        {
+          "start": 6730.3,
+          "duration": 653.6,
+          "blocking": 0,
+          "render": 7377.7,
+          "intro": "1",
+          "tell": "Observe. Endure. Answer.",
+          "scripts": [
+            {
+              "duration": 5.9,
+              "fn": "",
+              "source": "",
+              "char": -1,
+              "invoker": "user-callback"
+            }
+          ]
+        },
+        {
+          "start": 18776.2,
+          "duration": 641.9,
+          "blocking": 0,
+          "render": 19410.8,
+          "intro": "0",
+          "tell": "AN OPENING. ANSWER.",
+          "scripts": [
+            {
+              "duration": 6.9,
+              "fn": "",
+              "source": "",
+              "char": -1,
+              "invoker": "user-callback"
+            }
+          ]
+        }
+      ],
+      "timer": {
+        "available": true,
+        "disjoints": 0,
+        "samples": 1565,
+        "median": {
+          "start": 15385.3,
+          "ms": 4.8,
+          "calls": 758,
+          "cpu": 3.4
+        },
+        "p95": {
+          "start": 31602.1,
+          "ms": 6.28,
+          "calls": 729,
+          "cpu": 4.3
+        },
+        "slowest": [
+          {
+            "start": 22392.6,
+            "ms": 7.85,
+            "calls": 971,
+            "cpu": 5.5
+          },
+          {
+            "start": 10363.7,
+            "ms": 9.77,
+            "calls": 728,
+            "cpu": 542.4
+          },
+          {
+            "start": 18688.9,
+            "ms": 62.62,
+            "calls": 927,
+            "cpu": 14.9
+          },
+          {
+            "start": 29500.1,
+            "ms": 91.81,
+            "calls": 835,
+            "cpu": 8
+          },
+          {
+            "start": 34355.4,
+            "ms": 163.19,
+            "calls": 682,
+            "cpu": 3.6
+          },
+          {
+            "start": 19439.6,
+            "ms": 268.24,
+            "calls": 768,
+            "cpu": 4.2
+          },
+          {
+            "start": 18757.5,
+            "ms": 651.24,
+            "calls": 917,
+            "cpu": 4.1
+          },
+          {
+            "start": 40945,
+            "ms": 860.09,
+            "calls": 954,
+            "cpu": 8.6
+          }
+        ],
+        "framesAtStalls": [
+          {
+            "start": 937.5,
+            "duration": 5341.8,
+            "samples": []
+          },
+          {
+            "start": 25983.5,
+            "duration": 2388.7,
+            "samples": [
+              {
+                "start": 25979.7,
+                "ms": 2.23,
+                "calls": 682,
+                "cpu": 3.6
+              },
+              {
+                "start": 28365.4,
+                "ms": 2.53,
+                "calls": 886,
+                "cpu": 6.2
+              }
+            ]
+          },
+          {
+            "start": 50342.4,
+            "duration": 1003.2,
+            "samples": [
+              {
+                "start": 50338.1,
+                "ms": 2.19,
+                "calls": 750,
+                "cpu": 3.8
+              },
+              {
+                "start": 51339.5,
+                "ms": 4.03,
+                "calls": 878,
+                "cpu": 5.7
+              },
+              {
+                "start": 51355.8,
+                "ms": 5.8,
+                "calls": 746,
+                "cpu": 3.6
+              }
+            ]
+          },
+          {
+            "start": 47873.8,
+            "duration": 948,
+            "samples": [
+              {
+                "start": 47868.8,
+                "ms": 2.38,
+                "calls": 883,
+                "cpu": 4.5
+              },
+              {
+                "start": 48816.3,
+                "ms": 4.55,
+                "calls": 746,
+                "cpu": 5.2
+              },
+              {
+                "start": 48822.2,
+                "ms": 3.56,
+                "calls": 882,
+                "cpu": 4.2
+              },
+              {
+                "start": 48836.5,
+                "ms": 2.89,
+                "calls": 746,
+                "cpu": 3.2
+              }
+            ]
+          },
+          {
+            "start": 39246.5,
+            "duration": 929.4,
+            "samples": [
+              {
+                "start": 39243.2,
+                "ms": 2.46,
+                "calls": 755,
+                "cpu": 3.2
+              },
+              {
+                "start": 40169.9,
+                "ms": 2.52,
+                "calls": 882,
+                "cpu": 5.6
+              },
+              {
+                "start": 40177.6,
+                "ms": 4.17,
+                "calls": 746,
+                "cpu": 3.9
+              },
+              {
+                "start": 40194.3,
+                "ms": 4.84,
+                "calls": 743,
+                "cpu": 3.3
+              }
+            ]
+          },
+          {
+            "start": 13353.3,
+            "duration": 890.9,
+            "samples": [
+              {
+                "start": 13350,
+                "ms": 2.45,
+                "calls": 690,
+                "cpu": 3
+              },
+              {
+                "start": 14234.3,
+                "ms": 7.78,
+                "calls": 929,
+                "cpu": 8.8
+              },
+              {
+                "start": 14250.9,
+                "ms": 3.79,
+                "calls": 754,
+                "cpu": 3.8
+              }
+            ]
+          },
+          {
+            "start": 20661.5,
+            "duration": 867.4,
+            "samples": [
+              {
+                "start": 20657.5,
+                "ms": 2.39,
+                "calls": 751,
+                "cpu": 3.9
+              },
+              {
+                "start": 21522.7,
+                "ms": 2.33,
+                "calls": 883,
+                "cpu": 5.9
+              },
+              {
+                "start": 21529.3,
+                "ms": 4.47,
+                "calls": 751,
+                "cpu": 3.3
+              },
+              {
+                "start": 21541.7,
+                "ms": 2.71,
+                "calls": 751,
+                "cpu": 3.5
+              }
+            ]
+          },
+          {
+            "start": 40965.2,
+            "duration": 846.5,
+            "samples": [
+              {
+                "start": 40961.7,
+                "ms": 2.38,
+                "calls": 790,
+                "cpu": 3.4
+              },
+              {
+                "start": 41805.6,
+                "ms": 2.77,
+                "calls": 940,
+                "cpu": 5.8
+              },
+              {
+                "start": 41812.6,
+                "ms": 5.51,
+                "calls": 790,
+                "cpu": 3.5
+              },
+              {
+                "start": 41829.2,
+                "ms": 5.04,
+                "calls": 790,
+                "cpu": 3.5
+              }
+            ]
+          },
+          {
+            "start": 9449.7,
+            "duration": 819.1,
+            "samples": [
+              {
+                "start": 9445.9,
+                "ms": 2.41,
+                "calls": 734,
+                "cpu": 3.7
+              },
+              {
+                "start": 10260.5,
+                "ms": 2.62,
+                "calls": 934,
+                "cpu": 7.8
+              },
+              {
+                "start": 10280.3,
+                "ms": 3.07,
+                "calls": 732,
+                "cpu": 4.3
+              }
+            ]
+          },
+          {
+            "start": 51826.6,
+            "duration": 799.8,
+            "samples": [
+              {
+                "start": 51823,
+                "ms": 2.37,
+                "calls": 766,
+                "cpu": 3.2
+              },
+              {
+                "start": 52620.6,
+                "ms": 2.58,
+                "calls": 903,
+                "cpu": 5.3
+              }
+            ]
+          },
+          {
+            "start": 6730.3,
+            "duration": 653.6,
+            "samples": []
+          },
+          {
+            "start": 18776.2,
+            "duration": 641.9,
+            "samples": [
+              {
+                "start": 18772.2,
+                "ms": 1.87,
+                "calls": 772,
+                "cpu": 3.9
+              },
+              {
+                "start": 19410.8,
+                "ms": 6.73,
+                "calls": 914,
+                "cpu": 6.9
+              },
+              {
+                "start": 19422.9,
+                "ms": 5.45,
+                "calls": 772,
+                "cpu": 3.6
+              }
+            ]
+          },
+          {
+            "start": 28886.1,
+            "duration": 622.6,
+            "samples": [
+              {
+                "start": 28882.6,
+                "ms": 2.45,
+                "calls": 712,
+                "cpu": 3.4
+              },
+              {
+                "start": 29500.1,
+                "ms": 91.81,
+                "calls": 835,
+                "cpu": 8
+              },
+              {
+                "start": 29516.7,
+                "ms": 4.32,
+                "calls": 703,
+                "cpu": 3.9
+              }
+            ]
+          },
+          {
+            "start": 33740.8,
+            "duration": 612.1,
+            "samples": [
+              {
+                "start": 34355.4,
+                "ms": 163.19,
+                "calls": 682,
+                "cpu": 3.6
+              },
+              {
+                "start": 34371.7,
+                "ms": 2.05,
+                "calls": 682,
+                "cpu": 3.6
+              }
+            ]
+          },
+          {
+            "start": 44286.2,
+            "duration": 601.4,
+            "samples": [
+              {
+                "start": 44281.8,
+                "ms": 2.33,
+                "calls": 756,
+                "cpu": 3.9
+              },
+              {
+                "start": 44881.1,
+                "ms": 3.02,
+                "calls": 891,
+                "cpu": 6
+              },
+              {
+                "start": 44888,
+                "ms": 4.68,
+                "calls": 754,
+                "cpu": 3.3
+              },
+              {
+                "start": 44899.1,
+                "ms": 2.91,
+                "calls": 754,
+                "cpu": 3.6
+              }
+            ]
+          },
+          {
+            "start": 10351.2,
+            "duration": 555.1,
+            "samples": [
+              {
+                "start": 10347,
+                "ms": 5.65,
+                "calls": 726,
+                "cpu": 3.8
+              },
+              {
+                "start": 10363.7,
+                "ms": 9.77,
+                "calls": 728,
+                "cpu": 542.4
+              },
+              {
+                "start": 10907,
+                "ms": 3.83,
+                "calls": 928,
+                "cpu": 6.8
+              },
+              {
+                "start": 10914.6,
+                "ms": 4.68,
+                "calls": 728,
+                "cpu": 3.5
+              }
+            ]
+          },
+          {
+            "start": 22429.9,
+            "duration": 505.4,
+            "samples": [
+              {
+                "start": 22426,
+                "ms": 2.21,
+                "calls": 809,
+                "cpu": 3.6
+              },
+              {
+                "start": 22928.5,
+                "ms": 2.64,
+                "calls": 963,
+                "cpu": 6.4
+              }
+            ]
+          },
+          {
+            "start": 30187.5,
+            "duration": 505.4,
+            "samples": [
+              {
+                "start": 30184,
+                "ms": 2.65,
+                "calls": 680,
+                "cpu": 3.3
+              },
+              {
+                "start": 30684.7,
+                "ms": 5.11,
+                "calls": 812,
+                "cpu": 7.7
+              },
+              {
+                "start": 30701.2,
+                "ms": 4.92,
+                "calls": 682,
+                "cpu": 5.2
+              }
+            ]
+          },
+          {
+            "start": 11818.4,
+            "duration": 474.5,
+            "samples": [
+              {
+                "start": 12299,
+                "ms": 2.17,
+                "calls": 716,
+                "cpu": 3.4
+              }
+            ]
+          },
+          {
+            "start": 46388.2,
+            "duration": 390,
+            "samples": [
+              {
+                "start": 46384.1,
+                "ms": 2.37,
+                "calls": 780,
+                "cpu": 4
+              },
+              {
+                "start": 46771.9,
+                "ms": 2.54,
+                "calls": 900,
+                "cpu": 5.9
+              },
+              {
+                "start": 46784.4,
+                "ms": 4.39,
+                "calls": 761,
+                "cpu": 4
+              }
+            ]
+          },
+          {
+            "start": 37828.6,
+            "duration": 386.3,
+            "samples": [
+              {
+                "start": 37825.1,
+                "ms": 2.4,
+                "calls": 684,
+                "cpu": 3.2
+              },
+              {
+                "start": 38208.7,
+                "ms": 2.53,
+                "calls": 816,
+                "cpu": 5.8
+              },
+              {
+                "start": 38226.4,
+                "ms": 4.55,
+                "calls": 684,
+                "cpu": 3.3
+              }
+            ]
+          },
+          {
+            "start": 42032.9,
+            "duration": 370.1,
+            "samples": [
+              {
+                "start": 42413.2,
+                "ms": 5.16,
+                "calls": 769,
+                "cpu": 5.6
+              }
+            ]
+          },
+          {
+            "start": 16323.2,
+            "duration": 365.7,
+            "samples": [
+              {
+                "start": 16319.6,
+                "ms": 1.86,
+                "calls": 748,
+                "cpu": 3.5
+              },
+              {
+                "start": 16682.6,
+                "ms": 2.28,
+                "calls": 891,
+                "cpu": 5.9
+              }
+            ]
+          },
+          {
+            "start": 35560.4,
+            "duration": 363.7,
+            "samples": [
+              {
+                "start": 35556.2,
+                "ms": 2.11,
+                "calls": 941,
+                "cpu": 4
+              },
+              {
+                "start": 35918,
+                "ms": 3,
+                "calls": 1093,
+                "cpu": 5.7
+              },
+              {
+                "start": 35924.5,
+                "ms": 4.24,
+                "calls": 943,
+                "cpu": 3.4
+              },
+              {
+                "start": 35939.8,
+                "ms": 4.62,
+                "calls": 941,
+                "cpu": 3.7
+              }
+            ]
+          },
+          {
+            "start": 17374.3,
+            "duration": 309,
+            "samples": [
+              {
+                "start": 17687.8,
+                "ms": 1.75,
+                "calls": 694,
+                "cpu": 3.4
+              }
+            ]
+          },
+          {
+            "start": 31023.1,
+            "duration": 305.9,
+            "samples": [
+              {
+                "start": 31018.2,
+                "ms": 2.21,
+                "calls": 879,
+                "cpu": 4.3
+              },
+              {
+                "start": 31323.8,
+                "ms": 3.88,
+                "calls": 742,
+                "cpu": 4.8
+              },
+              {
+                "start": 31335.2,
+                "ms": 2.86,
+                "calls": 873,
+                "cpu": 4.8
+              }
+            ]
+          },
+          {
+            "start": 15622.2,
+            "duration": 304.3,
+            "samples": [
+              {
+                "start": 15936,
+                "ms": 4.02,
+                "calls": 732,
+                "cpu": 4.2
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "errors": []
+}
