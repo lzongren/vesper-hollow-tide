@@ -6,6 +6,9 @@ from math import atan2, cos, exp, pi, sin, tau
 from bind_pilgrim import cross, unit
 from garment_surfaces import garment_surfaces
 from cloud_collar import cloud_collar
+from plum_hairpin import butterfly
+from wayfarer_blink import install_shape
+from scalp_fit import scalp_radius
 
 
 def dress(out, bones, rest, art):
@@ -17,14 +20,16 @@ def dress(out, bones, rest, art):
         )
         if texture:
             pbr["baseColorTexture"] = out.image(
-                (art / texture).read_bytes(), "image/jpeg", name
+                (art / texture).read_bytes(),
+                "image/png" if texture.endswith(".png") else "image/jpeg",
+                name,
             )
         out.doc["materials"].append(
             dict(name=name, doubleSided=True, pbrMetallicRoughness=pbr)
         )
         return len(out.doc["materials"]) - 1
 
-    face = material("WayfarerSkin", (1, 1, 1), 0.60, texture="ruyi-face.jpg")
+    face = material("WayfarerSkin", (1, 1, 1), 0.60, texture="plum-face.jpg")
     silk = material("MagnoliaSilk", (1, 1, 1), 0.66, texture="magnolia-silk.jpg")
     lining = material("CeladonSilk", (1, 1, 1), 0.76, texture="celadon.jpg")
     crimson = material("RoseBinding", (1, 1, 1), 0.71, texture="rosewood.jpg")
@@ -32,7 +37,9 @@ def dress(out, bones, rest, art):
     hair = material("InkHair", (1, 1, 1), 0.63, texture="hair.jpg")
     jade = material("CloudJade", (0.16, 0.40, 0.32), 0.27, 0.12)
     pearl = material("SeedPearl", (0.84, 0.75, 0.62), 0.28, 0.09)
-    petal = material("MagnoliaJade", (0.55, 0.76, 0.61), 0.34, 0.04)
+    enamel = material("KingfisherEnamel", (0.048, 0.34, 0.36), 0.24, 0.26)
+    fringe = material("TempleStrands", (1, 1, 1), 0.64, texture="temple-strands.png")
+    out.doc["materials"][fringe].update(alphaMode="MASK", alphaCutoff=0.38)
     river = material("RiverBrocade", (1, 1, 1), 0.65, texture="river-sash.jpg")
     brocade = material("RuyiBrocade", (1, 1, 1), 0.58, texture="ruyi-embroidery.jpg")
     eye = material("WetIris", (1, 1, 1), 0.23, texture="ruyi-face.jpg")
@@ -175,6 +182,8 @@ def dress(out, bones, rest, art):
 
     # An asymmetric oval follows the cranial vault from the nape to a
     # displaced crown. Both radii vary continuously across the temple.
+    scalp = scalp_radius(shaped, source["faces"])
+
     def hair_shell(a, v):
         temple = abs(atan2(sin(a), cos(a)))
         edge = 8.045 - 0.39 * smooth((temple - 0.32) / 0.77)
@@ -188,7 +197,16 @@ def dress(out, bones, rest, art):
         wave = 0.009 * cos(15 * a + 2.8 * v) * sin(pi * v)
         width = (0.87 + wave) * radius
         depth = (1.08 + wave) * radius
-        return pos(width * sin(a), h, 0.56 + depth * cos(a))
+        x, z = width * sin(a), depth * cos(a)
+        length = (x * x + z * z) ** 0.5
+        # Touch the forehead at the roots; let the bun retain its dressed volume.
+        weight = (1 - smooth((v - 0.04) / 0.40)) * (1 - smooth((temple - 1.23) / 0.34))
+        if weight > 0 and length > 0:
+            surface = scalp(atan2(x, z), h, length)
+            fitted = surface + 0.016 + 0.045 * smooth((v - 0.02) / 0.38)
+            scale = 1 + weight * (fitted / length - 1)
+            x, z = x * scale, z * scale
+        return pos(x, h, 0.56 + z)
 
     def swept_hair(u, v):
         a = tau * u
@@ -219,18 +237,22 @@ def dress(out, bones, rest, art):
                 )
 
             patch(hair, 10, 38, lock)
-    # Short, tapered baby hairs break up the smooth edge at close range.
-    for index in range(88):
-        angle = -1.47 + 2.94 * index / 87
-        bend = 0.037 * sin(8 * angle + 0.7)
-        length = 0.0025 + 0.0045 * (0.5 + 0.5 * cos(index * 2.39))
+    # Lace the solid cap into the photographed forehead with two feathered
+    # temple panels. The UVs run from the roots down to the tapered ends.
+    for side in (-1, 1):
 
-        def hairline_tip(t, angle=angle, bend=bend, length=length):
-            a = angle + bend * t
-            x, y, z = hair_shell(a, 0.018 * (1 - t))
-            return x + 0.0007 * sin(a), y - length * t, z + 0.0007 * cos(a)
+        def temple(u, v, side=side):
+            angle = 0.13 + side * (1.56 * u + 0.078 * v * (0.16 + 0.84 * u))
+            x, y, z = hair_shell(angle, 0.12 * (1 - v) ** 2)
+            offset = 0.00038 + 0.00046 * sin(pi * v)
+            drop = (0.0018 + 0.0060 * u) * (0.22 + 0.78 * smooth(u / 0.22)) * v**1.4
+            return (
+                (x + offset * sin(angle), y - drop, z + offset * cos(angle)),
+                (u * 3.0, v),
+                head,
+            )
 
-        strand(hair, hairline_tip, lambda t: 0.00042 * (1 - 0.94 * t), head, 6)
+        patch(fringe, 74, 12, temple)
     for side in (-1, 1):
         for j in range(4):
             root = hair_shell(side * (1.03 + 0.055 * j), 0.08)
@@ -256,45 +278,20 @@ def dress(out, bones, rest, art):
 
         strand(hair, coil, lambda t: 0.013 + 0.003 * sin(pi * t), head, 64)
 
-    # The comb sits above the left ear. Thin cupped petals, stamens and
-    # pearl strings cast their own silhouettes instead of being baked onto the hair.
+    # The openwork butterfly sits above the left ear on a pin through the coil.
     strand(
         brass,
-        lambda t: (-0.087 + 0.199 * t, 1.738 + 0.049 * t, -0.066 + 0.025 * t),
+        lambda t: (-0.087 + 0.187 * t, 1.738 + 0.039 * t, -0.066 + 0.018 * t),
         lambda t: 0.0027 + 0.0012 * t,
         head,
     )
-    for size, ox, oy, oz in [
-        (1, 0.086, 1.774, -0.034),
-        (0.66, 0.055, 1.791, -0.042),
-        (0.48, 0.109, 1.755, -0.030),
-    ]:
-        for j in range(6):
-            a = (j / 6 + 0.03) * tau
-
-            def flower(u, v):
-                span = 0.011 * size * (0.13 + 0.87 * sin(pi * v) ** 0.72) * (2 * u - 1)
-                length = 0.030 * size * v
-                return (
-                    (
-                        ox + length * cos(a) - span * sin(a),
-                        oy + length * sin(a) + span * cos(a),
-                        oz
-                        + 0.010 * size * sin(pi * v)
-                        + 0.008 * size * (2 * u - 1) ** 2 * v,
-                    ),
-                    (u, v),
-                    head,
-                )
-
-            patch(petal, 8, 12, flower)
-        globe(pearl, (ox, oy, oz + 0.008 * size), (0.005 * size,) * 3, head)
+    butterfly(patch, strand, globe, brass, enamel, pearl, head)
     for j in range(3):
-        x = 0.090 + 0.009 * j
+        x = 0.089 + 0.0075 * j
         length = 0.048 + 0.019 * (j % 2)
 
         def chain(t):
-            return (x + 0.004 * sin(t * pi), 1.756 - length * t, -0.036 + 0.002 * j)
+            return (x + 0.004 * sin(t * pi), 1.755 - length * t, -0.036 + 0.002 * j)
 
         strand(brass, chain, lambda t: 0.0011, head)
         for t in (0.37, 0.73, 1):
@@ -513,3 +510,4 @@ def dress(out, bones, rest, art):
     globe(jade, (0, 1.064, -0.175), (0.020, 0.019, 0.012), waist)
     cloud_collar(patch, brocade, brass, crimson)
     finish()
+    install_shape(out, face, verts)

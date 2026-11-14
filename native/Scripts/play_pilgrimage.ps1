@@ -89,7 +89,7 @@ if ($cinderReport.revision -ne 2) {
 $outfitReport = if (Test-Path "$project\Saved\WayfarerOutfit.json") {
     Get-Content -Raw "$project\Saved\WayfarerOutfit.json" | ConvertFrom-Json
 }
-if ($rebuildDuel -or $outfitReport.revision -ne 5 -or !(Test-Path "$project\Content\Vesper\Duel\JadeMagnolia\JadeMagnolia\SkeletalMeshes\JadeMagnolia.uasset")) {
+if ($rebuildDuel -or $outfitReport.revision -ne 6 -or !(Test-Path "$project\Content\Vesper\Duel\MeiSwordswoman\MeiSwordswoman\SkeletalMeshes\MeiSwordswoman.uasset")) {
     Invoke-MapPass 'fit_wayfarer' 'VESPER_WAYFARER_READY'
 }
 if (!(Test-Path "$project\Saved\WestPass.json")) {
@@ -100,6 +100,12 @@ if (!(Test-Path "$project\Saved\LotusLanterns.json")) {
 }
 if (!(Test-Path "$project\Saved\PineFoliage.json")) {
     Invoke-MapPass 'fit_pine_foliage' 'VESPER_PINE_FOLIAGE_READY'
+}
+$ridgeReport = if (Test-Path "$project\Saved\RiverPeaks.json") {
+    Get-Content -Raw "$project\Saved\RiverPeaks.json" | ConvertFrom-Json
+}
+if ($ridgeReport.revision -ne 2) {
+    Invoke-MapPass 'fit_river_peaks' 'VESPER_RIVER_PEAKS_READY'
 }
 Start-Process "$bin\UnrealEditor.exe" -WorkingDirectory $project -ArgumentList @(
     "`"$descriptor`"", "$map`?game=$gameMode", '-game', '-windowed', '-ResX=1600', '-ResY=900', '-NoP4',

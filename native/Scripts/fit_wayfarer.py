@@ -12,7 +12,11 @@ from keeper_materials import surface
 from sash_material import silk_motion
 from wayfarer_skin import complexion
 
-mesh = mesh_for("JadeMagnolia", "pilgrim.glb", armed=True, wayfarer=True)
+mesh = mesh_for("MeiSwordswoman", "pilgrim.glb", armed=True, wayfarer=True)
+if not any(
+    str(name).lower().endswith("blink") for name in mesh.get_all_morph_target_names()
+):
+    raise RuntimeError("The fitted swordswoman is missing her eyelid morph")
 bp = lib.load_asset(combat + "BP_CombatCharacter")
 reference = unreal.get_default_object(
     bp.generated_class()
@@ -38,9 +42,13 @@ for slot in slots:
         slot.material_interface = surface(root, name + "Surface", name, metal, rough)
     elif name == "RiverBrocade":
         slot.material_interface = silk_motion(root)
+    elif name == "TempleStrands":
+        slot.material_interface = surface(
+            root, "FineTempleHair", name, 0, 0.62, cutout=True, specular=0.18
+        )
     elif name == "InkHair":
         slot.material_interface = surface(
-            root, "BrushedInk", name, 0, 0.72, specular=0.06
+            root, "BrushedInk", name, 0, 0.59, specular=0.21
         )
     elif name == "Pilgrim_0":
         slot.material_interface = surface(
@@ -59,6 +67,6 @@ mesh.set_editor_property("materials", slots)
 lib.save_loaded_asset(mesh, only_if_is_dirty=False)
 fit("BP_CombatCharacter", "BP_BelfryPilgrim", mesh, {})
 (project / "Saved" / "WayfarerOutfit.json").write_text(
-    json.dumps({"mesh": mesh.get_path_name(), "revision": 5})
+    json.dumps({"mesh": mesh.get_path_name(), "revision": 6})
 )
 unreal.log("VESPER_WAYFARER_READY")

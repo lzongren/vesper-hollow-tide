@@ -2,7 +2,7 @@
 
 **Visual rebuild in progress.** The browser prototype below did not meet the requested Bloodborne / Wuchang visual standard. The [native Unreal project](native/README.md) now includes a 205.4-metre route through three courtyards. The Bellwarden, the Veiled Heron and the Saint of Cinders are playable along the Unreal route and in the browser prototype.
 
-[Magnolia swordswoman in the mountain pass](docs/runtime/magnolia-tailoring/) · [Run and turn with the embroidered sash](docs/runtime/river-sash/)
+[Meet the playable Chinese swordswoman and watch her three boss fights](docs/runtime/plum-wayfarer/) · [Run and turn with the embroidered sash](docs/runtime/river-sash/)
 
 [Enter the final reliquary and fight the Saint of Cinders](docs/runtime/cinder-duel/)
 

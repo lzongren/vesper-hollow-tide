@@ -9,10 +9,11 @@ runtime = runpy.run_path(str(Path(__file__).with_name("belfry_combat.py")))
 step = runtime["step"]
 shots = [(4, "rear"), (8, "front"), (12, "profile"), (19, "walk"), (25, "portrait")]
 start = camera = None
+blink_shot = False
 
 
 def tick(_dt):
-    global start, camera
+    global start, camera, blink_shot
     pawn = step.pawn
     if not runtime["live"](pawn):
         return
@@ -50,10 +51,22 @@ def tick(_dt):
         loc, unreal.MathLibrary.find_look_at_rotation(loc, aim), False, True
     )
     camera.set_field_of_view(lens)
-    if elapsed >= shots[0][0]:
+    target = runtime["blink"].target
+    weight = pawn.mesh.get_morph_target(target) if target else 0.0
+    if elapsed >= 20.0 and weight >= 0.98 and not blink_shot:
+        unreal.log("TAILOR_SHOT blink")
+        unreal.log("TAILOR_BLINK_WEIGHT " + str(weight))
+        unreal.SystemLibrary.execute_console_command(pawn, "Shot", step.pc)
+        blink_shot = True
+        return
+    if (
+        shots
+        and elapsed >= shots[0][0]
+        and (shots[0][1] != "portrait" or weight < 0.03)
+    ):
         unreal.log("TAILOR_SHOT " + shots.pop(0)[1])
         unreal.SystemLibrary.execute_console_command(pawn, "Shot", step.pc)
-    if not shots:
+    if not shots and (blink_shot or elapsed > 33):
         unreal.unregister_slate_post_tick_callback(handle)
 
 
