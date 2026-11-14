@@ -1,0 +1,174 @@
+{
+  "results": [
+    {
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+      "boss": "Saint of Cinders",
+      "mode": "PILGRIM",
+      "timing": {
+        "samples": 2534,
+        "median": 16.7,
+        "p95": 16.8,
+        "max": 83.3
+      },
+      "title": "Vigil released",
+      "stats": "0:40TIME4PARRIES5HITS TAKEN",
+      "bossHealth": "0%",
+      "playerHealth": 75,
+      "awakened": true,
+      "elapsed": 42.25870000004775,
+      "terminal": true,
+      "frames": [
+        {
+          "start": 443,
+          "duration": 1087.5,
+          "blocking": 1029,
+          "render": 1530.1,
+          "intro": "1",
+          "tell": "Observe. Endure. Answer.",
+          "scripts": [
+            {
+              "duration": 1077.8,
+              "fn": "",
+              "source": "scene-CTjxYJQ3.js",
+              "char": 237538,
+              "invoker": "resolve-promise"
+            }
+          ]
+        },
+        {
+          "start": 1541.5,
+          "duration": 184.3,
+          "blocking": 133,
+          "render": 1713.6,
+          "intro": "1",
+          "tell": "Observe. Endure. Answer.",
+          "scripts": [
+            {
+              "duration": 170.8,
+              "fn": "",
+              "source": "",
+              "char": -1,
+              "invoker": "user-callback"
+            },
+            {
+              "duration": 9,
+              "fn": "",
+              "source": "",
+              "char": -1,
+              "invoker": "user-callback"
+            }
+          ]
+        },
+        {
+          "start": 17262,
+          "duration": 103.5,
+          "blocking": 41.5,
+          "render": 17274,
+          "intro": "0",
+          "tell": "AN OPENING. ANSWER.",
+          "scripts": [
+            {
+              "duration": 91.2,
+              "fn": "",
+              "source": "",
+              "char": -1,
+              "invoker": "user-callback"
+            }
+          ]
+        },
+        {
+          "start": 344.2,
+          "duration": 69.3,
+          "blocking": 6.5,
+          "render": 413.4,
+          "intro": "",
+          "tell": "Observe. Endure. Answer.",
+          "scripts": [
+            {
+              "duration": 54.6,
+              "fn": "",
+              "source": "scene-CTjxYJQ3.js",
+              "char": 237538,
+              "invoker": "resolve-promise"
+            }
+          ]
+        }
+      ],
+      "timer": {
+        "available": true,
+        "disjoints": 0,
+        "samples": 2406,
+        "median": {
+          "start": 37440.2,
+          "ms": 20.76,
+          "calls": 720,
+          "cpu": 4.4
+        },
+        "p95": {
+          "start": 6208.2,
+          "ms": 25.76,
+          "calls": 739,
+          "cpu": 5.1
+        },
+        "slowest": [
+          {
+            "start": 17524.5,
+            "ms": 33.59,
+            "calls": 689,
+            "cpu": 4.4
+          },
+          {
+            "start": 36373.7,
+            "ms": 33.78,
+            "calls": 738,
+            "cpu": 4.9
+          },
+          {
+            "start": 17507.9,
+            "ms": 33.79,
+            "calls": 824,
+            "cpu": 5.1
+          },
+          {
+            "start": 17573.7,
+            "ms": 33.82,
+            "calls": 819,
+            "cpu": 5
+          },
+          {
+            "start": 17374.1,
+            "ms": 34.39,
+            "calls": 834,
+            "cpu": 4.7
+          },
+          {
+            "start": 17444.3,
+            "ms": 34.4,
+            "calls": 835,
+            "cpu": 5.3
+          },
+          {
+            "start": 17274.2,
+            "ms": 36.88,
+            "calls": 839,
+            "cpu": 91.1
+          },
+          {
+            "start": 17365.8,
+            "ms": 38.01,
+            "calls": 703,
+            "cpu": 4.4
+          }
+        ],
+        "framesAtStalls": [
+          {
+            "start": 443,
+            "duration": 1087.5,
+            "samples": []
+          }
+        ]
+      }
+    }
+  ],
+  "errors": []
+}
