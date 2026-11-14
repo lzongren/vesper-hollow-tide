@@ -35,6 +35,7 @@ import { karstSpurs } from "./karst";
 import { heronStroke } from "./heron-sabres";
 import { HeronWing, bridalMask, dressHeron } from "./heron";
 import { RingStaff } from "./ring-staff";
+import { belfryFront } from "./belfry-front";
 import { cinderArmour } from "./cinder-armour";
 import { cinderIcon } from "./cinder-icon";
 import { CinderFire, CinderLights } from "./cinder-fire";
@@ -1024,6 +1025,8 @@ export class World {
         0.075,
       );
     }
+    g.add(belfryFront(this.art.textures.get("belfry-dragon-beam")!, this.art.textures.get("belfry-paper")!,
+      this.art.textures.get("wood-color")!, this.art.textures.get("rock-color")!));
     this.bell(g, 0.94, -0.22, 1.95, -3.37);
     cylinder(g, this.materials.dark, -0.22, 4.17, -3.37, 0.048, 0.93);
     for (const side of [-1, 1]) {
@@ -1053,8 +1056,8 @@ export class World {
         ).scale.y = 2.45;
       }
     }
-    const altarLight = new T.PointLight(0xffac65, 39, 7, 2);
-    altarLight.position.set(1.54, 2.88, -3.62);
+    const altarLight = new T.PointLight(0xffba81, 64, 11, 2);
+    altarLight.position.set(1.36, 3.18, -2.57);
     g.add(altarLight);
     const sign = box(g, this.materials.wood, 0, 4.88, 3.23, 3.42, 1.06, 0.16);
     mesh(
@@ -1088,6 +1091,7 @@ export class World {
           : [];
     const [seal] = await Promise.all([
       this.art.courtSeal(["belfry", "heron", "cinder"][index]),
+      index === 0 ? this.art.loadBelfryFrieze() : undefined,
       index === 1 ? this.art.loadCraneFresco() : undefined,
       index === 2 ? this.art.loadCinderBrocade() : undefined,
       ...scans.map((name) => this.art.loadLandmark(name)),
@@ -1405,6 +1409,12 @@ export class World {
         2,
       );
       light.position.set(x, 2.7, z);
+      if (index === 0 && x === 0) {
+        light.position.set(-2.55, 7.00, -17.3);
+        light.color.setHex(0xffcd95);
+        light.intensity = 57;
+        light.distance = 15;
+      }
       if (index === 1 && x === 0) {
         light.position.copy(porchLamp);
         light.position.z += -19.09;

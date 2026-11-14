@@ -45,6 +45,18 @@ export class ArtLibrary {
     map.anisotropy = 8;
     this.textures.set("crane-fresco", map);
   }
+  async loadBelfryFrieze() {
+    if (this.textures.has("belfry-dragon-beam")) return;
+    const loader = new T.TextureLoader();
+    const names = ["belfry-dragon-beam", "belfry-paper"];
+    const maps = await Promise.all(names.map(name =>
+      loader.loadAsync(`${import.meta.env.BASE_URL}art/${name}.jpg`)));
+    maps.forEach((map, index) => {
+      map.colorSpace = T.SRGBColorSpace;
+      map.anisotropy = 8;
+      this.textures.set(names[index], map);
+    });
+  }
   async loadCinderBrocade() {
     if (this.textures.has("cinder-brocade")) return;
     const map = await new T.TextureLoader().loadAsync(`${import.meta.env.BASE_URL}textures/cinder-brocade.jpg`);
