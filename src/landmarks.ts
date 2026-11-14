@@ -1,5 +1,6 @@
 import * as T from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
+import { shrinePortal } from "./shrine-portal";
 import { moonGatePorch } from "./moon-gate";
 import { ArtLibrary } from "./assets";
 
@@ -391,9 +392,6 @@ export function cinderReliquary(art: ArtLibrary, m: Palette) {
     rock(art, shrine, s * 9.7, -23, 12.6, s * -0.48, 1.24);
     rock(art, shrine, s * 17, -18, 10.8, s * -0.85, 1.12);
     rock(art, shrine, s * 15, -32, 18.8, s * -0.51, 1.16);
-    masonry.block(m.rock, s * 5.1, 2.12, -20.8, 1.42, 4.24, 2.36);
-    for (let i = 0; i < 7; i++)
-      masonry.block(m.roof, s * 5.1, 0.4 + i * 0.62, -19.65, 1.58, 0.12, 0.35);
     for (let col = 0; col < 4; col++)
       for (let row = 0; row < 3; row++) {
         const x = s * (6.2 + col * 1.12),
@@ -426,44 +424,7 @@ export function cinderReliquary(art: ArtLibrary, m: Palette) {
         );
       }
   }
-  for (let i = 0; i < 27; i++)
-    masonry.add(
-      archStone(
-        4.39,
-        5.79,
-        (Math.PI * i) / 27 + 0.002,
-        (Math.PI * (i + 1)) / 27 - 0.002,
-        2.5,
-      ),
-      m.rock,
-      0,
-      4.14,
-      -22.1,
-    );
-  for (let i = 0; i < 25; i++)
-    masonry.add(
-      archStone(
-        4.42,
-        4.64,
-        (Math.PI * i) / 25 + 0.003,
-        (Math.PI * (i + 1)) / 25 - 0.003,
-        0.28,
-      ),
-      m.gold,
-      0,
-      4.14,
-      -19.75,
-    );
-  for (let i = 0; i < 4; i++)
-    masonry.block(
-      m.rock,
-      0,
-      0.12 + i * 0.21,
-      -17.7 - i * 0.67,
-      9.2 - i * 0.32,
-      0.24 + i * 0.42,
-      1,
-    );
+  shrine.add(shrinePortal(m.rock, m.gold));
   masonry.block(m.dark, 0, 4, -27, 12, 8.3, 1.2);
   rock(art, shrine, -2.4, -33, 13.0, 0.43, 1.24);
   const lamp = art.model("chinese_chandelier", 3.7);
