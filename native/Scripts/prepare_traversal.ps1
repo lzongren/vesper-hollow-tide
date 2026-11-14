@@ -31,6 +31,9 @@ function Stage-Source([string]$SourceDir, [string]$Name) {
 foreach ($channel in @('color','normal','rough')) {
     Stage-Source $source "stone-$channel.jpg"
 }
+foreach ($channel in @('color','normal','rough')) {
+    Stage-Source $source "rock-$channel.jpg"
+}
 $models = Join-Path (Split-Path $project -Parent) 'public\models'
 foreach ($channel in @('color','normal')) {
     Stage-Source $source "pilgrim-brocade-$channel.jpg"
