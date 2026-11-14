@@ -15,9 +15,16 @@ Object.defineProperty(globalThis, "FileReader", {
   configurable: true,
 });
 
-export async function bake(prop: T.Group, name: string) {
+export async function bake(
+  prop: T.Group,
+  name: string,
+  animations: T.AnimationClip[] = [],
+) {
   prop.name = name;
-  const output = await new GLTFExporter().parseAsync(prop, { binary: true });
+  const output = await new GLTFExporter().parseAsync(prop, {
+    binary: true,
+    animations,
+  });
   if (!(output instanceof ArrayBuffer))
     throw Error("Expected a binary glTF asset");
   await writeFile(

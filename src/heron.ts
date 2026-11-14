@@ -1,3 +1,6 @@
+import { MantleMotion } from "./vestments";
+import { WeaponGrip } from "./pilgrim";
+import { duelistSabre, heronGuards } from "./heron-sabres";
 import * as T from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
@@ -328,8 +331,9 @@ export function dressHeron(
     roughness: 0.39,
   });
   const steel = new T.MeshStandardMaterial({
-    color: 0xd4e6df,
-    metalness: 0.76,
+    color: 0xe7f1ed,
+    vertexColors: true,
+    metalness: 0.6,
     roughness: 0.25,
   });
   const place = (target: T.Object3D, g: T.BufferGeometry, m: T.Material) => {
@@ -375,7 +379,17 @@ export function dressHeron(
     );
   }
   dress.computeVertexNormals();
-  place(hip, dress, satin);
+  const skirts: MantleMotion[] = [];
+  function hanging(g: T.BufferGeometry, mat: T.Material) {
+    const y = g.attributes.position;
+    const top = waist.y + 0.08;
+    skirts.push(
+      new MantleMotion(place(hip, g, mat), (i) =>
+        T.MathUtils.clamp((top - y.getY(i)) / (top - 0.18), 0, 1),
+      ),
+    );
+  }
+  hanging(dress, satin);
   // A separate embroidered front panel tapers below the sash and breaks up the wide hem.
   const panel = new T.PlaneGeometry(1, 1, 24, 36),
     panelPos = panel.attributes.position;
@@ -396,10 +410,9 @@ export function dressHeron(
       seam[u < 0 ? 0 : 1].push(new T.Vector3(x, y, z + 0.008));
   }
   panel.computeVertexNormals();
-  place(hip, panel, brocade);
+  hanging(panel, brocade);
   for (const edge of seam)
-    place(
-      hip,
+    hanging(
       new T.TubeGeometry(new T.CatmullRomCurve3(edge), 36, 0.009, 5, false),
       gold,
     );
@@ -460,7 +473,8 @@ export function dressHeron(
       enamel,
     );
   }
-  for (const name of ["Left", "Right"]) {
+  const grips = {} as Record<"Left" | "Right", WeaponGrip>;
+  for (const name of ["Left", "Right"] as const) {
     const side = name === "Left" ? 1 : -1;
     for (const [start, end, r0, r1, mat] of [
       ["Arm", "ForeArm", 0.121, 0.096, satin],
@@ -507,49 +521,23 @@ export function dressHeron(
         );
       }
     }
-    const hand = bones.get(name + "Hand")!,
-      p = point(hand);
-    place(
-      hand,
-      new T.SphereGeometry(0.086, 14, 10)
-        .scale(0.87, 1, 0.7)
-        .translate(p.x, p.y, p.z),
-      ivory,
-    );
-    // Raised spine on a hooked sabre; two convex faces meet in a bright cutting edge.
-    const verts: number[] = [],
-      idx: number[] = [];
-    for (let j = 0; j <= 24; j++) {
-      const u = j / 24,
-        tip = Math.min(1, (1 - u) * 6),
-        x = p.x + side * (0.04 + 0.14 * u + 0.39 * u * u),
-        y = p.y - 0.1 - 0.85 * u,
-        z = p.z + 0.2 * u;
-      for (const [dx, dz] of [
-        [-0.048 * tip, 0],
-        [0, 0.023 * tip],
-        [0.1 * tip, 0],
-        [0, -0.023 * tip],
-      ])
-        verts.push(x + side * dx, y, z + dz);
-      if (j)
-        for (let k = 0; k < 4; k++) {
-          const a = (j - 1) * 4 + k,
-            b = (j - 1) * 4 + ((k + 1) % 4);
-          idx.push(a, b, a + 4, b, b + 4, a + 4);
-        }
-    }
-    const blade = new T.BufferGeometry();
-    blade.setAttribute("position", new T.Float32BufferAttribute(verts, 3));
-    blade.setIndex(side === 1 ? idx : idx.reverse());
-    blade.computeVertexNormals();
-    place(hand, blade, steel);
-    place(
-      hand,
-      new T.SphereGeometry(0.09, 12, 8)
-        .scale(1.6, 0.27, 0.68)
-        .translate(p.x, p.y - 0.09, p.z),
-      gold,
+    const sword = duelistSabre(side, {
+      skin: ivory,
+      steel,
+      bronze: gold,
+      binding: enamel,
+    });
+    root.add(sword);
+    grips[name] = new WeaponGrip(
+      root,
+      bones.get(name + "Arm")!,
+      bones.get(name + "ForeArm")!,
+      bones.get(name + "Hand")!,
+      sword,
+      heronGuards[name],
+      undefined,
+      side,
     );
   }
+  return { grips, skirts };
 }

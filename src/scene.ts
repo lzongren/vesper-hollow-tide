@@ -30,6 +30,7 @@ import {
   valleyHorizon,
 } from "./sanctuary";
 import { waitForOpeningDraw } from "./first-frame";
+import { heronStroke } from "./heron-sabres";
 import { HeronWing, bridalMask, dressHeron } from "./heron";
 import { RingStaff } from "./ring-staff";
 import { CinderFire, CinderLights } from "./cinder-fire";
@@ -203,6 +204,7 @@ interface Actor {
   halo?: T.Group;
   staff?: RingStaff;
   pinions?: HeronWing[];
+  sabres?: ReturnType<typeof dressHeron>;
 }
 interface Effect {
   mesh: T.Mesh;
@@ -641,7 +643,7 @@ export class World {
     if (kind === 1) {
       // Retain the animated rig and dress it with the Heron's own silhouette.
       model.traverse(o => { if (isMesh(o)) o.visible = false; });
-      dressHeron(root, bones, this.materials["heron-silk"], this.materials.gold, this.art.textures.get("pilgrim-brocade-normal")!);
+      a.sabres = dressHeron(root, bones, this.materials["heron-silk"], this.materials.gold, this.art.textures.get("pilgrim-brocade-normal")!);
       const drape = mesh(
         root,
         mantleGeometry().scale(1.7, 1.6, 1.5),
@@ -1591,6 +1593,13 @@ export class World {
       action === "dodge" ? Math.sin(progress * Math.PI) : 0,
     );
     root.updateMatrixWorld(true);
+    if (a.sabres) {
+      for (const hand of ["Right","Left"] as const)
+        a.sabres.grips[hand].poseKeys(heronStroke(shape, action, hand), progress);
+      for(const silk of a.sabres.skirts)
+        silk.step(x,z,root.rotation.y,dt,t,0);
+      return;
+    }
     if (a.grip) {
       if (a.kind === 0 && shape)
         a.grip.poseKeys(bellStroke(shape, action), progress);

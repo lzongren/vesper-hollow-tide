@@ -58,13 +58,13 @@ export class MantleMotion {
   private base: Float32Array;
   private band: Float32Array;
 
-  constructor(mesh: T.Mesh) {
+  constructor(mesh: T.Mesh, dropAt?: (i: number) => number) {
     this.geometry = mesh.geometry;
     const p = this.geometry.attributes.position;
     this.base = new Float32Array(p.array);
     this.band = Float32Array.from(
       { length: p.count },
-      (_, i) => (1 - this.geometry.attributes.uv.getY(i)) * 7,
+      (_, i) => (dropAt ? dropAt(i) : 1 - this.geometry.attributes.uv.getY(i)) * 7,
     );
     if (p instanceof T.BufferAttribute) p.setUsage(T.DynamicDrawUsage);
   }

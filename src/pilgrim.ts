@@ -81,6 +81,7 @@ export class WeaponGrip {
     weapon: T.Group,
     private rest: GripKey = guard,
     private support?: readonly [T.Bone, T.Bone, T.Bone],
+    private side = -1,
   ) {
     // Object3D.attach compensates for the source armature's centimetre units.
     this.hand.getWorldPosition(weapon.position);
@@ -112,7 +113,7 @@ export class WeaponGrip {
     const value = (i: number) => T.MathUtils.lerp(a[i], b[i], f);
     grip.set(value(1), value(2), value(3));
     this.root.localToWorld(grip);
-    solveArm(this.root, this.upper, this.fore, this.hand, grip, -1);
+    solveArm(this.root, this.upper, this.fore, this.hand, grip, this.side);
     const yaw = value(4),
       pitch = value(5);
     blade.set(
