@@ -15,3 +15,5 @@ The aerial colour increases towards the foot of the distant mountains. The court
 ![Old roof above, segmented roof below](tiles.jpg)
 
 Each curved run on the moon-gate porch uses six overlapping sections with raised lips. Firing colour varies between pieces. The crop shows how the porch catches light from the combat camera. The revised geometry and vertex colours are present in the updated exchange model.
+
+[Combat footage](combat.mp4) retains the complete gameplay frame. It was captured at 1440p in Chrome, advanced two 60 Hz simulation ticks per recorded frame and reduced to 1280 × 720 for playback. The clip is silent and runs for 3.5 seconds. A separate real-time RTX 5080 run cleared all three awakened encounters on Pilgrim difficulty using the same 83 release files. [Outcomes and timing](clears.json)
