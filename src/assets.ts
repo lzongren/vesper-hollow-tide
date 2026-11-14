@@ -59,6 +59,12 @@ export class ArtLibrary {
           this.textures.set(`${name}-${channel}`, texture);
         }),
       ),
+      ...["color", "normal"].map(async channel => {
+        const map = await images.loadAsync(`${base}textures/pilgrim-brocade-${channel}.jpg`);
+        if (channel === "color") map.colorSpace = T.SRGBColorSpace;
+        map.anisotropy = 8;
+        this.textures.set(`pilgrim-brocade-${channel}`, map);
+      }),
       new HDRLoader().loadAsync(`${base}textures/moonlight.hdr`).then((t) => {
         t.mapping = T.EquirectangularReflectionMapping;
         this.environment = t;

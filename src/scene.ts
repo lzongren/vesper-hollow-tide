@@ -13,6 +13,7 @@ import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { Combat, angleDiff, type GameEvent, type Vec } from "./combat";
 import { ArtLibrary } from "./assets";
+import { PilgrimGrip, mantleGeometry, BladeTrail } from "./pilgrim";
 import { courtPaving } from "./court";
 import { heronGarden, cinderReliquary } from "./landmarks";
 
@@ -164,6 +165,7 @@ interface Actor {
   weapon: T.Group;
   kind: number;
   height: number;
+  grip?: PilgrimGrip;
   rightHand?: T.Bone;
   halo?: T.Group;
 }
@@ -188,6 +190,7 @@ export class World {
   player: Actor = { root: new T.Group() } as Actor;
   boss: Actor = { root: new T.Group() } as Actor;
   bossIndex = -1;
+  bladeTrail = new BladeTrail();
   telegraphKey = "";
   telegraph = new T.Group();
   hazards = new Map<number, T.Group>();
@@ -248,7 +251,13 @@ export class World {
     const portraitLight = new T.DirectionalLight(0xffddb5, 1.5);
     portraitLight.position.set(8, 11, 15);
     this.scene.add(portraitLight);
-    this.scene.add(this.arena, this.decor, this.telegraph, this.lock);
+    this.scene.add(
+      this.arena,
+      this.decor,
+      this.telegraph,
+      this.lock,
+      this.bladeTrail,
+    );
     const ring = mesh(
       this.lock,
       new T.TorusGeometry(0.075, 0.008, 6, 24),
@@ -301,7 +310,6 @@ export class World {
       this.player = this.actor(-1);
       this.scene.add(this.player.root);
       this.loaded = true;
-
     });
     this.resize();
   }
@@ -392,7 +400,7 @@ export class World {
             mm.onBeforeCompile = (shader) => {
               shader.fragmentShader = shader.fragmentShader.replace(
                 "#include <map_fragment>",
-                `#include <map_fragment>\n float lum=dot(diffuseColor.rgb, vec3(.299,.587,.114)); diffuseColor.rgb=${kind === 1 ? 'vec3(.18,.23,.22)+vec3(lum)*.9' : 'mix(vec3(lum),diffuseColor.rgb,.3)'};`,
+                `#include <map_fragment>\n float lum=dot(diffuseColor.rgb, vec3(.299,.587,.114)); diffuseColor.rgb=${kind === 1 ? "vec3(.18,.23,.22)+vec3(lum)*.9" : "mix(vec3(lum),diffuseColor.rgb,.3)"};`,
               );
             };
           }
@@ -412,27 +420,20 @@ export class World {
       rightHand: bones.get("RightHand"),
     };
     if (kind < 1) {
-      const robe = cloth(
-        root,
-        this.materials.cloth.clone(),
-        kind < 0 ? 0.9 : 1.7,
-        kind < 0 ? 1.15 : 2.8,
-        0,
-        kind < 0 ? 1.18 : 1.7,
-        -0.24,
-      );
-      a.robe = robe;
-      const pos = robe.geometry.attributes.position;
-      const capeHeight = kind < 0 ? 1.15 : 2.8;
-      for (let i = 0; i < pos.count; i++) {
-        const w = pos.getY(i) / capeHeight + 0.5;
-        pos.setX(i, pos.getX(i) * (1 - 0.38 * w));
-        pos.setZ(i, pos.getZ(i) - (1 - w) * 0.18);
-        pos.setY(i, pos.getY(i) + Math.cos(pos.getX(i) * 15) * 0.025 * (1 - w));
-      }
-      robe.userData.base = new Float32Array(pos.array);
-      robe.geometry.computeVertexNormals();
       if (kind < 0) {
+        const fabric = new T.MeshStandardMaterial({
+          side: T.DoubleSide,
+          map: this.art.textures.get("pilgrim-brocade-color"),
+          normalMap: this.art.textures.get("pilgrim-brocade-normal"),
+          roughness: 0.83,
+        });
+        const robe = mesh(root, mantleGeometry(), fabric, 0, 1.13, 0);
+        a.robe = robe;
+        robe.userData.base = new Float32Array(
+          robe.geometry.attributes.position.array,
+        );
+        bones.get("Spine")?.attach(robe);
+
         // Woven travel hat and layered lacquered mantle give the pilgrim an original silhouette.
         const hat = mesh(
           root,
@@ -455,10 +456,36 @@ export class World {
             true,
           );
         const sword = this.art.model("sword", 1.65);
-        sword.position.y = -0.32;
+        sword.position.y = -0.22;
         weapon.add(sword);
-        weapon.rotation.x = -0.9;
+        const upper = bones.get("RightArm"),
+          fore = bones.get("RightForeArm");
+        if (upper && fore && a.rightHand)
+          a.grip = new PilgrimGrip(root, upper, fore, a.rightHand, weapon);
       } else {
+        const robe = cloth(
+          root,
+          this.materials.cloth.clone(),
+          1.7,
+          2.8,
+          0,
+          1.7,
+          -0.24,
+        );
+        a.robe = robe;
+        const pos = robe.geometry.attributes.position;
+        const capeHeight = 2.8;
+        for (let i = 0; i < pos.count; i++) {
+          const w = pos.getY(i) / capeHeight + 0.5;
+          pos.setX(i, pos.getX(i) * (1 - 0.38 * w));
+          pos.setZ(i, pos.getZ(i) - (1 - w) * 0.18);
+          pos.setY(
+            i,
+            pos.getY(i) + Math.cos(pos.getX(i) * 15) * 0.025 * (1 - w),
+          );
+        }
+        robe.userData.base = new Float32Array(pos.array);
+        robe.geometry.computeVertexNormals();
         for (let i = 0; i < 12; i++) {
           const ang = (i / 12) * Math.PI * 2;
           const petal = mesh(
@@ -1077,6 +1104,10 @@ export class World {
       a.robe.geometry.computeVertexNormals();
     }
     root.updateMatrixWorld(true);
+    if (a.grip) {
+      a.grip.pose(action, progress);
+      return;
+    }
     if (a.rightHand) {
       const world = a.rightHand.getWorldPosition(new T.Vector3());
       root.worldToLocal(world);
@@ -1093,14 +1124,15 @@ export class World {
     if (a.halo) a.halo.rotation.z = t * 0.13;
   }
   burst(e: GameEvent) {
-    if (e.kind === "swing" || e.kind === "slam") {
-      const actor = e.kind === "swing" ? this.player : this.boss;
-      const r = e.kind === "swing" ? (e.value === 2 ? 3 : 2.5) : 3.9;
+    if (e.kind === "swing") return;
+    if (e.kind === "slam") {
+      const actor = this.boss;
+      const r = 3.9;
       const m = mesh(
         this.scene,
         new T.RingGeometry(r - 0.18, r, 64, 1, -Math.PI / 2 - 1.1, 2.2),
         new T.MeshBasicMaterial({
-          color: e.kind === "swing" ? 0xc3dad5 : 0xd5a86c,
+          color: 0xd5a86c,
           transparent: true,
           opacity: 0.35,
           side: T.DoubleSide,
@@ -1166,6 +1198,11 @@ export class World {
       game.mode === "dead" ? "dead" : p.action,
       p.timer / p.duration,
     );
+    this.bladeTrail.sample(
+      this.player.weapon,
+      game.mode === "combat" ? p.action : "idle",
+      p.timer / p.duration,
+    );
     this.animateActor(
       this.boss,
       b.x,
@@ -1182,10 +1219,10 @@ export class World {
       d = Math.hypot(dx, dz);
     const desired = locked ? Math.atan2(-dx, -dz) : this.orbit;
     this.yaw += angleDiff(desired, this.yaw) * (1 - Math.exp(-dt * 1.8));
-    const distance = 7.4 + Math.min(d, 13) * 0.1;
+    const distance = 5.6 + Math.min(d, 13) * 0.18;
     const target = new T.Vector3(
       p.x + Math.sin(this.yaw) * distance + Math.cos(this.yaw) * 0.85,
-      3.6 + Math.min(d, 12) * 0.055,
+      2.95 + Math.min(d, 12) * 0.08,
       p.z + Math.cos(this.yaw) * distance - Math.sin(this.yaw) * 0.85,
     );
     const look = new T.Vector3(
