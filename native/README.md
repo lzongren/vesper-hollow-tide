@@ -14,6 +14,8 @@ Install the engine’s Templates and Feature Packs component. The first launch i
 
 [Saint of Cinders duel](../docs/runtime/cinder-duel/) · [Veiled Heron duel](../docs/runtime/heron-duel/) · [Slate forecourt in combat](../docs/runtime/slate-forecourt/) · [Mountain bell hall at 1440p](../docs/runtime/bell-hall/) · [Bellwarden costume and camera comparison](../docs/runtime/keeper-regalia/) · [Bellwarden combat captures and timings](../docs/runtime/belfry-duel/) · [Valley forest floor and ferns](../docs/runtime/valley-understory/) · [Evening light on the mountain route](../docs/runtime/mountain-evening/) · [Mountain pine gameplay comparison](../docs/runtime/mountain-pines/) · [Retaining walls and valley stair](../docs/runtime/mountain-masonry/) · [Procession road gameplay](../docs/runtime/procession-road/) · [Traversal measurements](../docs/runtime/mountain-pilgrimage/) · [Art direction and acceptance target](Art/quality-target.json)
 
+The western pass includes layered limestone spurs, scanned foothill outcrops and planted pine stands. Tree locations drive a ground tint beneath the canopy. [Western pass gameplay views](../docs/runtime/western-pass/)
+
 The mountain lighting pass uses the bundled HDR cloud deck for the sky and diffuse fill. Regenerate it with Python and NumPy using `python art/bake_mountain_sky.py native/Art/MountainOvercast.hdr`.
 
 The optional pine mesh generator uses Python and Pillow. Run `python native/Scripts/mountain_pines.py public/textures native/Art/MountainPines.glb` to rebuild both tree forms and their embedded needle cutout. Normal game startup imports the bundled GLB.

@@ -89,6 +89,9 @@ $outfitReport = if (Test-Path "$project\Saved\WayfarerOutfit.json") {
 if ($rebuildDuel -or $outfitReport.revision -ne 2 -or !(Test-Path "$project\Content\Vesper\Duel\MagnoliaLady\MagnoliaLady\SkeletalMeshes\MagnoliaLady.uasset")) {
     Invoke-MapPass 'fit_wayfarer' 'VESPER_WAYFARER_READY'
 }
+if (!(Test-Path "$project\Saved\WestPass.json")) {
+    Invoke-MapPass 'raise_karst_pass' 'VESPER_WEST_PASS_READY'
+}
 Start-Process "$bin\UnrealEditor.exe" -WorkingDirectory $project -ArgumentList @(
     "`"$descriptor`"", "$map`?game=$gameMode", '-game', '-windowed', '-ResX=1600', '-ResY=900', '-NoP4',
     '-ForceEnablePython', '-ExecCmds="py __import__(''runpy'').run_path(__import__(''unreal'').Paths.convert_relative_path_to_full(__import__(''unreal'').Paths.project_dir())+''Scripts/belfry_combat.py'')"'
