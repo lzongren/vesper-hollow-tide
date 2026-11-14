@@ -10,19 +10,63 @@ export class ArtLibrary {
   models = new Map<string, GLTF>();
   textures = new Map<string, T.Texture>();
   environment?: T.DataTexture;
+  private seals = new Map<string, T.MeshStandardMaterial>();
+
+  async courtSeal(name: string) {
+    const existing = this.seals.get(name);
+    if (existing) return existing;
+    const loader = new T.TextureLoader();
+    const map = await loader.loadAsync(
+      `${import.meta.env.BASE_URL}art/${name}-inlay.jpg`,
+    );
+    map.colorSpace = T.SRGBColorSpace;
+    map.anisotropy = 8;
+    const material = new T.MeshStandardMaterial({
+      name: `${name} courtyard inlay`,
+      map,
+      bumpMap: map,
+      bumpScale: 0.047,
+      roughness: 0.62,
+    });
+    this.seals.set(name, material);
+    return material;
+  }
+
+  async loadCraneFresco() {
+    if (this.textures.has("crane-fresco")) return;
+    const map = await new T.TextureLoader().loadAsync(
+      `${import.meta.env.BASE_URL}art/crane-fresco.jpg`,
+    );
+    map.colorSpace = T.SRGBColorSpace;
+    map.anisotropy = 8;
+    this.textures.set("crane-fresco", map);
+  }
+  async loadLandmark(name: string) {
+    if (this.models.has(name)) return;
+    const model = await new GLTFLoader().loadAsync(
+      `${import.meta.env.BASE_URL}models/${name}.glb`,
+    );
+    this.models.set(name, model);
+  }
   async load() {
     const gltf = new GLTFLoader(),
       images = new T.TextureLoader();
     const base = import.meta.env.BASE_URL;
     await Promise.all([
-      ...["pilgrim", "wraith", "sorcerer", "sword", "pine", "dead-tree"].map(
-        async (name) => {
-          this.models.set(
-            name,
-            await gltf.loadAsync(`${base}models/${name}.glb`),
-          );
-        },
-      ),
+      ...[
+        "pilgrim",
+        "wraith",
+        "sorcerer",
+        "sword",
+        "pine",
+        "dead-tree",
+        "tide-bell",
+      ].map(async (name) => {
+        this.models.set(
+          name,
+          await gltf.loadAsync(`${base}models/${name}.glb`),
+        );
+      }),
       ...["stone", "wall", "rock", "wood", "metal"].flatMap((name) =>
         ["color", "normal", "rough"].map(async (channel) => {
           const texture = await images.loadAsync(
@@ -34,6 +78,35 @@ export class ArtLibrary {
           this.textures.set(`${name}-${channel}`, texture);
         }),
       ),
+      ...["color", "normal"].map(async (channel) => {
+        const map = await images.loadAsync(
+          `${base}textures/pilgrim-brocade-${channel}.jpg`,
+        );
+        if (channel === "color") map.colorSpace = T.SRGBColorSpace;
+        map.anisotropy = 8;
+        this.textures.set(`pilgrim-brocade-${channel}`, map);
+      }),
+      ...[
+        "karst-valley",
+        "tide-icon",
+        "lacquer-bay",
+        "heron-silk",
+        "cinder-mask",
+        "dragon-mantle",
+        "rain-stones",
+        "heron-quill",
+        "warden-mask",
+        "belfry-plaque",
+        "warden-brocade",
+        "maple-leaf",
+      ].map(async (name) => {
+        const map = await images.loadAsync(
+          `${base}art/${name}.${name === "heron-quill" || name === "warden-mask" || name === "maple-leaf" ? "png" : "jpg"}`,
+        );
+        map.colorSpace = T.SRGBColorSpace;
+        map.anisotropy = 8;
+        this.textures.set(name, map);
+      }),
       new HDRLoader().loadAsync(`${base}textures/moonlight.hdr`).then((t) => {
         t.mapping = T.EquirectangularReflectionMapping;
         this.environment = t;

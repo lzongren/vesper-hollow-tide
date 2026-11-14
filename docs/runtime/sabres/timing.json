@@ -1,0 +1,17 @@
+[
+  {
+    "frame": 1,
+    "health": "100 / 100",
+    "tell": "Silken crescent · GOLD / PARRY OR DODGE"
+  },
+  {
+    "frame": 48,
+    "health": "79 / 100",
+    "tell": "Observe. Endure. Answer."
+  },
+  {
+    "frame": 64,
+    "health": "79 / 100",
+    "tell": "AN OPENING. ANSWER."
+  }
+]

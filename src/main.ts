@@ -34,7 +34,6 @@ let last = 0,
 const keys = new Set<string>();
 let padButtons: boolean[] = [];
 let lastHud = 0;
-let lastStep = 0;
 const chapterNumbers = ["I", "II", "III"],
   verbs = ["Enter the belfry", "Enter the garden", "Enter the reliquary"];
 const clock = (s: number) =>
@@ -120,34 +119,42 @@ async function begin(index = selected) {
   if (startingEncounter) return;
   startingEncounter = true;
   $("loading").hidden = false;
+  $("loading-stage").textContent = "Opening the court…";
+  inGame = false;
+  $("hud").hidden = true;
+  $("error").hidden = true;
   hideModal();
   clearInput();
   try {
     if (!world) {
       const { World: WorldClass } = await import("./scene");
-      world = new WorldClass($<HTMLCanvasElement>("world"));
-      await world.ready;
+      const openingWorld = new WorldClass($<HTMLCanvasElement>("world"));
+      await openingWorld.ready;
+      world = openingWorld;
+      world.onPlayerStep = (x, z) => {
+        if (game?.mode === "combat") audio.event({ kind: "step", x, z });
+      };
       world.setQuality(save.quality);
       world.reducedMotion = save.reducedMotion;
     }
+    await world.prepareCourt(index);
     game = new Combat(index, save.difficulty);
     selected = index;
     world.setArena(index);
     world.player.root.visible = true;
-    world.telegraphKey = "";
     world.cameraInitialized = false;
     world.yaw = 0;
-    save.attempts[index]++;
-    persist(save);
-    inGame = true;
     paused = false;
     resultShown = false;
     locked = true;
     accumulator = 0;
-    lastStep = 0;
-    last = performance.now();
+    for (const actor of [world.player, world.boss]) {
+      actor.feet.reset();
+      actor.impactAge = 1;
+    }
+    $("loading-stage").textContent = "Lighting the court…";
+    await world.prepareOpening(game);
     $("menu").hidden = true;
-    $("hud").hidden = false;
     $("boss-name").textContent = game.spec.name;
     $("boss-epithet").textContent = game.spec.epithet;
     $("intro-chapter").textContent = `VIGIL ${chapterNumbers[index]}`;
@@ -161,10 +168,17 @@ async function begin(index = selected) {
     } catch {
       message("Audio unavailable — the pilgrimage continues in silence.", 3);
     }
-    $("loading").hidden = true;
+    clearInput();
+    last = performance.now();
+    save.attempts[index]++;
+    persist(save);
+    inGame = true;
     updateHud();
+    $("hud").hidden = false;
+    $("loading").hidden = true;
   } catch (err) {
     $("loading").hidden = true;
+    backToMenu();
     $("error").hidden = false;
     $("error").textContent =
       `The arena could not be opened. Check the connection and WebGL 2 support, then reload. ${err instanceof Error ? err.message : String(err)}`;
@@ -482,7 +496,8 @@ function menuController() {
 }
 function frame(now: number) {
   requestAnimationFrame(frame);
-  const dt = Math.min((now - last) / 1000 || 0.016, 0.05);
+  if (startingEncounter) return;
+  const dt = Math.max(0, Math.min((now - last) / 1000, 0.05));
   last = now;
   if (!inGame || modal) {
     menuController();
@@ -526,15 +541,6 @@ function frame(now: number) {
       $("damage-flash").style.opacity = ".55";
       setTimeout(() => ($("damage-flash").style.opacity = "0"), 150);
     }
-  }
-  if (
-    world.moving &&
-    game.mode === "combat" &&
-    game.player.action === "idle" &&
-    game.time - lastStep > 0.32
-  ) {
-    lastStep = game.time;
-    audio.event({ kind: "step", x: game.player.x, z: game.player.z });
   }
   audio.update(game.bossIndex, game.boss.phase, game.mode === "combat");
   world.update(game, dt, locked);

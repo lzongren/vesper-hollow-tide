@@ -1,10 +1,14 @@
 # Vesper — The Hollow Tide
 
+**Visual rebuild in progress.** The browser prototype below did not meet the requested Bloodborne / Wuchang visual standard. A [native Unreal rebuild](native/README.md) is being prepared; it has no playable native level yet.
+
 **Three fallen saints. One last bell.**
 
 An original, playable 3D soulslike boss-rush chapter for the browser. Deliberate melee combat, weathered temple courtyards, detailed armoured and skeletal characters, pale feathers, and an adaptive dark-ambient score. Inspired by the tension and combat language of games such as Bloodborne and Wuchang: Fallen Feathers; no characters, music, models, or other assets from those games are used.
 
-![Vesper title artwork](public/art/vesper-cover.png)
+![The Veiled Heron winding up a paired sabre attack in the painted court](docs/runtime/sabres/gather.jpg)
+
+[Painted crane court, paired sabres and gameplay comparison](docs/runtime/sabres/) · [Rain porch in the playable garden](docs/runtime/porch/) · [The masked duelist and the moon bridge](docs/runtime/moonbridge/) · [Firelight, draped shoulders and the ring staff](docs/runtime/firelight/) · [Complete Saint of Cinders fight with sound](docs/runtime/firelight/shrine.mp4) · [Shrine fire and belfry sweep comparisons](docs/runtime/embers/) · [Watch a complete Bellwarden victory with sound](docs/runtime/vigil/bellwarden.mp4) · [Three courts in gameplay](docs/runtime/vigil/) · [Rain courts in motion](docs/runtime/rain/) · [Three encounter galleries](docs/runtime/sanctuary/) · [Bellwarden combat with game audio](docs/runtime/bronze/bellwarden.mp4)
 
 ## Play locally
 

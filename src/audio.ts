@@ -246,6 +246,17 @@ export class Soundscape {
         this.tone(e.value ? 440 : 146.8, t, 0.38, 0.055, "sine", pan);
         break;
       case "slam":
+        if (this.boss === 0) {
+          // The heavy casting rings past the much shorter sound of the haft impact.
+          this.bell(e.value === 1 ? 109.9 : 73.4, t + 0.018, 0.19);
+          this.noise(t, 0.055, 0.15, 1840);
+        } else if (this.boss === 2) {
+          // Bronze rings strike the two rails on release and on the rebound.
+          for (const [delay, pitch, gain] of [[.012, 764, .045], [.068, 911, .032], [.143, 812, .023]]) {
+            this.tone(pitch, t + delay, .32, gain, "sine", pan);
+            this.tone(pitch * 2.68, t + delay, .12, gain * .47, "sine", pan);
+          }
+        }
         this.tone(36, t, 0.65, 0.3);
         this.noise(t, 0.4, 0.22, 130);
         break;
