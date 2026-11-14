@@ -17,12 +17,14 @@ since = None
 shots = []
 track = []
 ascent = []
+forest_ticks = []
 stages = [
     ("road", (1300, 240, 100), -6, 7.0),
     ("stairs", (4200, -1250, 115), -90, 5.0),
     ("toe", None, 94, 4.5),
     ("return", None, 90, 5.2),
     ("bank", (1100, 1150, 100), -23, 6.0),
+    ("forest timing", None, -23, 9.0),
 ]
 entered = False
 shot = False
@@ -68,7 +70,13 @@ def record(dt):
                 str(pawn.character_movement.movement_mode),
             ]
         )
-    if not shot and t >= (2.25 if label == "stairs" else duration - 1.3):
+    if label == "forest timing" and t >= 1:
+        forest_ticks.append(round(t, 6))
+    if (
+        label != "forest timing"
+        and not shot
+        and t >= (2.25 if label == "stairs" else duration - 1.3)
+    ):
         unreal.SystemLibrary.execute_console_command(pawn, "Shot", controller)
         shots.append(
             {
@@ -91,6 +99,7 @@ def record(dt):
                         "shots": shots,
                         "descent": track,
                         "ascent": ascent,
+                        "forest_ticks": forest_ticks,
                     }
                 )
             )

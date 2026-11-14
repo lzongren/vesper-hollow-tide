@@ -1,0 +1,13 @@
+{
+  "trees": 120,
+  "variants": {
+    "RidgePine": {
+      "instances": 60,
+      "slots": 2
+    },
+    "WindPine": {
+      "instances": 60,
+      "slots": 2
+    }
+  }
+}
