@@ -12,7 +12,9 @@ Keep the checkout on a physical local drive outside OneDrive. The launcher check
 
 Install the engine’s Templates and Feature Packs component. The first launch imports the repository’s GLBs and paving textures and creates the map. Subsequent launches reuse the saved level. Use WASD to move, the mouse to look and Space to jump. Generated project content stays on the machine. The project runs in standalone game mode through Unreal Editor and requires the editor installation.
 
-[Procession road gameplay](../docs/runtime/procession-road/) · [Traversal measurements](../docs/runtime/mountain-pilgrimage/) · [Art direction and acceptance target](Art/quality-target.json)
+[Retaining walls and valley stair](../docs/runtime/mountain-masonry/) · [Procession road gameplay](../docs/runtime/procession-road/) · [Traversal measurements](../docs/runtime/mountain-pilgrimage/) · [Art direction and acceptance target](Art/quality-target.json)
+
+Rebuild the retaining-wall bays and dressed treads with `python native/Scripts/retaining_mesh.py public/textures native/Art/CausewayAshlar.glb`. The map pass finds the exposed edges of the overlapping road and court foundations and leaves openings for each flight of stairs.
 
 ## Prepare sources
 

@@ -1,0 +1,16 @@
+{
+  "bays": 96,
+  "wall_metres": 565.21,
+  "treads": 104,
+  "apron_treads": [
+    8,
+    0,
+    0
+  ],
+  "mesh_names": [
+    "AshlarBay1",
+    "AshlarBay2",
+    "AshlarBay3",
+    "DescentTread"
+  ]
+}

@@ -40,6 +40,9 @@ if (!(Test-Path "$project\Saved\RouteMeshes.json")) {
 if (!(Test-Path "$project\Saved\Procession.json")) {
     Invoke-MapPass 'dress_procession' 'VESPER_PROCESSION_SAVED'
 }
+if (!(Test-Path "$project\Saved\Ashlar.json")) {
+    Invoke-MapPass 'fit_causeway' 'VESPER_ASHLAR_SAVED'
+}
 if (!(Test-Path "$project\Saved\FittedPilgrim.json") -or (Get-Content -Raw "$project\Saved\FittedPilgrim.json" | ConvertFrom-Json).locomotion_revision -ne 2) {
     Invoke-MapPass 'fit_pilgrim' 'VESPER_PILGRIM_FITTED'
 }

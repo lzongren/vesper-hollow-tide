@@ -2,6 +2,8 @@
 
 **Visual rebuild in progress.** The browser prototype below did not meet the requested Bloodborne / Wuchang visual standard. The [native Unreal project](native/README.md) now includes a 205.4-metre route through three courtyards with third-person traversal. The three boss fights run in the browser build.
 
+[Walk down the mountain stair and back up to the court](docs/runtime/mountain-masonry/)
+
 [Watch the playable pilgrim run and turn in Unreal](docs/runtime/native-pilgrim/)
 
 [Watch the updated Unreal approach to the belfry on RTX 5080](docs/runtime/procession-road/)
