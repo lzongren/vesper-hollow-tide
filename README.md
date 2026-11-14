@@ -2,7 +2,7 @@
 
 **Visual rebuild in progress.** The browser prototype below did not meet the requested Bloodborne / Wuchang visual standard. The [native Unreal project](native/README.md) now includes a 205.4-metre route through three courtyards. The Bellwarden, the Veiled Heron and the Saint of Cinders are playable along the Unreal route and in the browser prototype.
 
-[Playable swordswoman in the mountain pass](docs/runtime/crane-wayfarer/)
+[Magnolia swordswoman in the mountain pass](docs/runtime/magnolia-wayfarer/)
 
 [Enter the final reliquary and fight the Saint of Cinders](docs/runtime/cinder-duel/)
 

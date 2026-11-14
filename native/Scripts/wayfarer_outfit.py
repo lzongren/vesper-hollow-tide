@@ -1,7 +1,7 @@
-"""Fit the crane coat, sash, wrapped hair and a projected portrait to the combat rig."""
+"""Fit the magnolia coat, crisscross sash, coiled hair and mapped portrait to the combat rig."""
 
 import json
-from math import atan2, cos, pi, sin, sqrt, tau
+from math import asin, atan2, cos, pi, sin, tau
 
 from bind_pilgrim import cross, unit
 from garment_surfaces import garment_surfaces
@@ -23,28 +23,42 @@ def dress(out, bones, rest, art):
         )
         return len(out.doc["materials"]) - 1
 
-    face = material("WayfarerSkin", (1, 1, 1), 0.60, texture="face.jpg")
-    silk = material("CraneSilk", (1, 1, 1), 0.66, texture="crane-silk.jpg")
-    lining = material("MidnightSilk", (1, 1, 1), 0.76, texture="lining.jpg")
-    crimson = material("MadderBinding", (1, 1, 1), 0.71, texture="binding.jpg")
+    face = material("WayfarerSkin", (1, 1, 1), 0.60, texture="magnolia-face.jpg")
+    silk = material("MagnoliaSilk", (1, 1, 1), 0.66, texture="magnolia-silk.jpg")
+    lining = material("CeladonSilk", (1, 1, 1), 0.76, texture="celadon.jpg")
+    crimson = material("RoseBinding", (1, 1, 1), 0.71, texture="rosewood.jpg")
     brass = material("ChasedBrass", (1, 1, 1), 0.38, 0.64, "brass.jpg")
     hair = material("InkHair", (1, 1, 1), 0.63, texture="hair.jpg")
     jade = material("CloudJade", (0.16, 0.40, 0.32), 0.27, 0.12)
+    pearl = material("SeedPearl", (0.84, 0.75, 0.62), 0.28, 0.09)
+    petal = material("MagnoliaJade", (0.55, 0.76, 0.61), 0.34, 0.04)
     patch, finish = garment_surfaces(out, bones)
     head = [("head", 1)]
     waist = [("pelvis", 1)]
 
     def face_uv(x, y):
-        return (0.502 + 0.376 * x, 0.508 - 0.353 * (y - 7.284))
+        # Place the eyeballs and lip seam on the corresponding portrait landmarks.
+        v = 0.459 - (y - 7.284) * (0.400 if y < 7.284 else 0.354)
+        return (0.511 + 0.389 * x, v)
 
     # Preserve the open eyelids and lips of the CC0 human mesh. Only the face
     # receives the frontal projection; the back of the skull carries wrapped hair.
     source = json.loads((art / "head.json").read_text())
     verts = source["vertices"]
+
+    def sculpt(x, y, z):
+        jaw = min(1, max(0, (7.14 - y) / 0.80))
+        return (
+            x * (1 - 0.13 * jaw),
+            y - 0.034 * jaw,
+            z - 0.054 * jaw * max(0, z - 0.5),
+        )
+
+    shaped = [sculpt(*v) for v in verts]
     normals = [[0.0, 0.0, 0.0] for _ in verts]
     batches = {face: [], hair: []}
     for f in source["faces"]:
-        a, b, c = (verts[i] for i in f[:3])
+        a, b, c = (shaped[i] for i in f[:3])
         normal = cross([j - i for i, j in zip(a, b)], [j - i for i, j in zip(a, c)])
         for i in f:
             for k in range(3):
@@ -55,7 +69,7 @@ def dress(out, bones, rest, art):
             hair if y > hairline and (abs(x) < 0.72 or y > 7.52 or z < 0.32) else face
         )
         # Keep the natural irregular photographed hairline at the forehead.
-        if z > 0.84 and 7.32 < y < 8.09 and abs(x) < 0.72:
+        if z > 1.10 and 7.32 < y < 8.09 and abs(x) < 0.60:
             slot = face
         for j in range(1, len(f) - 1):
             batches[slot].extend([f[0], f[j], f[j + 1]])
@@ -63,7 +77,7 @@ def dress(out, bones, rest, art):
     def pos(x, y, z):
         return (0.104 * x, 1.625 + 0.103 * (y - 7.0), 0.104 * (z - 0.32))
 
-    coords = [pos(*v) for v in verts]
+    coords = [pos(*v) for v in shaped]
     uv = [face_uv(x, y) if y > 6.22 and z > 0.53 else (0.61, 0.81) for x, y, z in verts]
     attrs = dict(
         POSITION=out.data(coords, "VEC3", bounds=True),
@@ -106,8 +120,8 @@ def dress(out, bones, rest, art):
         globe(
             face, pos(side * 0.308, 7.284, 1.245), (0.0128, 0.0125, 0.0126), head, True
         )
-    globe(hair, (0, 1.778, -0.048), (0.062, 0.050, 0.058), head, grooves=1)
-    globe(hair, (0.003, 1.803, -0.066), (0.050, 0.037, 0.042), head, grooves=1)
+    # A low, offset chignon reads in silhouette in both profile and the combat view.
+    globe(hair, (-0.015, 1.734, -0.076), (0.070, 0.061, 0.055), head, grooves=1)
 
     def strand(mat, path, width, skin, steps=22):
         def surface(u, v):
@@ -140,27 +154,67 @@ def dress(out, bones, rest, art):
                 )
 
             strand(hair, wisp, lambda t: 0.00165 * (1 - t * 0.97), head)
-    for j in range(4):
+    # Coiled lengths traverse the back of the knot in opposite directions.
+    for k in range(4):
 
-        def wrap(t):
-            a = t * tau
+        def coil(t):
+            a = (t * 1.38 + 0.25 * k) * tau
             return (
-                0.059 * cos(a),
-                1.791 + 0.005 * j + 0.007 * sin(a),
-                -0.048 + 0.049 * sin(a),
+                -0.013 + (0.050 + 0.013 * t) * cos(a),
+                1.744 + 0.039 * sin(a) - 0.022 * t,
+                -0.087 - 0.014 * k + 0.009 * sin(2 * a),
             )
 
-        strand(crimson if j % 2 else brass, wrap, lambda t: 0.0028, head, 56)
+        strand(hair, coil, lambda t: 0.013 + 0.003 * sin(pi * t), head, 64)
+
+    # The comb sits above the left ear. Thin cupped petals, stamens and
+    # pearl strings cast their own silhouettes instead of being baked onto the hair.
     strand(
         brass,
-        lambda t: (-0.097 + 0.207 * t, 1.791 + 0.048 * t, -0.049 + 0.019 * t),
-        lambda t: 0.0032 * (0.55 + t),
+        lambda t: (-0.087 + 0.199 * t, 1.738 + 0.049 * t, -0.066 + 0.025 * t),
+        lambda t: 0.0027 + 0.0012 * t,
         head,
     )
-    globe(jade, (0.113, 1.841, -0.029), (0.009, 0.013, 0.009), head)
+    for size, ox, oy, oz in [
+        (1, 0.086, 1.774, -0.034),
+        (0.66, 0.055, 1.791, -0.042),
+        (0.48, 0.109, 1.755, -0.030),
+    ]:
+        for j in range(6):
+            a = (j / 6 + 0.03) * tau
+
+            def flower(u, v):
+                span = 0.011 * size * (0.13 + 0.87 * sin(pi * v) ** 0.72) * (2 * u - 1)
+                length = 0.030 * size * v
+                return (
+                    (
+                        ox + length * cos(a) - span * sin(a),
+                        oy + length * sin(a) + span * cos(a),
+                        oz
+                        + 0.010 * size * sin(pi * v)
+                        + 0.008 * size * (2 * u - 1) ** 2 * v,
+                    ),
+                    (u, v),
+                    head,
+                )
+
+            patch(petal, 8, 12, flower)
+        globe(pearl, (ox, oy, oz + 0.008 * size), (0.005 * size,) * 3, head)
+    for j in range(3):
+        x = 0.090 + 0.009 * j
+        length = 0.048 + 0.019 * (j % 2)
+
+        def chain(t):
+            return (x + 0.004 * sin(t * pi), 1.756 - length * t, -0.036 + 0.002 * j)
+
+        strand(brass, chain, lambda t: 0.0011, head)
+        for t in (0.37, 0.73, 1):
+            globe(pearl, chain(t), (0.0034, 0.0048, 0.0034), head)
+    for side in (-1, 1):
+        globe(pearl, (side * 0.082, 1.628, 0.028), (0.0038, 0.0051, 0.0038), head)
 
     # Eight slightly overlapping panels put slits between the moving thighs.
-    # The crane is centred on the uninterrupted back panel above the belt.
+    # The embroidered branch spans the uninterrupted back panel.
     def cloth(a, t):
         y = 0.43 + 1.035 * t
         flare = max(0, 1 - (y - 0.43) / 0.59)
@@ -182,8 +236,8 @@ def dress(out, bones, rest, art):
         a = tau * u
         edge, _ = cloth(a, 1)
         spread = abs(sin(a)) ** 3
-        x = edge[0] + 0.065 * sin(a) * spread
-        y = edge[1] - 0.062 * spread
+        x = edge[0] + 0.036 * sin(a) * spread
+        y = edge[1] - 0.048 * spread
         z = edge[2]
         collar_height = 1.510 - 0.035 * max(0, cos(a))
         p = (
@@ -201,7 +255,7 @@ def dress(out, bones, rest, art):
             p, skin = cloth(a, v)
             return p, (0.05 + 0.90 * u, 0.995 - 0.91 * v), skin
 
-        patch(silk if j in (0, 4) else lining, 18, 38, panel)
+        patch(lining if j in (2, 6) else silk, 18, 38, panel)
 
         def trim(u, v):
             p, tex, skin = panel(0.026 * u, v)
@@ -240,7 +294,7 @@ def dress(out, bones, rest, art):
             )
             return p, (u, 1 - v), [(chain[seg], 1 - t), (chain[seg + 1], t)]
 
-        patch(lining, 36, 32, arm)
+        patch(silk, 36, 32, arm)
 
         def sleeve_cap(u, v):
             ring, _, skin = arm(u, 0)
@@ -253,7 +307,7 @@ def dress(out, bones, rest, art):
             )
 
         patch(silk, 36, 10, sleeve_cap)
-        patch(silk, 36, 12, lambda u, v: arm(u, 0.26 * v))
+
         for band in (0.11, 0.17, 0.67, 0.73, 0.82, 0.88, 0.94):
 
             def cuff(u, v):
@@ -264,17 +318,29 @@ def dress(out, bones, rest, art):
             patch(brass if band in (0.17, 0.67, 0.94) else crimson, 36, 3, cuff)
 
         def collar(u, v):
-            x = side * (0.078 - 0.208 * v) + (0.5 - u) * 0.064
-            y = 1.533 - 0.354 * v
-            z = 0.060 + 0.139 * min(1, v * 4) + 0.025 * sin(pi * v)
-            return (x, y, z), (0.1 + u * 0.13, v), [("spine_05", 1)]
+            # The inner lapel ends under the crossing; the outer one continues
+            # toward the right side fastening instead of forming a second tail.
+            t = v * (0.40 if side < 0 else 1.0)
+            if t < 0.22:
+                along = t / 0.22
+                a = side * (1.32 - 0.99 * along) + (u - 0.5) * 0.29
+                (x, y, z), tex, skin = shoulder_yoke(a / tau, 1 - along)
+                return (x, y + 0.0015, z + 0.003), tex, skin
+            along = (t - 0.22) / 0.78
+            height = 1 - along * 0.34
+            edge, _ = cloth(side * 0.33, height)
+            x = edge[0] * (1 - along) - side * 0.126 * along + (0.5 - u) * 0.042
+            half_width = cloth(pi / 2, height)[0][0]
+            a = asin(max(-0.99, min(0.99, x / half_width)))
+            (x, y, z), skin = cloth(a, height)
+            return (x, y, z + 0.006 + 0.002 * side), (0.1 + u * 0.13, v), skin
 
-        patch(crimson, 9, 20, collar)
+        patch(lining, 9, 20, collar)
         for edge in (0, 0.92):
 
             def braid(u, v):
                 (x, y, z), uv, skin = collar(edge + 0.075 * u, v)
-                return (x, y, z + 0.002), uv, skin
+                return (x, y, z + 0.004 + 0.001 * side), uv, skin
 
             patch(brass, 2, 20, braid)
 

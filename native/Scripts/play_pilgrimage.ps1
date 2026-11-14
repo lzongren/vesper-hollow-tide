@@ -86,7 +86,7 @@ if ($cinderReport.revision -ne 2) {
 $outfitReport = if (Test-Path "$project\Saved\WayfarerOutfit.json") {
     Get-Content -Raw "$project\Saved\WayfarerOutfit.json" | ConvertFrom-Json
 }
-if ($rebuildDuel -or $outfitReport.revision -ne 1 -or !(Test-Path "$project\Content\Vesper\Duel\CraneWayfarerCourt\CraneWayfarerCourt\SkeletalMeshes\CraneWayfarerCourt.uasset")) {
+if ($rebuildDuel -or $outfitReport.revision -ne 2 -or !(Test-Path "$project\Content\Vesper\Duel\MagnoliaLady\MagnoliaLady\SkeletalMeshes\MagnoliaLady.uasset")) {
     Invoke-MapPass 'fit_wayfarer' 'VESPER_WAYFARER_READY'
 }
 Start-Process "$bin\UnrealEditor.exe" -WorkingDirectory $project -ArgumentList @(

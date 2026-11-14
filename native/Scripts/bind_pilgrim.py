@@ -333,7 +333,7 @@ def build(reference, body_path, art, textures, output, *, bellwarden=False, arme
             for position, joint_ids, influence in zip(vertices, base.values(a["JOINTS_0"]), weights):
                 glove = any("Hand" in source_names[i] and w > 0.44
                             for i, w in zip(joint_ids, influence))
-                keep.append(position[1] < 0.98 or glove)
+                keep.append(position[1] < 0.81 or glove)
             indices = base.values(prim["indices"])
             kept = []
             for i in range(0, len(indices), 3):
@@ -476,6 +476,8 @@ def build(reference, body_path, art, textures, output, *, bellwarden=False, arme
                         y += target["head"][1] + 0.216
                         z += target["head"][2]
                     elif prefix == "SwordCase":
+                        if wayfarer:
+                            x, y, z = .77 * x, .87 * y, .77 * z
                         turn = align((0, -1, 0), (0.22, -0.84, -0.5))
                         x, y, z = rotate(turn, (x, y, z))
                         x += 0.21
