@@ -1,4 +1,5 @@
 import * as T from "three";
+import { jianPoint } from "./pilgrim-jian";
 
 // Keys describe the wrist and the blade direction in the actor's metre-scale frame.
 // The two contact keys coincide with the combat simulation at 0.14 s and 0.46 s.
@@ -201,26 +202,41 @@ export function mantleGeometry() {
   return geometry;
 }
 
-/** Six rendered edge samples make a tapering ribbon during the cutting phase. */
+/** Short exposure at the moving point. Timestamped samples decay in seconds
+ * so the wake has the same lifetime at different presentation rates. */
 export class BladeTrail extends T.Mesh<T.BufferGeometry, T.MeshBasicMaterial> {
+  private static readonly count = 16;
+  private static readonly lifetime = 0.05;
   private samples = 0;
-  private positions = new Float32Array(6 * 2 * 3);
+  private lastProgress = 0;
+  private lastAction = "";
+  private times = new Float64Array(BladeTrail.count);
+  private positions = new Float32Array(BladeTrail.count * 6);
+  private colors = new Float32Array(BladeTrail.count * 8);
+
   constructor() {
     const geometry = new T.BufferGeometry();
     const material = new T.MeshBasicMaterial({
-      color: 0xbecac8,
+      color: 0xb7c7c5,
       side: T.DoubleSide,
+      vertexColors: true,
       transparent: true,
-      opacity: 0.16,
+      opacity: 0.28,
       depthWrite: false,
+      forceSinglePass: true,
     });
     super(geometry, material);
+    this.colors.fill(1);
     geometry.setAttribute(
       "position",
       new T.BufferAttribute(this.positions, 3).setUsage(T.DynamicDrawUsage),
     );
-    const indices = [];
-    for (let i = 0; i < 5; i++) {
+    geometry.setAttribute(
+      "color",
+      new T.BufferAttribute(this.colors, 4).setUsage(T.DynamicDrawUsage),
+    );
+    const indices: number[] = [];
+    for (let i = 0; i < BladeTrail.count - 1; i++) {
       const a = i * 2;
       indices.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
     }
@@ -229,22 +245,55 @@ export class BladeTrail extends T.Mesh<T.BufferGeometry, T.MeshBasicMaterial> {
     this.frustumCulled = false;
     this.visible = false;
   }
-  sample(weapon: T.Group, action: string, progress: number) {
+
+  sample(weapon: T.Group, action: string, progress: number, now: number) {
     const cutting =
       action === "light"
         ? progress > 0.2 && progress < 0.56
         : action === "heavy" && progress > 0.39 && progress < 0.7;
-    if (!cutting) {
+    if (
+      !cutting ||
+      action !== this.lastAction ||
+      progress < this.lastProgress ||
+      now < this.times[0]
+    )
       this.samples = 0;
-      this.visible = false;
-      return;
+    this.lastAction = action;
+    this.lastProgress = progress;
+    while (
+      this.samples &&
+      now - this.times[this.samples - 1] >= BladeTrail.lifetime
+    )
+      this.samples--;
+    if (cutting && (!this.samples || now > this.times[0])) {
+      // Leave the strong part of the blade visible. Only the last twelve
+      // centimetres sweep a feathered mark in the air.
+      weapon.localToWorld(grip.set(0, jianPoint - 0.12, 0));
+      weapon.localToWorld(blade.set(0, jianPoint - 0.015, 0));
+      const speed = this.samples
+        ? Math.hypot(
+            blade.x - this.positions[3],
+            blade.y - this.positions[4],
+            blade.z - this.positions[5],
+          ) /
+          (now - this.times[0])
+        : 0;
+      this.positions.copyWithin(6, 0, this.positions.length - 6);
+      this.times.copyWithin(1, 0, BladeTrail.count - 1);
+      this.times[0] = now;
+      grip.toArray(this.positions, 0);
+      blade.toArray(this.positions, 3);
+      this.samples = Math.min(BladeTrail.count, this.samples + 1);
+      this.material.opacity = 0.27 * T.MathUtils.smoothstep(speed, 2.8, 13);
+      for (let i = 0; i < this.samples; i++) {
+        const freshness = 1 - (now - this.times[i]) / BladeTrail.lifetime;
+        this.colors[i * 8 + 3] = 0;
+        this.colors[i * 8 + 7] = freshness * freshness;
+      }
+      this.geometry.attributes.position.needsUpdate = true;
+      this.geometry.attributes.color.needsUpdate = true;
     }
-    this.positions.copyWithin(6, 0, 30);
-    weapon.localToWorld(grip.set(0, 0.57, 0)).toArray(this.positions, 0);
-    weapon.localToWorld(blade.set(0, 1.4, 0)).toArray(this.positions, 3);
-    this.samples = Math.min(6, this.samples + 1);
-    this.visible = this.samples > 1;
-    this.geometry.setDrawRange(0, (this.samples - 1) * 6);
-    this.geometry.attributes.position.needsUpdate = true;
+    this.visible = this.samples > 1 && this.material.opacity > 0;
+    this.geometry.setDrawRange(0, Math.max(0, this.samples - 1) * 6);
   }
 }

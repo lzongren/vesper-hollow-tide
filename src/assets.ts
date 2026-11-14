@@ -57,7 +57,6 @@ export class ArtLibrary {
         "pilgrim",
         "wraith",
         "sorcerer",
-        "sword",
         "pine",
         "dead-tree",
         "tide-bell",

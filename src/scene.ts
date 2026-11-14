@@ -21,6 +21,7 @@ import {
 } from "./vestments";
 import type { Attack } from "./combat";
 import { WeaponGrip, mantleGeometry, BladeTrail } from "./pilgrim";
+import { pilgrimJian } from "./pilgrim-jian";
 import {
   courtyardMaple,
   mapleLeaf,
@@ -531,9 +532,7 @@ export class World {
         const headwear = travelHat();
         root.add(headwear);
         bones.get("Head")?.attach(headwear);
-        const sword = this.art.model("sword", 1.65);
-        sword.position.y = -0.22;
-        weapon.add(sword);
+        weapon.add(pilgrimJian());
         const upper = bones.get("RightArm"),
           fore = bones.get("RightForeArm");
         if (upper && fore && a.rightHand)
@@ -1711,6 +1710,7 @@ export class World {
       this.player.weapon,
       game.mode === "combat" ? p.action : "idle",
       p.timer / p.duration,
+      this.time,
     );
     this.animateActor(
       this.boss,
@@ -1731,15 +1731,20 @@ export class World {
     const desired = locked ? Math.atan2(-dx, -dz) : this.orbit;
     this.yaw += angleDiff(desired, this.yaw) * (1 - Math.exp(-dt * 1.8));
     const distance = 3.92 + Math.min(d, 13) * 0.18;
+    // Offset the eye towards the sword shoulder at melee range. Keep the
+    // farther opening and unlocked orbit on their established camera track.
+    const close = locked ? 1 - T.MathUtils.smoothstep(d, 2.4, 5.8) : 0;
+    const shoulder = 0.85 + 1.48 * close;
+    const focus = 0.30 + 0.16 * close;
     const target = new T.Vector3(
-      p.x + Math.sin(this.yaw) * distance + Math.cos(this.yaw) * 0.85,
-      2.15 + Math.min(d, 12) * 0.09,
-      p.z + Math.cos(this.yaw) * distance - Math.sin(this.yaw) * 0.85,
+      p.x + Math.sin(this.yaw) * distance + Math.cos(this.yaw) * shoulder,
+      2.15 + Math.min(d, 12) * 0.09 + 0.24 * close,
+      p.z + Math.cos(this.yaw) * distance - Math.sin(this.yaw) * shoulder,
     );
     const look = new T.Vector3(
-      p.x + (b.x - p.x) * 0.3,
+      p.x + (b.x - p.x) * focus,
       1.75,
-      p.z + (b.z - p.z) * 0.3,
+      p.z + (b.z - p.z) * focus,
     );
     if (!this.cameraInitialized) {
       this.camera.position.copy(target);
