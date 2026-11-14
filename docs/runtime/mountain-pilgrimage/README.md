@@ -2,6 +2,16 @@
 
 [Unreal map measurements](map.json) · [Launch from a Windows checkout](../../../native/README.md)
 
+## Native standalone run
+
+![Approaching the belfry on the RTX 5080](running.jpg)
+
+[Native start, run and stop](native-motion.mp4) · [Character movement samples](native-motion.json) · [Capture timing](native-capture.json)
+
+Unreal 5.8.4 ran the map at 1600 × 900 using DX12. The probe supplied forward movement to the possessed third-person character and released it. The movement-only sample covered 31.70 metres, reached 600 cm/s and finished at rest. Its 382 Slate tick intervals had a median of 17.35 ms and a 95th percentile of 37.09 ms. The initial run's screenshot requests failed after its launch frame, while movement sampling completed.
+
+The second run produced 40 full engine screenshots over 8 seconds. The video retains the recorded timing, including the overhead of PNG readback. Its character covered 31.38 metres and again finished at rest. This clip checks poses and scale. The timing results above describe the first run. The opening road, rectangular markers, broad mountain shapes and Epic mannequin remain at prototype fidelity.
+
 ## Browser combat
 
 [Movement and lock-on capture](browser-motion.mp4) · [Three full encounter results](browser-results.json)
