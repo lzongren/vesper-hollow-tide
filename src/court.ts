@@ -49,3 +49,83 @@ export function courtPaving(random: () => number) {
   geometry.computeVertexNormals();
   return geometry;
 }
+
+/** A shallow gutter follows the last stone course. Cast grates bridge its four
+ * outlets; the openings reveal the dark channel bed between the bronze bars. */
+export function runoffChannel(metal: T.Material, kerb: T.Material) {
+  const gutter = new T.Group();
+  const bed = new T.MeshBasicMaterial({ color: 0x171d1d });
+  const annulus = (
+    inner: number,
+    outer: number,
+    height: number,
+    material: T.Material,
+  ) => {
+    const g = new T.RingGeometry(inner, outer, 192);
+    g.rotateX(-Math.PI / 2);
+    const m = new T.Mesh(g, material);
+    m.position.y = height;
+    m.receiveShadow = true;
+    gutter.add(m);
+  };
+  annulus(12.59, 13.14, -0.002, bed);
+  annulus(12.56, 12.62, 0.026, kerb);
+  annulus(12.65, 12.67, 0.004, metal);
+  const bars: T.Matrix4[] = [];
+  const stones: T.Matrix4[] = [];
+  const transform = new T.Object3D();
+  function piece(
+    batch: T.Matrix4[],
+    angle: number,
+    r: number,
+    y: number,
+    w: number,
+    h: number,
+    d: number,
+    turn = 0,
+  ) {
+    transform.position.set(Math.sin(angle) * r, y, Math.cos(angle) * r);
+    transform.rotation.set(0, angle + turn, 0);
+    transform.scale.set(w, h, d);
+    transform.updateMatrix();
+    batch.push(transform.matrix.clone());
+  }
+  // Short gaps in the curb line up with the four cast intake grilles.
+  for (let i = 0; i < 96; i++) {
+    const a = (i * Math.PI) / 48;
+    if (i % 24 === 0) continue;
+    piece(stones, a, 13.03, 0.064, 0.825, 0.15, 0.32);
+    piece(stones, a, 13.06, 0.155, 0.83, 0.045, 0.37);
+  }
+  for (let side = 0; side < 4; side++) {
+    const a = (side * Math.PI) / 2;
+    for (const r of [12.63, 13.15])
+      piece(bars, a, r, 0.065, 0.94, 0.056, 0.056);
+    for (let i = -5; i <= 5; i++)
+      piece(bars, a + i * 0.0066, 12.89, 0.063, 0.034, 0.048, 0.54);
+    for (const sign of [-1, 1])
+      piece(
+        bars,
+        a + sign * 0.016,
+        12.89,
+        0.093,
+        0.026,
+        0.022,
+        0.53,
+        sign * 0.63,
+      );
+  }
+  function instances(matrices: T.Matrix4[], material: T.Material) {
+    const mesh = new T.InstancedMesh(
+      new T.BoxGeometry(),
+      material,
+      matrices.length,
+    );
+    matrices.forEach((matrix, i) => mesh.setMatrixAt(i, matrix));
+    mesh.castShadow = mesh.receiveShadow = true;
+    gutter.add(mesh);
+  }
+  instances(stones, kerb);
+  instances(bars, metal);
+  return gutter;
+}

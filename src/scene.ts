@@ -29,7 +29,9 @@ import {
   leafDrifts,
   valleyHorizon,
 } from "./sanctuary";
-import { courtPaving } from "./court";
+import { batchCourt } from "./static-court";
+import { RainCourt } from "./raincourt";
+import { courtPaving, runoffChannel } from "./court";
 import { heronGarden, cinderReliquary } from "./landmarks";
 
 const Y = new T.Vector3(0, 1, 0);
@@ -203,6 +205,7 @@ export class World {
   composer: EffectComposer;
   ao: SSAOPass;
   arena = new T.Group();
+  rainCourt = new RainCourt();
   decor = new T.Group();
   player: Actor = { root: new T.Group() } as Actor;
   boss: Actor = { root: new T.Group() } as Actor;
@@ -288,6 +291,7 @@ export class World {
     this.scene.add(portraitLight);
     this.scene.add(
       this.arena,
+      this.rainCourt.floor,
       this.decor,
       this.telegraph,
       this.lock,
@@ -400,6 +404,7 @@ export class World {
     stone.bumpScale = 0.055;
     stone.normalMap = null;
     stone.roughness = 0.71;
+    this.rainCourt.finishStone(stone);
   }
   resize() {
     this.camera.aspect = innerWidth / innerHeight;
@@ -407,6 +412,13 @@ export class World {
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(innerWidth, innerHeight);
     this.composer.setSize(innerWidth, innerHeight);
+    // Contact shading varies slowly on the pavement. Keep the beauty pass at
+    // native resolution and sample the occlusion pass on a smaller grid.
+    const ratio = this.renderer.getPixelRatio() * 0.65;
+    this.ao.setSize(
+      Math.max(1, Math.round(innerWidth * ratio)),
+      Math.max(1, Math.round(innerHeight * ratio)),
+    );
   }
   setQuality(value: string) {
     this.quality = value;
@@ -945,17 +957,20 @@ export class World {
           ? ["rock_face_01"]
           : [];
     const [seal] = await Promise.all([
-      this.art.courtSeal(["lotus", "plume", "cinder"][index]),
+      this.art.courtSeal(["belfry", "heron", "cinder"][index]),
       ...scans.map((name) => this.art.loadLandmark(name)),
     ]);
-    seal.color.setHex(0xa0a4a4);
-    seal.normalScale.set(0.5, 0.5);
+    seal.color.setHex(index === 0 ? 0xd2d6ce : 0xb4bbb8);
+    this.rainCourt.finishStone(seal, index !== 1);
+
     this.materials[`seal-${index}`] = seal;
   }
   setArena(index: number) {
     if (!this.loaded || this.bossIndex === index) return;
     this.bossIndex = index;
     this.clear(this.arena);
+    this.clear(this.rainCourt.floor);
+    this.rainCourt.setArena(index);
     this.clear(this.decor);
     this.clothMeshes = [];
     this.flames = [];
@@ -976,7 +991,7 @@ export class World {
     this.scene.background = new T.Color(colors[index]);
     this.materials.stone.color.setHex([0xffffff, 0xbdd0bd, 0xaaa398][index]);
     const ground = mesh(
-      this.arena,
+      this.rainCourt.floor,
       new T.CircleGeometry(43, 128),
       this.materials.stone,
       0,
@@ -986,7 +1001,7 @@ export class World {
     // CircleGeometry uses the disc extent for UVs.
     ground.rotation.x = -Math.PI / 2;
     const seal = mesh(
-      this.arena,
+      this.rainCourt.floor,
       new T.CircleGeometry(6.35, 144),
       this.materials[`seal-${index}`],
     );
@@ -995,7 +1010,7 @@ export class World {
     seal.rotation.x = -Math.PI / 2;
     seal.castShadow = false;
     const slabs = new T.MeshStandardMaterial({
-      color: [0x919994, 0x899a92, 0xa39890][index],
+      color: [0x6c797b, 0x788681, 0x776b61][index],
       vertexColors: true,
       roughness: 0.82,
       map: this.art.textures.get("rock-color"),
@@ -1003,24 +1018,15 @@ export class World {
       roughnessMap: this.art.textures.get("rock-rough"),
       normalScale: new T.Vector2(0.48, 0.48),
     });
-    const paving = mesh(this.arena, courtPaving(random(2137 + index)), slabs);
+    this.rainCourt.finishStone(slabs);
+    const paving = mesh(
+      this.rainCourt.floor,
+      courtPaving(random(2137 + index)),
+      slabs,
+    );
     paving.name = "Fitted apron stones";
     paving.castShadow = false;
-    // Hand-laid raised perimeter, with a traversable central court and no chessboard tiling.
-    for (let i = 0; i < 48; i++) {
-      const a = (i / 48) * Math.PI * 2;
-      const block = box(
-        this.arena,
-        this.materials.wall,
-        Math.sin(a) * 13,
-        -0.03,
-        Math.cos(a) * 13,
-        1.8,
-        0.35,
-        0.6,
-      );
-      block.rotation.y = a;
-    }
+    this.arena.add(runoffChannel(this.materials.gold, this.materials.rock));
     if (index === 0) this.temple(this.arena, 0, -24, 1.7);
     else if (index === 1)
       this.arena.add(heronGarden(this.art, this.materials, random(1729)));
@@ -1279,6 +1285,7 @@ export class World {
       });
       this.decor.add(guardian);
     }
+    batchCourt(this.arena, new Set([...this.clothMeshes, ...this.flames]));
   }
   aim(clientX: number, clientY: number): Vec | undefined {
     this.ray.setFromCamera(
@@ -1599,6 +1606,15 @@ export class World {
     for (let i = 0; i < rain.count; i++)
       rain.setY(i, (this.rainBase[i * 3 + 1] - this.time * 2.2 + 10000) % 25);
     rain.needsUpdate = true;
+    this.rainCourt.footfall(0, p.x, p.z, p.facing, p.action === "dodge");
+    this.rainCourt.footfall(1, b.x, b.z, b.facing, false);
+    this.rainCourt.capture(
+      this.renderer,
+      this.scene,
+      this.camera,
+      this.time,
+      this.quality,
+    );
     if (this.quality === "low") this.renderer.render(this.scene, this.camera);
     else this.composer.render();
   }

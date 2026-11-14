@@ -16,23 +16,17 @@ export class ArtLibrary {
     const existing = this.seals.get(name);
     if (existing) return existing;
     const loader = new T.TextureLoader();
-    const base = `${import.meta.env.BASE_URL}textures/seal-${name}`;
-    const [color, normal, orm] = await Promise.all(
-      ["color", "normal", "orm"].map((channel) =>
-        loader.loadAsync(`${base}-${channel}.jpg`),
-      ),
+    const map = await loader.loadAsync(
+      `${import.meta.env.BASE_URL}art/${name}-inlay.jpg`,
     );
-    for (const map of [color, normal, orm]) map.anisotropy = 8;
-    color.colorSpace = T.SRGBColorSpace;
+    map.colorSpace = T.SRGBColorSpace;
+    map.anisotropy = 8;
     const material = new T.MeshStandardMaterial({
-      name: `${name} engraved stone and bronze`,
-      map: color,
-      normalMap: normal,
-      roughness: 1,
-      metalness: 1,
-      roughnessMap: orm,
-      metalnessMap: orm,
-      aoMap: orm,
+      name: `${name} courtyard inlay`,
+      map,
+      bumpMap: map,
+      bumpScale: 0.047,
+      roughness: 0.62,
     });
     this.seals.set(name, material);
     return material;
