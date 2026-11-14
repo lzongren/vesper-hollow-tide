@@ -1,4 +1,5 @@
 import * as T from "three";
+import { cliffWalk } from "./cliff-walk";
 import { ridgePavilion } from "./ridge-pavilion";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
@@ -52,17 +53,36 @@ function random(seed: number) {
 
 // Closed-in-plan limestone spurs. The angular strata run through several
 // elevations, so a cliff has continuous gullies breaking an uneven cap.
-function crag(spur: Spur, seed: number, trees: T.Vector3[], summit: T.Vector3) {
+const around = 96, rows = 40;
+
+function crag(spur: Spur, seed: number, face: number, trees: T.Vector3[], summit: T.Vector3) {
   const [x, z, height, width, depth, yaw] = spur;
   const rng = random(seed),
     phase = rng() * 6.28;
+  // Offset ribs produce a sheltering face and an exposed shoulder on each spur.
+  // An individual tilted bedding plane can step out or undercut the face.
+  const ribs = Array.from({ length: 8 }, (_, i) => ({
+    bearing: ((i + rng() * 0.65) * Math.PI) / 4,
+    width: 0.04 + rng() * 0.13,
+    depth: (i % 3 === 0 ? -1 : 1) * (0.09 + rng() * 0.23),
+    lean: (rng() - 0.5) * 0.64,
+  }));
+  const beds = Array.from({ length: 5 }, (_, i) => ({
+    height: (i + 0.32 + rng() * 0.43) / 5,
+    dip: (rng() - 0.5) * 0.17,
+    direction: rng() * Math.PI * 2,
+    step: 0.026 + rng() * 0.049,
+  }));
+  const atlasUv = (u: number, v: number) => {
+    const column = face % 2, row = Math.floor(face / 2);
+    uv.push((2048 * column + 6 + 2036 * u) / 4096,
+      1 - (1024 * row + 6 + 1012 * (1 - v)) / 4096);
+  };
   const positions: number[] = [],
     uv: number[] = [],
     colors: number[] = [],
     indices: number[] = [];
-  const around = 72,
-    rows = 28;
-  const moss = new T.Color(0x5e735f),
+  const moss = new T.Color(0x9da599),
     limestone = new T.Color(0xe1e9e4);
   const color = new T.Color();
   const profile = [
@@ -84,13 +104,16 @@ function crag(spur: Spur, seed: number, trees: T.Vector3[], summit: T.Vector3) {
     const r = T.MathUtils.lerp(r0, r1, t1 === t0 ? 0 : (t - t0) / (t1 - t0));
     for (let col = 0; col <= around; col++) {
       const a = ((col % around) / around) * 2 * Math.PI;
-      const fold =
-        0.15 * Math.sin(5 * a + phase) +
-        0.087 * Math.sin(9 * a + 1.3 * phase + 0.6 * t) -
-        0.14 * Math.pow(0.5 + 0.5 * Math.cos(13 * a + phase + t), 5);
-      const band =
-        0.024 * Math.sin(45 * t + 2 * Math.sin(a + phase)) +
-        0.012 * Math.sin(71 * t + 3 * a);
+      let fold = 0;
+      for (const rib of ribs) {
+        const offset = 1 - Math.cos(a - rib.bearing - rib.lean * t);
+        fold += rib.depth * Math.exp(-offset / (rib.width * rib.width));
+      }
+      let band = 0;
+      for (const bed of beds) {
+        const distance = t - bed.height - bed.dip * Math.cos(a - bed.direction);
+        band += bed.step * Math.exp(-Math.abs(distance) / (distance < 0 ? 0.018 : 0.07));
+      }
       const cx = Math.cos(a),
         cz = Math.sin(a);
       const rx =
@@ -107,18 +130,14 @@ function crag(spur: Spur, seed: number, trees: T.Vector3[], summit: T.Vector3) {
         depth * 0.11 * t;
       const crown =
         0.86 +
-        0.09 * Math.cos(a + phase) +
-        0.055 * Math.sin(3 * a + phase) +
-        0.025 * Math.sin(7 * a);
+        0.12 * Math.cos(a + phase) +
+        0.077 * Math.sin(3 * a + phase) +
+        0.13 * fold;
       const px = x + rx * Math.cos(yaw) + rz * Math.sin(yaw);
       const pz = z - rx * Math.sin(yaw) + rz * Math.cos(yaw);
       const py = -2 + height * t * crown;
       positions.push(px, py, pz);
-      uv.push(
-        ((col / around) * Math.PI * (width + depth)) / 9.7 +
-          0.035 * Math.sin(a * 4 + t * 5),
-        py / 11.5 + 0.048 * Math.sin(3 * a + phase),
-      );
+      atlasUv(col / around, t);
       const cover = T.MathUtils.clamp(
         1.9 * (t - 0.66) + 0.25 * Math.sin(3 * a + phase) - 1.6 * fold,
         0,
@@ -127,7 +146,7 @@ function crag(spur: Spur, seed: number, trees: T.Vector3[], summit: T.Vector3) {
       color
         .copy(limestone)
         .lerp(moss, cover)
-        .multiplyScalar(0.85 + fold + band);
+        .multiplyScalar(0.95 + 0.43 * fold + band);
       colors.push(color.r, color.g, color.b);
       if (col && row) {
         const i = row * (around + 1) + col,
@@ -148,7 +167,7 @@ function crag(spur: Spur, seed: number, trees: T.Vector3[], summit: T.Vector3) {
   summit.copy(center);
   positions.push(center.x, center.y, center.z);
   colors.push(moss.r, moss.g, moss.b);
-  uv.push(0.5, 0.5);
+  atlasUv(0.5, 1);
   for (let i = 0; i < around; i++) indices.push(last + i, cap, last + i + 1);
   const g = new T.BufferGeometry();
   g.setAttribute("position", new T.Float32BufferAttribute(positions, 3));
@@ -156,6 +175,16 @@ function crag(spur: Spur, seed: number, trees: T.Vector3[], summit: T.Vector3) {
   g.setAttribute("uv", new T.Float32BufferAttribute(uv, 2));
   g.setIndex(indices);
   g.computeVertexNormals();
+  const normals = g.getAttribute("normal");
+  const start = new T.Vector3(), end = new T.Vector3();
+  for (let row = 0; row <= rows; row++) {
+    const first = row * (around + 1), last = first + around;
+    start.fromBufferAttribute(normals, first);
+    end.fromBufferAttribute(normals, last);
+    start.add(end).normalize();
+    normals.setXYZ(first, start.x, start.y, start.z);
+    normals.setXYZ(last, start.x, start.y, start.z);
+  }
   return g;
 }
 
@@ -270,8 +299,15 @@ export function karstSpurs(encounter: number, map: T.Texture) {
     sites: T.Vector3[] = [];
   const summits = spurs[encounter].map(() => new T.Vector3());
   const geometry = spurs[encounter].map((s, i) =>
-    crag(s, 1429 + 203 * i + 97 * encounter, sites, summits[i]),
+    crag(s, 1429 + 203 * i + 97 * encounter, i, sites, summits[i]),
   );
+  if (encounter === 2) {
+    const wall = geometry[4].getAttribute("position");
+    const stations = Array.from({length: 14}, (_, i) => (around - 13 + 2*i) % around);
+    const anchors = (row: number) => stations.map(col =>
+      new T.Vector3().fromBufferAttribute(wall, row * (around + 1) + col));
+    group.add(cliffWalk(anchors(17), anchors(12)));
+  }
   if (encounter === 1) {
     const beacon = ridgePavilion();
     beacon.position.copy(summits[1]);

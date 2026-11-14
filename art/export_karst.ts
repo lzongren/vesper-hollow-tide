@@ -1,10 +1,13 @@
-/** Package the garden geography, beacon and limestone albedo in one native asset. */
+/** Export a court landscape with its placed architecture and embedded ridge atlas. */
 import { readFile, writeFile } from "node:fs/promises";
 import * as T from "three";
 import { karstSpurs } from "../src/karst";
 import { bake } from "./bake_glb";
 
-const group = karstSpurs(1, new T.Texture());
+const court = process.argv[2] ?? "garden";
+if (court !== "garden" && court !== "shrine") throw Error("Choose garden or shrine");
+const asset = court === "garden" ? "GardenRidges" : "ShrineCliffWalk";
+const group = karstSpurs(court === "garden" ? 1 : 2, new T.Texture());
 const cliff = group.getObjectByName("Limestone spurs") as T.Mesh<
   T.BufferGeometry,
   T.MeshStandardMaterial
@@ -15,15 +18,15 @@ cliff.material.bumpMap = null;
 // glTF uses the opposite image origin to a browser-loaded Three texture.
 const uv = cliff.geometry.getAttribute("uv");
 for (let i = 0; i < uv.count; i++) uv.setY(i, 1 - uv.getY(i));
-await bake(group, "GardenRidges");
+await bake(group, asset);
 
-const path = new URL("../native/Art/GardenRidges.glb", import.meta.url);
+const path = new URL(`../native/Art/${asset}.glb`, import.meta.url);
 const base = await readFile(path),
   jsonLength = base.readUInt32LE(12);
 const gltf = JSON.parse(base.toString("utf8", 20, 20 + jsonLength));
 const binary = base.subarray(28 + jsonLength);
 const image = await readFile(
-  new URL("../public/art/karst-limestone.jpg", import.meta.url),
+  new URL("../public/art/ridge-faces.jpg", import.meta.url),
 );
 const index = gltf.bufferViews.length;
 gltf.bufferViews.push({
@@ -35,7 +38,7 @@ gltf.images = [
   { bufferView: index, mimeType: "image/jpeg", name: "Eroded limestone" },
 ];
 gltf.samplers = [
-  { wrapS: 33648, wrapT: 33648, magFilter: 9729, minFilter: 9987 },
+  { wrapS: 33071, wrapT: 33071, magFilter: 9729, minFilter: 9987 },
 ];
 gltf.textures = [{ source: 0, sampler: 0 }];
 const material = gltf.materials.find(

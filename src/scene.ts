@@ -1280,7 +1280,7 @@ export class World {
     this.arena.add(leafDrifts(random(3248 + index), index === 1));
     this.decor.add(
       valleyHorizon(this.art.textures.get("karst-valley")!, this.art.textures.get("clearing-clouds")!, index),
-      karstSpurs(index, this.art.textures.get("karst-limestone")!),
+      karstSpurs(index, this.art.textures.get("ridge-faces")!),
     );
     for (const [x, z, scale] of [
       [-12.8, -13.5, 1.3],

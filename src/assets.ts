@@ -136,6 +136,7 @@ export class ArtLibrary {
         "karst-valley",
         "clearing-clouds",
         "karst-limestone",
+        "ridge-faces",
         "tide-icon",
         "lacquer-bay",
         "heron-silk",
