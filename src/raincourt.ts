@@ -10,6 +10,7 @@ uniform mat4 courtProject;
 uniform float courtTime, courtWet, courtSeed;
 uniform vec4 courtSteps[6];
 uniform vec4 courtSoles[4];
+uniform vec4 courtToes[4];
 varying vec3 courtPoint;
 float poolHash(vec2 p) {
   vec3 p3=fract(vec3(p.xyx)*.1031);
@@ -45,6 +46,8 @@ export class RainCourt {
   private project = new T.Matrix4();
   private step = Array.from({ length: 6 }, () => new T.Vector4(0, 0, -10, 0));
   private soles = Array.from({ length: 4 }, () => new T.Vector4(0, 0, 0.1, 0));
+  private toes = Array.from({ length: 4 }, () => new T.Vector4());
+  private toe = new T.Vector3();
   private ankle = new T.Vector3();
   private clock = { value: 0 };
   private wet = { value: 0 };
@@ -77,6 +80,7 @@ export class RainCourt {
         courtSeed: this.seed,
         courtSteps: { value: this.step },
         courtSoles: { value: this.soles },
+        courtToes: { value: this.toes },
         ritePose: this.rite.pose,
         riteExtent: this.rite.extent,
         riteCharge: this.rite.charge,
@@ -134,8 +138,13 @@ export class RainCourt {
           }
           float occlusion=0.;
           for(int i=0;i<4;i++){
-            vec2 offset=(p-courtSoles[i].xy)/courtSoles[i].z;
-            occlusion=max(occlusion,courtSoles[i].w*exp(-dot(offset,offset)*1.7));
+            vec2 heel=courtSoles[i].xy, axis=courtToes[i].xy-heel;
+            float along=clamp(dot(p-heel,axis)/max(dot(axis,axis),.00001),0.,1.);
+            float width=mix(courtSoles[i].z,courtToes[i].z,along);
+            float contact=mix(courtSoles[i].w,courtToes[i].w,along);
+            vec2 offset=(p-heel-along*axis)/max(width,.005);
+            float r2=dot(offset,offset);
+            occlusion=max(occlusion,contact*(.79*exp(-r2*1.62)+.21*exp(-r2*.35)));
           }
           outgoingLight += waterWriting(p,pool,diffuseColor.rgb);
           outgoingLight*=1.-occlusion;
@@ -144,20 +153,21 @@ export class RainCourt {
     };
   }
 
-  sole(index: number, bone: T.Bone | null, height: number) {
-    const footprint = this.soles[index];
-    if (!bone) {
-      footprint.w = 0;
+  sole(index: number, bone: T.Bone | undefined, toeBone: T.Bone | undefined, height: number) {
+    const heel = this.soles[index], tip = this.toes[index];
+    if (!bone || !toeBone) {
+      heel.w = tip.w = 0;
       return;
     }
     bone.getWorldPosition(this.ankle);
-    const lift = Math.max(0, this.ankle.y - height * 0.064);
-    footprint.set(
-      this.ankle.x,
-      this.ankle.z,
-      height * 0.107 + lift * 0.23,
-      0.54 * Math.exp((-lift * 5) / height),
-    );
+    toeBone.getWorldPosition(this.toe);
+    const dx = this.toe.x - this.ankle.x, dz = this.toe.z - this.ankle.z;
+    const heelLift = Math.max(0, this.ankle.y - height * 0.064);
+    const toeLift = Math.max(0, this.toe.y - height * 0.025);
+    heel.set(this.ankle.x - dx * 0.20, this.ankle.z - dz * 0.20,
+      height * 0.059 + heelLift * 0.28, 0.65 * Math.exp(-heelLift * 15 / height));
+    tip.set(this.toe.x + dx * 0.14, this.toe.z + dz * 0.14,
+      height * 0.055 + toeLift * 0.28, 0.68 * Math.exp(-toeLift * 16 / height));
   }
 
   contact(x: number, z: number, strength: number) {

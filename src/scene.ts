@@ -1457,6 +1457,7 @@ export class World {
     progress: number,
     dt: number,
     shape?: Attack["shape"],
+    dodgeDirection?: Vec,
   ) {
     const t = this.time;
     const root = a.root;
@@ -1526,8 +1527,10 @@ export class World {
       rotate("LeftArm", -1.3);
       rotate("LeftForeArm", -1);
     } else if (action === "dodge") {
-      root.rotation.x = -Math.sin(progress * Math.PI) * 1.3;
-      root.position.y = -0.18;
+      const tuck = Math.sin(Math.PI * progress);
+      rotate("Spine", 0.21 * tuck, -0.25 * tuck);
+      rotate("LeftArm", -0.46 * tuck, 0, 0.32 * tuck);
+      rotate("LeftForeArm", -0.74 * tuck);
     } else if (action === "stagger") {
       rotate("Spine", 0.7);
       root.position.y = -0.25;
@@ -1552,21 +1555,17 @@ export class World {
       );
       root.position.y -= a.height * 0.038 * Math.abs(recoil);
     }
-    if (action === "dodge" || action === "dead") {
+    let landing: T.Vector3 | undefined;
+    if (action === "dodge" && dodgeDirection) {
+      landing = a.feet.evade(progress, dodgeDirection);
+    } else if (action === "dead") {
       a.feet.reset();
-      if (action === "dodge") {
-        const tuck = Math.sin(Math.PI * progress);
-        rotate("LeftUpLeg", -0.76 * tuck);
-        rotate("RightUpLeg", -0.47 * tuck);
-        rotate("LeftLeg", 1.03 * tuck);
-        rotate("RightLeg", 0.79 * tuck);
-      }
     } else {
-      const landing = a.feet.pose(dt);
-      if (landing) {
-        this.rainCourt.contact(landing.x, landing.z, a.kind < 0 ? 1 : 1.55);
-        if (a.kind < 0) this.onPlayerStep?.(landing.x, landing.z);
-      }
+      landing = a.feet.pose(dt);
+    }
+    if (landing) {
+      this.rainCourt.contact(landing.x, landing.z, action === "dodge" ? 2.1 : a.kind < 0 ? 1 : 1.55);
+      if (a.kind < 0) this.onPlayerStep?.(landing.x, landing.z);
     }
     a.pinions?.forEach(wing => wing.pose(t, action, progress));
     a.clothMotion?.step(
@@ -1609,8 +1608,7 @@ export class World {
     if (a.halo) a.halo.rotation.z = t * 0.13;
   }
   burst(e: GameEvent) {
-    if (e.kind === "swing") return;
-    if (e.kind === "dodge") this.rainCourt.contact(e.x, e.z, 2.1);
+    if (e.kind === "swing" || e.kind === "dodge") return;
     if (e.kind === "hit" || e.kind === "hurt") {
       const victim = e.kind === "hit" ? this.boss : this.player;
       const attacker = e.kind === "hit" ? this.player : this.boss;
@@ -1699,6 +1697,8 @@ export class World {
       game.mode === "dead" ? "dead" : p.action,
       p.duration ? p.timer / p.duration : 0,
       dt,
+      undefined,
+      p.dodgeDir,
     );
     this.bladeTrail.sample(
       this.player.weapon,
@@ -1797,12 +1797,14 @@ export class World {
     for (const [i, actor] of [this.player, this.boss].entries()) {
       this.rainCourt.sole(
         i * 2,
-        actor.bones.get("LeftFoot") ?? null,
+        actor.bones.get("LeftFoot"),
+        actor.bones.get("LeftToeBase"),
         actor.height,
       );
       this.rainCourt.sole(
         i * 2 + 1,
-        actor.bones.get("RightFoot") ?? null,
+        actor.bones.get("RightFoot"),
+        actor.bones.get("RightToeBase"),
         actor.height,
       );
     }

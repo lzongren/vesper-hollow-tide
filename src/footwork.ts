@@ -1,6 +1,9 @@
 import * as T from "three";
 import { solveTwoBone } from "./pilgrim";
 
+const upAxis = new T.Vector3(0, 1, 0);
+const rightAxis = new T.Vector3(1, 0, 0);
+
 class Leg {
   readonly rest = new T.Vector3();
   readonly sole = new T.Quaternion();
@@ -30,9 +33,11 @@ export class Footwork {
   private readonly end = new T.Vector3();
   private readonly pole = new T.Vector3();
   private readonly parent = new T.Quaternion();
+  private readonly pitch = new T.Quaternion();
   private readonly yaw = new T.Quaternion();
   private initialized = false;
   private swing = -1;
+  private evadeProgress = -1;
   private next = 0;
   private progress = 0;
   private duration = 0.2;
@@ -54,12 +59,80 @@ export class Footwork {
   }
 
   reset() {
+    this.evadeProgress = -1;
     this.initialized = false;
     this.swing = -1;
     this.progress = 0;
   }
 
+  /** The combat dash stops translating at 0.32 s. Land on the leading foot
+   * near that instant and draw the trailing boot underneath during recovery. */
+  evade(progress: number, direction: { x: number; z: number }) {
+    const root = this.root,
+      h = this.height;
+    const t = T.MathUtils.clamp(progress, 0, 1);
+    const sweep = Math.sin(Math.PI * t);
+    const rise = Math.sin(Math.PI * T.MathUtils.clamp((t - 0.06) / 0.6, 0, 1));
+    const absorb = Math.sin(
+      Math.PI * T.MathUtils.clamp((t - 0.62) / 0.38, 0, 1),
+    );
+    const yaw = root.rotation.y;
+    const side = Math.cos(yaw) * direction.x - Math.sin(yaw) * direction.z;
+    const forward = Math.sin(yaw) * direction.x + Math.cos(yaw) * direction.z;
+    const lead =
+      Math.abs(side) > 0.32
+        ? this.legs[0].rest.x * side > 0
+          ? 0
+          : 1
+        : forward >= 0
+          ? 0
+          : 1;
+    const reach =
+      T.MathUtils.smoothstep(t, 0.08, 0.59) *
+      (1 - T.MathUtils.smoothstep(t, 0.68, 1));
+    root.position.y =
+      h * (-0.065 - 0.12 * sweep + 0.075 * rise - 0.06 * absorb);
+    root.rotation.x = forward * (0.43 * rise - 0.16 * absorb);
+    root.rotation.z = -side * (0.46 * rise - 0.15 * absorb);
+    root.updateWorldMatrix(true, false);
+    this.yaw.setFromAxisAngle(upAxis, yaw);
+    for (const [index, leg] of this.legs.entries()) {
+      const leading = index === lead;
+      const stride = leading ? 0.26 * reach : -0.24 * sweep;
+      const lift = leading
+        ? 0.14 * rise
+        : 0.245 *
+          Math.sin(Math.PI * T.MathUtils.clamp((t - 0.12) / 0.8, 0, 1)) ** 2;
+      leg.target.copy(leg.rest).applyQuaternion(this.yaw);
+      leg.target.x += root.position.x + direction.x * h * stride;
+      leg.target.z += root.position.z + direction.z * h * stride;
+      leg.target.y += h * lift;
+      this.plant(leg, leading ? -0.24 * rise : 0.56 * sweep);
+    }
+    const landed = t >= 0.66 && this.evadeProgress < 0.66;
+    this.evadeProgress = t;
+    this.previous.copy(root.position);
+    this.initialized = false;
+    this.swing = -1;
+    return landed ? this.legs[lead].target : undefined;
+  }
+
+  private plant(leg: Leg, pitch: number) {
+    const h = this.height;
+    this.pole.set(leg.rest.x * 1.24, h * 0.35, h * 0.48);
+    this.root.localToWorld(this.pole);
+    solveTwoBone(leg.hip, leg.knee, leg.ankle, leg.target, this.pole);
+    leg.knee.getWorldQuaternion(this.parent).invert();
+    leg.ankle.quaternion.copy(this.parent).multiply(this.yaw);
+    if (pitch)
+      leg.ankle.quaternion.multiply(
+        this.pitch.setFromAxisAngle(rightAxis, pitch),
+      );
+    leg.ankle.quaternion.multiply(leg.sole);
+  }
+
   pose(dt: number): T.Vector3 | undefined {
+    this.evadeProgress = -1;
     const root = this.root,
       h = this.height;
     this.velocity.set(
@@ -122,16 +195,7 @@ export class Footwork {
       (0.065 +
         (this.swing >= 0 ? 0.012 * Math.sin(Math.PI * this.progress) : 0));
     root.updateWorldMatrix(true, false);
-    for (const leg of this.legs) {
-      this.pole.set(leg.rest.x * 1.24, h * 0.35, h * 0.48);
-      root.localToWorld(this.pole);
-      solveTwoBone(leg.hip, leg.knee, leg.ankle, leg.target, this.pole);
-      leg.knee.getWorldQuaternion(this.parent).invert();
-      leg.ankle.quaternion
-        .copy(this.parent)
-        .multiply(this.yaw)
-        .multiply(leg.sole);
-    }
+    for (const leg of this.legs) this.plant(leg, 0);
     return landed;
   }
 }

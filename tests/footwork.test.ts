@@ -58,7 +58,7 @@ function rig(name: string) {
       landing: landing?.clone(),
     };
   }
-  return { frame, gait };
+  return { frame, gait, root, pos };
 }
 
 for (const name of ["pilgrim", "wraith", "sorcerer"])
@@ -107,3 +107,34 @@ for (const name of ["pilgrim", "wraith", "sorcerer"])
       );
     },
   );
+
+test("the evade leads into travel, lifts the trailing boot and lands once at different frame rates", () => {
+  for (const hz of [30, 60, 120]) {
+    for (const sign of [-1, 1]) {
+      const { root, gait, frame, pos } = rig("pilgrim");
+      const neutral = frame(0, 0, 1 / hz);
+      const lead =
+        (neutral.left.x - neutral.right.x) * sign > 0
+          ? "LeftFoot"
+          : "RightFoot";
+      const trail = lead === "LeftFoot" ? "RightFoot" : "LeftFoot";
+      let landings = 0;
+      const count = Math.ceil(0.47 * hz);
+      for (let i = 0; i <= count; i++) {
+        const t = i / count;
+        root.position.x = sign * 14 * Math.min(0.32, 0.47 * t);
+        const contact = gait.evade(t, { x: sign, z: 0 });
+        if (contact) {
+          landings++;
+          assert.ok(t >= 0.66 && t < 0.66 + 1 / count);
+          assert.ok((pos(lead).x - pos(trail).x) * sign > 0.25);
+          assert.ok(pos(trail).y > pos(lead).y + 0.12);
+          assert.ok(contact.distanceTo(pos(lead)) < 0.04);
+        }
+      }
+      assert.equal(landings, 1);
+      assert.ok(Math.abs(root.rotation.z) < 1e-6);
+      assert.equal(frame(root.position.x, 0, 1 / hz).landing, undefined);
+    }
+  }
+});
