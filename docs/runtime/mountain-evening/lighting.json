@@ -1,0 +1,13 @@
+{
+  "sky": "/Game/Vesper/HighlandSky/MountainOvercast.MountainOvercast",
+  "summit_pine_groups": 3,
+  "sun_lux": 3.4,
+  "skylight_intensity": 5.0,
+  "bounce_lux": 1.55,
+  "fog_density": 0.012,
+  "fog_start_cm": 1700,
+  "exposure_ev100": [
+    0.2,
+    1.6
+  ]
+}

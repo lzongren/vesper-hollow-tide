@@ -12,7 +12,9 @@ Keep the checkout on a physical local drive outside OneDrive. The launcher check
 
 Install the engine’s Templates and Feature Packs component. The first launch imports the repository’s GLBs and paving textures and creates the map. Subsequent launches reuse the saved level. Use WASD to move, the mouse to look and Space to jump. Generated project content stays on the machine. The project runs in standalone game mode through Unreal Editor and requires the editor installation.
 
-[Mountain pine gameplay comparison](../docs/runtime/mountain-pines/) · [Retaining walls and valley stair](../docs/runtime/mountain-masonry/) · [Procession road gameplay](../docs/runtime/procession-road/) · [Traversal measurements](../docs/runtime/mountain-pilgrimage/) · [Art direction and acceptance target](Art/quality-target.json)
+[Evening light on the mountain route](../docs/runtime/mountain-evening/) · [Mountain pine gameplay comparison](../docs/runtime/mountain-pines/) · [Retaining walls and valley stair](../docs/runtime/mountain-masonry/) · [Procession road gameplay](../docs/runtime/procession-road/) · [Traversal measurements](../docs/runtime/mountain-pilgrimage/) · [Art direction and acceptance target](Art/quality-target.json)
+
+The mountain lighting pass uses the bundled HDR cloud deck for the sky and diffuse fill. Regenerate it with Python and NumPy using `python art/bake_mountain_sky.py native/Art/MountainOvercast.hdr`.
 
 The optional pine mesh generator uses Python and Pillow. Run `python native/Scripts/mountain_pines.py public/textures native/Art/MountainPines.glb` to rebuild both tree forms and their embedded needle cutout. Normal game startup imports the bundled GLB.
 

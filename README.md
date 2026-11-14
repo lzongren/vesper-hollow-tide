@@ -2,6 +2,8 @@
 
 **Visual rebuild in progress.** The browser prototype below did not meet the requested Bloodborne / Wuchang visual standard. The [native Unreal project](native/README.md) now includes a 205.4-metre route through three courtyards with third-person traversal. The three boss fights run in the browser build.
 
+[Compare evening light on the playable mountain route](docs/runtime/mountain-evening/)
+
 [See the palm cape on the playable pilgrim](docs/runtime/palm-mantle/)
 
 [Compare the mountain pines in actual gameplay](docs/runtime/mountain-pines/)

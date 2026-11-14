@@ -40,6 +40,9 @@ if (!(Test-Path "$project\Saved\RouteMeshes.json")) {
 if (!(Test-Path "$project\Saved\Procession.json")) {
     Invoke-MapPass 'dress_procession' 'VESPER_PROCESSION_SAVED'
 }
+if (!(Test-Path "$project\Saved\MountainEvening.json")) {
+    Invoke-MapPass 'light_mountain' 'VESPER_MOUNTAIN_EVENING'
+}
 if (!(Test-Path "$project\Saved\Pines.json")) {
     Invoke-MapPass 'plant_pines' 'VESPER_PINES_SAVED'
 }
