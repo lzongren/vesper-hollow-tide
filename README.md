@@ -4,6 +4,8 @@
 
 [Meet the playable Chinese swordswoman and watch her three boss fights](docs/runtime/plum-wayfarer/) · [Run and turn with the embroidered sash](docs/runtime/river-sash/)
 
+[Walk through the bronze guardian gate and watch the three fights with game audio](docs/runtime/bell-gate-lions/)
+
 [Enter the final reliquary and fight the Saint of Cinders](docs/runtime/cinder-duel/)
 
 [Fight the Veiled Heron at the moon gate](docs/runtime/heron-duel/)

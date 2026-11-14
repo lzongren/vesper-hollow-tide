@@ -28,6 +28,9 @@ player_mesh = None
 wins = []
 review = "-CourtHUDReview" in unreal.SystemLibrary.get_command_line()
 captured = set()
+record_mix = "-RecordCourtMix" in unreal.SystemLibrary.get_command_line()
+mix_started = None
+previous_submix_mode = None
 start = last_sample = original = None
 last_attack = -1.0
 pressed = False
@@ -73,13 +76,24 @@ def finish(reason):
             )
         )
     )
+    if mix_started is not None:
+        unreal.AudioMixerLibrary.stop_recording_output(
+            step.pc,
+            unreal.AudioRecordingExportType.WAV_FILE,
+            "ThreeCourtsMix",
+            str(saved),
+        )
+        unreal.SystemLibrary.execute_console_command(
+            step.pc, f"au.NeverDisableSubmixes {previous_submix_mode}", step.pc
+        )
+        unreal.log(f"VESPER_MIX_END {time.perf_counter() - mix_started:.6f}")
     unreal.log("VESPER_THREE_COURTS " + reason)
     unreal.unregister_slate_post_tick_callback(handle)
 
 
 def tick(dt):
     global stage, start, original, last_sample, last_attack, pressed
-    global player_mesh, previous_frame
+    global player_mesh, previous_frame, mix_started, previous_submix_mode
     pawn = step.pawn
     if not runtime["live"](pawn):
         return
@@ -89,6 +103,16 @@ def tick(dt):
     previous_frame = wall_time
     if start is None:
         player_mesh = pawn.mesh.skeletal_mesh_asset.get_name()
+        if record_mix:
+            previous_submix_mode = unreal.SystemLibrary.get_console_variable_int_value(
+                "au.NeverDisableSubmixes"
+            )
+            # The wave writer otherwise omits the silent sections between fights.
+            unreal.SystemLibrary.execute_console_command(
+                pawn, "au.NeverDisableSubmixes 1", step.pc
+            )
+            unreal.AudioMixerLibrary.start_recording_output(pawn, 130.0)
+            mix_started = time.perf_counter()
         if not review:
             unreal.SystemLibrary.execute_console_command(
                 pawn, "CsvProfile START", step.pc
@@ -139,6 +163,10 @@ def tick(dt):
             name = duel.tag
         if name and name not in captured:
             captured.add(name)
+            if mix_started is not None:
+                unreal.log(
+                    f"VESPER_MIX_MARK {name} {time.perf_counter() - mix_started:.6f}"
+                )
             unreal.log(
                 "VESPER_LIFEBAR_VIEW "
                 + name
