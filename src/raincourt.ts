@@ -8,6 +8,7 @@ uniform sampler2D courtMirror;
 uniform mat4 courtProject;
 uniform float courtTime, courtWet, courtSeed;
 uniform vec4 courtSteps[6];
+uniform vec4 courtSoles[4];
 varying vec3 courtPoint;
 float poolHash(vec2 p) {
   vec3 p3=fract(vec3(p.xyx)*.1031);
@@ -41,6 +42,8 @@ export class RainCourt {
   private mirrorInverse = new T.Matrix4();
   private project = new T.Matrix4();
   private step = Array.from({ length: 6 }, () => new T.Vector4(0, 0, -10, 0));
+  private soles = Array.from({ length: 4 }, () => new T.Vector4(0, 0, 0.1, 0));
+  private ankle = new T.Vector3();
   private clock = { value: 0 };
   private wet = { value: 0 };
   private seed = { value: 0 };
@@ -70,6 +73,7 @@ export class RainCourt {
         courtWet: this.wet,
         courtSeed: this.seed,
         courtSteps: { value: this.step },
+        courtSoles: { value: this.soles },
       });
       shader.vertexShader =
         "varying vec3 courtPoint;\n" +
@@ -118,9 +122,31 @@ export class RainCourt {
             float fresnel=.11+.61*pow(grazing,2.6);
             outgoingLight=mix(outgoingLight,mirror,pool*fresnel*margin);
           }
+          float occlusion=0.;
+          for(int i=0;i<4;i++){
+            vec2 offset=(p-courtSoles[i].xy)/courtSoles[i].z;
+            occlusion=max(occlusion,courtSoles[i].w*exp(-dot(offset,offset)*1.7));
+          }
+          outgoingLight*=1.-occlusion;
           #include <opaque_fragment>`,
           );
     };
+  }
+
+  sole(index: number, bone: T.Bone | null, height: number) {
+    const footprint = this.soles[index];
+    if (!bone) {
+      footprint.w = 0;
+      return;
+    }
+    bone.getWorldPosition(this.ankle);
+    const lift = Math.max(0, this.ankle.y - height * 0.064);
+    footprint.set(
+      this.ankle.x,
+      this.ankle.z,
+      height * 0.107 + lift * 0.23,
+      0.54 * Math.exp((-lift * 5) / height),
+    );
   }
 
   contact(x: number, z: number, strength: number) {

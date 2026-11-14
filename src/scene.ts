@@ -24,6 +24,7 @@ import type { Attack } from "./combat";
 import { WeaponGrip, mantleGeometry, BladeTrail } from "./pilgrim";
 import {
   courtyardMaple,
+  mapleLeaf,
   featherGeometry,
   foldingScreen,
   leafDrifts,
@@ -31,6 +32,7 @@ import {
 } from "./sanctuary";
 import { batchCourt } from "./static-court";
 import { incenseVessel, incenseSmoke } from "./incense";
+import { ceremonialSilks, type SilkPanel } from "./silk";
 import { travelHat } from "./travel-hat";
 import { Footwork } from "./footwork";
 import { RainCourt } from "./raincourt";
@@ -185,6 +187,7 @@ interface Actor {
   impactAge: number;
   impactSide: number;
   impactForward: number;
+  silks?: SilkPanel[];
   robe?: T.Mesh;
   clothMotion?: MantleMotion;
   weapon: T.Group;
@@ -238,10 +241,11 @@ export class World {
   loaded = false;
   moon: T.DirectionalLight;
   fill: T.PointLight;
-  incenseTime = { value: 0 };
+  environmentTime = { value: 0 };
   clothMeshes: T.Mesh[] = [];
   flames: T.Mesh[] = [];
   featherTemplate?: T.BufferGeometry;
+  leafTemplate?: T.BufferGeometry;
   lampPaper = textureCanvas((c) => {
     const glow = c.createLinearGradient(0, 0, 0, 512);
     for (const [stop, tint] of [
@@ -276,8 +280,8 @@ export class World {
     this.renderer.toneMappingExposure = 1.1;
     this.scene.background = new T.Color(0x111d22);
     this.scene.fog = new T.FogExp2(0x19272b, 0.022);
-    this.scene.add(new T.HemisphereLight(0xc3daef, 0x544138, 1.08));
-    this.moon = new T.DirectionalLight(0xb9d2ec, 2.55);
+    this.scene.add(new T.HemisphereLight(0xc3daef, 0x4b3a33, 0.79));
+    this.moon = new T.DirectionalLight(0xbed9f6, 2.8);
     this.moon.position.set(-12, 20, -15);
     this.moon.castShadow = true;
     this.moon.shadow.mapSize.set(2048, 2048);
@@ -295,8 +299,8 @@ export class World {
     this.fill = new T.PointLight(0xffb36d, 26, 18, 2);
     this.fill.position.set(2, 4, 4);
     this.scene.add(this.fill);
-    const portraitLight = new T.DirectionalLight(0xffddb5, 1.5);
-    portraitLight.position.set(8, 11, 15);
+    const portraitLight = new T.DirectionalLight(0xffdeb9, 1.26);
+    portraitLight.position.set(12, 7, 9);
     this.scene.add(portraitLight);
     this.scene.add(
       this.arena,
@@ -395,7 +399,7 @@ export class World {
         bumpScale: name.includes("silk") ? 0.012 : 0.055,
         emissiveMap: map,
         emissive: 0xffdfa9,
-        emissiveIntensity: name === "lacquer-bay" ? 0.48 : 0.16,
+        emissiveIntensity: name === "lacquer-bay" ? 0.13 : 0.1,
         roughness: 0.74,
         metalness: 0.12,
         side: T.DoubleSide,
@@ -514,18 +518,16 @@ export class World {
       rightHand: bones.get("RightHand"),
     };
     if (kind < 1) {
+      a.silks = ceremonialSilks(
+        root,
+        bones,
+        height,
+        this.art.textures.get(kind === 0 ? "warden-brocade" : "dragon-mantle")!,
+        this.materials.gold,
+        this.materials.dark,
+        kind === 0,
+      );
       if (kind < 0) {
-        const fabric = new T.MeshStandardMaterial({
-          side: T.DoubleSide,
-          map: this.art.textures.get("dragon-mantle"),
-          bumpMap: this.art.textures.get("dragon-mantle"),
-          bumpScale: 0.014,
-          roughness: 0.83,
-        });
-        const robe = mesh(root, mantleGeometry(), fabric, 0, 1.13, 0);
-        a.robe = robe;
-        bones.get("Spine")?.attach(robe);
-
         // Woven travel hat and layered lacquered mantle give the pilgrim an original silhouette.
         const headwear = travelHat();
         root.add(headwear);
@@ -538,17 +540,6 @@ export class World {
         if (upper && fore && a.rightHand)
           a.grip = new WeaponGrip(root, upper, fore, a.rightHand, weapon);
       } else {
-        const robe = mesh(
-          root,
-          mantleGeometry().scale(2.16, 2.22, 1.8),
-          this.materials["tide-icon"],
-          0,
-          2.35,
-          0,
-        );
-        a.robe = robe;
-        bones.get("Spine")?.attach(robe);
-
         const face = new T.PlaneGeometry(0.49, 0.65, 24, 28);
         const pos = face.attributes.position;
         for (let i = 0; i < pos.count; i++) {
@@ -576,16 +567,6 @@ export class World {
           0.23,
         );
         bones.get("Head")?.attach(mask);
-        const stole = mesh(
-          root,
-          mantleGeometry().scale(1.12, 1.48, 1.1),
-          this.materials["heron-silk"],
-          0,
-          2.05,
-          0.12,
-        );
-        stole.rotation.y = Math.PI;
-        bones.get("Spine")?.attach(stole);
         // A repoussé aureole with hanging bead strands clears the gaze and weapon.
         const crown = new T.Group();
         root.add(crown);
@@ -1090,7 +1071,7 @@ export class World {
       vessel.position.set(x, 0, z);
       vessel.rotation.y = 0.48 * i - 0.37;
       this.arena.add(vessel);
-      const plume = incenseSmoke(this.incenseTime, i * 3.7 + index * 1.9);
+      const plume = incenseSmoke(this.environmentTime, i * 3.7 + index * 1.9);
       plume.position.set(x, 1.7, z);
       this.decor.add(plume);
     }
@@ -1188,7 +1169,16 @@ export class World {
       [15.7, 10, 1.22],
       [-10, -26, 1.34],
     ]) {
-      const tree = courtyardMaple(rng, this.materials.wood, index !== 1);
+      const leaf = this.art.textures.get("maple-leaf")!;
+      this.leafTemplate ??= mapleLeaf(leaf);
+      const tree = courtyardMaple(
+        rng,
+        this.materials.wood,
+        index !== 1,
+        this.leafTemplate,
+        leaf,
+        this.environmentTime,
+      );
       tree.position.set(x, 0, z);
       tree.scale.setScalar(scale);
       tree.rotation.y = rng() * 6;
@@ -1502,6 +1492,7 @@ export class World {
       if (a.kind === 0 && shape)
         a.grip.poseKeys(bellStroke(shape, action), progress);
       else a.grip.pose(action, progress);
+      a.silks?.forEach((panel) => panel.update(dt, t));
       return;
     }
     if (a.rightHand) {
@@ -1596,7 +1587,7 @@ export class World {
     if (!this.loaded) return;
     this.setArena(game.bossIndex);
     this.time += dt;
-    this.incenseTime.value = this.time;
+    this.environmentTime.value = this.time;
     const p = game.player,
       b = game.boss;
     this.animateActor(
@@ -1632,10 +1623,10 @@ export class World {
       d = Math.hypot(dx, dz);
     const desired = locked ? Math.atan2(-dx, -dz) : this.orbit;
     this.yaw += angleDiff(desired, this.yaw) * (1 - Math.exp(-dt * 1.8));
-    const distance = 4.35 + Math.min(d, 13) * 0.225;
+    const distance = 3.92 + Math.min(d, 13) * 0.18;
     const target = new T.Vector3(
       p.x + Math.sin(this.yaw) * distance + Math.cos(this.yaw) * 0.85,
-      2.32 + Math.min(d, 12) * 0.09,
+      2.15 + Math.min(d, 12) * 0.09,
       p.z + Math.cos(this.yaw) * distance - Math.sin(this.yaw) * 0.85,
     );
     const look = new T.Vector3(
@@ -1697,6 +1688,18 @@ export class World {
     for (let i = 0; i < rain.count; i++)
       rain.setY(i, (this.rainBase[i * 3 + 1] - this.time * 2.2 + 10000) % 25);
     rain.needsUpdate = true;
+    for (const [i, actor] of [this.player, this.boss].entries()) {
+      this.rainCourt.sole(
+        i * 2,
+        actor.bones.get("LeftFoot") ?? null,
+        actor.height,
+      );
+      this.rainCourt.sole(
+        i * 2 + 1,
+        actor.bones.get("RightFoot") ?? null,
+        actor.height,
+      );
+    }
     this.rainCourt.capture(
       this.renderer,
       this.scene,

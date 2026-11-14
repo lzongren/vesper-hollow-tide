@@ -75,136 +75,217 @@ export function foldingScreen(
 }
 
 /** Branches, individual lobed leaves and windfall share three draw calls per tree. */
+/** Build each crown from the branch tips. Leaves occur in opposite pairs on
+ * drooping shoots, with longer open spaces between the primary limbs. */
 export function courtyardMaple(
   random: () => number,
   bark: T.Material,
   copper: boolean,
+  leaf: T.BufferGeometry,
+  map: T.Texture,
+  clock: { value: number },
 ) {
   const tree = new T.Group(),
-    branches: T.BufferGeometry[] = [],
-    tips: T.Vector3[] = [];
-  function branch(
-    start: T.Vector3,
-    direction: T.Vector3,
-    length: number,
-    radius: number,
-    depth: number,
+    stems: T.BufferGeometry[] = [],
+    shoots: T.CatmullRomCurve3[] = [];
+  const lean = random() * 0.75 - 0.375,
+    spread = 0.8 + random() * 0.55;
+  const rot = random() * Math.PI * 2;
+  function stem(
+    path: T.CatmullRomCurve3,
+    r0: number,
+    r1: number,
+    segments: number,
+    sides: number,
   ) {
-    const end = start.clone().addScaledVector(direction, length);
-    const mid = start.clone().lerp(end, 0.53);
-    mid.y -= length * 0.09;
-    const path = new T.CatmullRomCurve3([start, mid, end]);
-    const stem = new T.TubeGeometry(path, 5, radius, 7, false);
-    const pos = stem.attributes.position;
-    for (let j = 0; j <= 5; j++) {
-      const c = path.getPointAt(j / 5);
-      for (let k = 0; k < 8; k++) {
-        const p = j * 8 + k,
-          v = new T.Vector3()
-            .fromBufferAttribute(pos, p)
-            .lerp(c, (0.47 * j) / 5);
-        pos.setXYZ(p, v.x, v.y, v.z);
+    const g = new T.TubeGeometry(path, segments, r0, sides, false),
+      p = g.attributes.position;
+    for (let j = 0; j <= segments; j++) {
+      const center = path.getPointAt(j / segments);
+      for (let k = 0; k <= sides; k++) {
+        const n = j * (sides + 1) + k;
+        const v = new T.Vector3()
+          .fromBufferAttribute(p, n)
+          .lerp(center, ((1 - r1 / r0) * j) / segments);
+        p.setXYZ(n, v.x, v.y, v.z);
       }
     }
-    stem.computeVertexNormals();
-    branches.push(stem);
+    g.computeVertexNormals();
+    stems.push(g);
+  }
+  function grow(
+    from: T.Vector3,
+    dir: T.Vector3,
+    len: number,
+    r: number,
+    depth: number,
+  ) {
+    const end = from.clone().addScaledVector(dir, len);
+    end.x += Math.cos(rot) * len * lean * 0.17;
+    const mid = from.clone().lerp(end, 0.56);
+    mid.x += Math.sin(rot + depth) * len * 0.13;
+    mid.y += len * (depth ? -0.08 : 0.115);
+    const curve = new T.CatmullRomCurve3([from, mid, end]);
+    stem(curve, r, r * (depth ? 0.53 : 0.19), depth ? 5 : 3, depth ? 7 : 3);
     if (depth === 0) {
-      tips.push(mid, end);
+      shoots.push(curve);
       return;
     }
-    const azimuth = random() * Math.PI * 2;
-    for (let i = 0; i < 3; i++) {
-      const a = azimuth + i * 2.094 + random() * 0.4;
+    const baseAngle = Math.atan2(dir.z, dir.x),
+      offset = random() * 0.8;
+    const forks = depth > 1 ? 3 : 4;
+    for (let i = 0; i < forks; i++) {
+      const az =
+        baseAngle + offset + (Math.PI * 2 * i) / forks + random() * 0.52;
       const next = new T.Vector3(
-        Math.cos(a),
-        0.09 + random() * 0.58,
-        Math.sin(a),
+        Math.cos(az) * spread,
+        depth > 1 ? 0.23 + random() * 0.85 : -0.55 + random() * 0.67,
+        Math.sin(az) * spread,
       )
-        .addScaledVector(direction, 0.82)
+        .addScaledVector(dir, depth > 1 ? 0.82 : 0.55)
         .normalize();
-      branch(
-        i === 0 ? mid : end,
+      grow(
+        curve.getPoint(0.4 + (0.57 / forks) * i + random() * 0.08),
         next,
-        length * (0.54 + random() * 0.22),
-        radius * 0.53,
+        len * (0.53 + random() * (depth === 1 ? 0.56 : 0.28)),
+        r * (0.41 + random() * 0.15),
         depth - 1,
       );
     }
   }
-  branch(
+  grow(
     new T.Vector3(),
-    new T.Vector3(0.22, 1, 0.09).normalize(),
-    4.1,
-    0.32,
+    new T.Vector3(lean, 1, -0.16 + random() * 0.32).normalize(),
+    3.9 + random() * 0.9,
+    0.27 + random() * 0.09,
     4,
   );
-  const wood = new T.Mesh(mergeGeometries(branches), bark);
-  branches.forEach((g) => g.dispose());
+  const wood = new T.Mesh(mergeGeometries(stems), bark);
+  stems.forEach((s) => s.dispose());
   wood.castShadow = wood.receiveShadow = true;
   tree.add(wood);
-  const shape = new T.Shape();
-  shape.moveTo(0, -0.5);
-  for (const [x, y] of [
-    [-0.16, -0.12],
-    [-0.49, 0.12],
-    [-0.24, 0.16],
-    [-0.43, 0.46],
-    [-0.12, 0.29],
-    [0, 0.71],
-    [0.13, 0.28],
-    [0.44, 0.44],
-    [0.25, 0.13],
-    [0.49, 0.12],
-    [0.15, -0.15],
-    [0, -0.5],
-  ])
-    shape.lineTo(x, y);
-  const leaf = new T.ShapeGeometry(shape);
-  const foliage = new T.InstancedMesh(
-    leaf,
-    new T.MeshStandardMaterial({ side: T.DoubleSide, roughness: 0.82 }),
-    tips.length * 18 + 110,
-  );
+  const material = new T.MeshStandardMaterial({
+    map,
+    side: T.DoubleSide,
+    roughness: 0.79,
+    alphaTest: 0.42,
+    metalness: 0,
+  });
+  material.onBeforeCompile = (shader) => {
+    shader.uniforms.breezeTime = clock;
+    shader.vertexShader = shader.vertexShader
+      .replace(
+        "#include <common>",
+        "#include <common>\nuniform float breezeTime;",
+      )
+      .replace(
+        "#include <begin_vertex>",
+        `#include <begin_vertex>
+      float t=breezeTime*1.45+dot(instanceMatrix[3].xz,vec2(.91,.73));
+      transformed.z+=uv.y*uv.y*(.13*sin(t)+.058*sin(2.4*t));`,
+      );
+  };
+  const pairs = 9,
+    foliage = new T.InstancedMesh(leaf, material, shoots.length * pairs * 2);
   const dummy = new T.Object3D(),
     color = new T.Color();
   let n = 0;
-  function placeLeaf(ground: boolean) {
-    dummy.rotation.set(
-      ground ? -Math.PI / 2 : -random() * 2,
-      ground ? 0 : random() * 3,
-      random() * 6,
-    );
-    dummy.scale.setScalar((ground ? 0.14 : 0.2) + random() * 0.18);
-    dummy.updateMatrix();
-    foliage.setMatrixAt(n, dummy.matrix);
-    color.setHSL(
-      (copper ? 0.006 : 0.055) + random() * 0.055,
-      0.52 + random() * 0.27,
-      0.12 + random() * 0.27,
-    );
-    foliage.setColorAt(n++, color);
-  }
-  for (const tip of tips)
-    for (let j = 0; j < 18; j++) {
-      dummy.position.copy(tip);
-      dummy.position.x += (random() - 0.5) * 1.38;
-      dummy.position.z += (random() - 0.5) * 1.32;
-      dummy.position.y += (random() - 0.5) * 0.8;
-      placeLeaf(false);
+  for (const shoot of shoots) {
+    const tint = random(),
+      turn = random() * 6.28;
+    for (let j = 0; j < pairs; j++) {
+      const t = 0.1 + (0.85 * j) / (pairs - 1),
+        origin = shoot.getPoint(t),
+        tangent = shoot.getTangent(t);
+      const az = Math.atan2(tangent.x, tangent.z);
+      for (const side of [-1, 1]) {
+        dummy.position.copy(origin);
+        dummy.rotation.order = "YXZ";
+        dummy.rotation.set(
+          1.28 + random() * 0.59,
+          az + side * (0.81 + random() * 0.47),
+          0.32 * Math.sin(turn + j * 0.52),
+        );
+        dummy.scale.setScalar((0.25 + random() * 0.12) * (1 - 0.27 * t));
+        dummy.updateMatrix();
+        foliage.setMatrixAt(n, dummy.matrix);
+        color.setRGB(
+          copper ? 0.58 + tint * 0.6 : 0.43 + tint * 0.4,
+          copper ? 0.37 + tint * 0.51 + random() * 0.11 : 0.69 + tint * 0.36,
+          copper ? 0.23 + tint * 0.38 : 0.32 + tint * 0.35,
+        );
+        foliage.setColorAt(n++, color);
+      }
     }
-  for (let j = 0; j < 110; j++) {
-    dummy.position.set(
-      (random() - 0.5) * 9,
-      0.012 + random() * 0.02,
-      (random() - 0.5) * 9,
-    );
-    placeLeaf(true);
   }
+  foliage.userData.sharedGeometry = true;
   foliage.receiveShadow = true;
   tree.add(foliage);
   return tree;
 }
 
+/** Trace the alpha silhouette into a fan so depth-only passes also see the
+ * indentations between the lobes. Keep the petiole at the shoot attachment. */
+export function mapleLeaf(texture: T.Texture) {
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = 192;
+  const ctx = canvas.getContext("2d")!;
+  ctx.drawImage(texture.image as HTMLImageElement, 0, 0, 192, 192);
+  const alpha = ctx.getImageData(0, 0, 192, 192).data;
+  let top = 191,
+    base = 0,
+    pivot = 96;
+  for (let y = 0; y < 192; y++) {
+    let count = 0,
+      sum = 0;
+    for (let x = 0; x < 192; x++)
+      if (alpha[(y * 192 + x) * 4 + 3] > 150) {
+        count++;
+        sum += x;
+      }
+    if (count) {
+      top = Math.min(top, y);
+      base = y;
+      pivot = sum / count;
+    }
+  }
+  const cx = 96,
+    cy = Math.round(top + (base - top) * 0.728);
+  const positions: number[] = [],
+    uvs: number[] = [],
+    indices: number[] = [];
+  function point(x: number, y: number) {
+    const u = x / 191,
+      v = 1 - y / 191;
+    positions.push(
+      (x - pivot) / (base - top),
+      (base - y) / (base - top),
+      0.11 * Math.abs((x - cx) / 191) + 0.048 * Math.sin(4.3 * v),
+    );
+    uvs.push(u, v);
+  }
+  point(cx, cy);
+  for (let i = 0; i < 44; i++) {
+    const a = (i / 44) * Math.PI * 2,
+      dx = Math.cos(a),
+      dy = Math.sin(a);
+    let radius = 0;
+    for (let r = 1; r < 192; r++) {
+      const x = Math.round(cx + dx * r),
+        y = Math.round(cy + dy * r);
+      if (x < 0 || x >= 192 || y < 0 || y >= 192) break;
+      if (alpha[(192 * y + x) * 4 + 3] > 100) radius = r;
+    }
+    point(cx + dx * (radius + 1), cy + dy * (radius + 1));
+    indices.push(0, 1 + ((i + 1) % 44), i + 1);
+  }
+  const geo = new T.BufferGeometry();
+  geo.setAttribute("position", new T.Float32BufferAttribute(positions, 3));
+  geo.setAttribute("uv", new T.Float32BufferAttribute(uvs, 2));
+  geo.setIndex(indices);
+  geo.computeVertexNormals();
+  return geo;
+}
 /** Fit the silhouette as well as the UVs; the SSAO depth pass ignores alpha tests. */
 export function featherGeometry(
   texture: T.Texture,

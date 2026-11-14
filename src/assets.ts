@@ -88,9 +88,11 @@ export class ArtLibrary {
         "heron-quill",
         "warden-mask",
         "belfry-plaque",
+        "warden-brocade",
+        "maple-leaf",
       ].map(async (name) => {
         const map = await images.loadAsync(
-          `${base}art/${name}.${name === "heron-quill" || name === "warden-mask" ? "png" : "jpg"}`,
+          `${base}art/${name}.${name === "heron-quill" || name === "warden-mask" || name === "maple-leaf" ? "png" : "jpg"}`,
         );
         map.colorSpace = T.SRGBColorSpace;
         map.anisotropy = 8;
