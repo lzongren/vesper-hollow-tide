@@ -1,6 +1,6 @@
 /** Export both hands, their fittings and the wrist-relative stroke animation. */
 import * as T from "three";
-import { duelistSabre, heronStroke } from "../src/heron-sabres";
+import { duelistSabre, heronStroke, honedSteel } from "../src/heron-sabres";
 import { BOSSES } from "../src/combat";
 import { bake } from "./bake_glb";
 
@@ -17,13 +17,7 @@ const materials = {
     metalness: 0.52,
     roughness: 0.32,
   }),
-  steel: new T.MeshStandardMaterial({
-    name: "Honed steel",
-    color: 0xe7f1ed,
-    vertexColors: true,
-    metalness: 0.6,
-    roughness: 0.25,
-  }),
+  steel: honedSteel(),
   bronze: new T.MeshStandardMaterial({
     name: "Bronze fittings",
     color: 0xb1935c,

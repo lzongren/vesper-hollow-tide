@@ -2,7 +2,7 @@ import { TessellateModifier } from "three/addons/modifiers/TessellateModifier.js
 import { heronSleeve } from "./heron-sleeve";
 import { MantleMotion } from "./vestments";
 import { WeaponGrip } from "./pilgrim";
-import { duelistSabre, heronGuards } from "./heron-sabres";
+import { duelistSabre, heronGuards, honedSteel } from "./heron-sabres";
 import * as T from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
@@ -121,9 +121,10 @@ export class HeronWing extends T.Group {
 export function bridalMask(gold: T.Material, silk: T.Material, porcelain: T.Texture | null = null) {
   const mask = new T.Group();
   const hair = new T.MeshStandardMaterial({
-    color: 0x252a2d,
-    roughness: 0.43,
-    metalness: 0.13,
+    name: "Coiffure",
+    color: 0x343031,
+    roughness: 0.51,
+    metalness: 0.04,
   });
   const glaze = new T.MeshPhysicalMaterial({
     color: 0xfff6e8,
@@ -166,12 +167,38 @@ export function bridalMask(gold: T.Material, silk: T.Material, porcelain: T.Text
       .translate(0, 0.014, -0.01),
   );
   for (const side of [-1, 1]) {
-    add(
-      hair,
-      new T.SphereGeometry(1, 24, 16)
-        .scale(0.117, 0.109, 0.11)
-        .translate(side * 0.102, 0.208, -0.078),
-    );
+    // Wind three interlaced locks around each hairpin. Each loop has an
+    // open centre and a tilted axis, visible in silhouette behind the crown.
+    const braid = (angle: number, lock: number, filament: number) => {
+      const phase = 7 * angle + lock * 2 * Math.PI / 3 + filament * 0.29;
+      const radius = 0.099 + 0.014 * Math.cos(phase) + 0.008 * Math.sin(3 * angle);
+      const u = radius * Math.cos(angle);
+      const v = radius * 0.85 * Math.sin(angle);
+      const depth = 0.017 * Math.sin(phase);
+      return new T.Vector3(
+        side * (0.15 + u - v * 0.23),
+        0.237 + v + u * 0.31,
+        -0.045 + depth + u * 0.45 - v * 0.3,
+      );
+    };
+    for (let lock = 0; lock < 3; lock++) {
+      for (let filament = -1; filament <= 1; filament++) {
+        const points = Array.from({ length: 84 }, (_, i) =>
+          braid(2 * Math.PI * i / 84, lock, filament));
+        const path = new T.CatmullRomCurve3(points, true);
+        add(hair, new T.TubeGeometry(path, 100, filament === 0 ? 0.011 : 0.0065, 7, true));
+      }
+    }
+    // Loose locks leave the temples and return under the veil.
+    for (let j = 0; j < 3; j++) {
+      line(hair, [
+        [side * (0.145 + j * 0.012), 0.142, 0.076],
+        [side * (0.199 + j * 0.014), 0.048, 0.083],
+        [side * (0.183 + j * 0.014), -0.071, 0.091],
+        [side * (0.214 + j * 0.01), -0.162, 0.04],
+        [side * (0.205 + j * 0.012), -0.195 + j * 0.015, 0.022],
+      ], 0.004 - j * 0.0009);
+    }
     for (let k = 0; k < 5; k++) {
       const u = k / 4;
       const base = [side * (0.034 + u * 0.112), 0.163, 0.089 - u * 0.03];
@@ -383,12 +410,7 @@ export function dressHeron(
     metalness: 0.13,
     roughness: 0.39,
   });
-  const steel = new T.MeshStandardMaterial({
-    color: 0xe7f1ed,
-    vertexColors: true,
-    metalness: 0.6,
-    roughness: 0.25,
-  });
+  const steel = honedSteel();
   const place = (target: T.Object3D, g: T.BufferGeometry, m: T.Material) => {
     const mesh = new T.Mesh(g, m);
     mesh.castShadow = mesh.receiveShadow = true;

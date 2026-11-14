@@ -86,6 +86,18 @@ export function heronStroke(
     return gestures[shape][side][phase];
 }
 
+export function honedSteel() {
+  return new T.MeshPhysicalMaterial({
+    name: "Longitudinally honed steel",
+    color: 0xf0ece5,
+    vertexColors: true,
+    metalness: 0.93,
+    roughness: 0.27,
+    anisotropy: 0.73,
+    anisotropyRotation: Math.PI / 2,
+  });
+}
+
 interface Finishes {
   skin: T.Material;
   steel: T.Material;
@@ -242,10 +254,14 @@ export function duelistSabre(side: number, m: Finishes) {
   function surface(t: number, x: number, z: number) {
     const tip = Math.min(1, (1 - t) * 3.65);
     const width = (0.95 + 0.23 * Math.sin(t * Math.PI)) * tip;
+    const flat = T.MathUtils.clamp((x - 0.016) / 0.056, 0, 1);
+    const crown = 0.0055 * Math.sin(Math.PI * flat);
+    const thickness = (Math.abs(z) + crown) * tip;
+    // A convex ground face rolls the court reflection away from the narrow edge.
     return [
       side * (shaftX + 0.018 * t + 0.225 * t ** 3 + x * width),
       0.182 + 1.17 * t,
-      0.022 + z * tip,
+      0.022 + Math.sign(z) * thickness,
     ];
   }
   for (const front of [-1, 1]) {
@@ -263,7 +279,10 @@ export function duelistSabre(side: number, m: Finishes) {
           const wave = 0.073 + 0.004 * Math.sin(37*t) + 0.0025 * Math.sin(61*t);
           const line = Math.exp(-((x-wave)**2) / 0.000023);
           const grain = Math.sin(150*x + 4*Math.sin(11*t) + 9*t);
-          const tone = T.MathUtils.lerp(c0, c1, q) + 0.22*line + 0.026*grain;
+          const folded = Math.sin(470 * x + 2.4 * Math.sin(14 * t + 22 * x) + 13 * t);
+          const flat = T.MathUtils.smoothstep(x, 0.016, 0.029) * (1 - T.MathUtils.smoothstep(x, 0.065, 0.08));
+          const tone = T.MathUtils.lerp(c0, c1, q) + 0.22 * line + 0.026 * grain
+            + flat * (0.105 * folded - 0.09);
           colors.push(tone * 0.92, tone * 0.965, tone);
           if (j && h) {
             const d = base + j*9 + h, a = d-10, b = d-9, c = d-1;

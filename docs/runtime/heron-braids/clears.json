@@ -1,0 +1,116 @@
+[
+  {
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5080 (0x00002C02) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "boss": "The Bellwarden",
+    "mode": "PILGRIM",
+    "timing": {
+      "samples": 1703,
+      "median": 16.7,
+      "p95": 16.8,
+      "max": 17.4
+    },
+    "title": "Vigil released",
+    "stats": "0:26TIME3PARRIES0HITS TAKEN",
+    "bossHealth": "0%",
+    "playerHealth": 100,
+    "awakened": true,
+    "elapsed": 28.397399999999635,
+    "terminal": true,
+    "entry": {
+      "loadMs": 10399,
+      "firstCallbackAfterReadyMs": 0,
+      "toCombatMs": 12802,
+      "intro": {
+        "count": 144,
+        "p95": 16.8,
+        "max": 23.4
+      },
+      "load": {
+        "count": 22,
+        "p95": 113.7,
+        "max": 9891.6
+      },
+      "fight": {
+        "count": 1584,
+        "p95": 16.8,
+        "max": 17.8
+      }
+    }
+  },
+  {
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5080 (0x00002C02) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "boss": "The Veiled Heron",
+    "mode": "PILGRIM",
+    "timing": {
+      "samples": 1809,
+      "median": 16.7,
+      "p95": 16.8,
+      "max": 17.7
+    },
+    "title": "Vigil released",
+    "stats": "0:28TIME5PARRIES0HITS TAKEN",
+    "bossHealth": "0%",
+    "playerHealth": 100,
+    "awakened": true,
+    "elapsed": 30.16799999999973,
+    "terminal": true,
+    "entry": {
+      "loadMs": 5310,
+      "firstCallbackAfterReadyMs": 5,
+      "toCombatMs": 7746,
+      "intro": {
+        "count": 146,
+        "p95": 16.8,
+        "max": 16.8
+      },
+      "load": {
+        "count": 11,
+        "p95": 5165.9,
+        "max": 5165.9
+      },
+      "fight": {
+        "count": 1697,
+        "p95": 16.8,
+        "max": 22.1
+      }
+    }
+  },
+  {
+    "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5080 (0x00002C02) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+    "boss": "Saint of Cinders",
+    "mode": "PILGRIM",
+    "timing": {
+      "samples": 2495,
+      "median": 16.7,
+      "p95": 16.8,
+      "max": 50
+    },
+    "title": "The last bell fades",
+    "stats": "0:39TIME4PARRIES5HITS TAKEN",
+    "bossHealth": "0%",
+    "playerHealth": 75,
+    "awakened": true,
+    "elapsed": 41.648200000012515,
+    "terminal": true,
+    "entry": {
+      "loadMs": 12269,
+      "firstCallbackAfterReadyMs": 5,
+      "toCombatMs": 14699,
+      "intro": {
+        "count": 145,
+        "p95": 16.8,
+        "max": 48.5
+      },
+      "load": {
+        "count": 17,
+        "p95": 12012.6,
+        "max": 12012.6
+      },
+      "fight": {
+        "count": 2358,
+        "p95": 16.8,
+        "max": 55.7
+      }
+    }
+  }
+]
