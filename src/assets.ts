@@ -15,7 +15,7 @@ export class ArtLibrary {
       images = new T.TextureLoader();
     const base = import.meta.env.BASE_URL;
     await Promise.all([
-      ...["pilgrim", "wraith", "sorcerer", "sword", "pine", "dead-tree"].map(
+      ...["pilgrim", "wraith", "sorcerer", "sword", "pine", "dead-tree", "tide-bell"].map(
         async (name) => {
           this.models.set(
             name,

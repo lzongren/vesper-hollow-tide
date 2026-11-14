@@ -523,42 +523,10 @@ export class World {
     return a;
   }
   bell(parent: T.Object3D, r: number, x: number, y: number, z: number) {
-    const points = [
-      new T.Vector2(0.12 * r, 1.5 * r),
-      new T.Vector2(0.55 * r, 1.4 * r),
-      new T.Vector2(0.62 * r, 1.15 * r),
-      new T.Vector2(0.65 * r, 0.55 * r),
-      new T.Vector2(0.85 * r, 0.1 * r),
-      new T.Vector2(r, 0),
-      new T.Vector2(0.95 * r, -0.06 * r),
-    ];
-    const g = new T.Group();
-    g.position.set(x, y, z);
-    parent.add(g);
-    mesh(g, new T.LatheGeometry(points, 64), this.materials.gold);
-    for (const [yy, rr] of [
-      [0.15, 0.83],
-      [0.25, 0.8],
-      [1.15, 0.63],
-      [1.23, 0.62],
-    ] as number[][])
-      torus(g, this.materials.gold, rr * r, 0.018 * r, 0, yy * r, 0, true);
-    for (let i = 0; i < 16; i++) {
-      const angle = (i / 16) * Math.PI * 2;
-      for (let j = 0; j < 3; j++) {
-        const stud = mesh(
-          g,
-          new T.SphereGeometry(0.035 * r, 8, 6),
-          this.materials.gold,
-          Math.sin(angle) * 0.65 * r,
-          (0.45 + j * 0.19) * r,
-          Math.cos(angle) * 0.65 * r,
-        );
-        stud.scale.z = 0.5;
-      }
-    }
-    cylinder(g, this.materials.dark, 0, 0.25 * r, 0, 0.08 * r, 0.65 * r);
-    return g;
+    const casting = this.art.model("tide-bell", 2.03 * r);
+    casting.position.set(x, y - 0.15 * r, z);
+    parent.add(casting);
+    return casting;
   }
   lantern(parent: T.Object3D, x: number, y: number, z: number, red = false) {
     const g = new T.Group();
