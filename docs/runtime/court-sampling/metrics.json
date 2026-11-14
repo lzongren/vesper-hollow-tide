@@ -1,0 +1,53 @@
+[
+  {
+    "woven hat": {
+      "edge pixels": 5520,
+      "previous MAE": 9.64,
+      "rebuilt MAE": 6.2
+    },
+    "sword": {
+      "edge pixels": 6800,
+      "previous MAE": 4.829,
+      "rebuilt MAE": 2.949
+    },
+    "whole crop": {
+      "edge pixels": 199104,
+      "previous MAE": 5.158,
+      "rebuilt MAE": 4.003
+    }
+  },
+  {
+    "woven hat": {
+      "edge pixels": 5520,
+      "previous MAE": 12.408,
+      "rebuilt MAE": 7.084
+    },
+    "sword": {
+      "edge pixels": 6800,
+      "previous MAE": 7.404,
+      "rebuilt MAE": 5.07
+    },
+    "whole crop": {
+      "edge pixels": 199104,
+      "previous MAE": 6.175,
+      "rebuilt MAE": 4.776
+    }
+  },
+  {
+    "woven hat": {
+      "edge pixels": 5520,
+      "previous MAE": 11.025,
+      "rebuilt MAE": 6.747
+    },
+    "sword": {
+      "edge pixels": 6800,
+      "previous MAE": 8.051,
+      "rebuilt MAE": 6.503
+    },
+    "whole crop": {
+      "edge pixels": 199104,
+      "previous MAE": 10.035,
+      "rebuilt MAE": 8.436
+    }
+  }
+]
