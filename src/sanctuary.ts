@@ -1,7 +1,7 @@
 import * as T from "three";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 
-/** The distant valley is cylindrical so an orbit cannot run off its edges. */
+/** The valley keeps a cylindrical horizon and a continuous crown above it. */
 export function valleyHorizon(texture: T.Texture, encounter: number) {
   texture.wrapS = T.MirroredRepeatWrapping;
   texture.repeat.x = 4;
@@ -12,10 +12,19 @@ export function valleyHorizon(texture: T.Texture, encounter: number) {
     fog: false,
     depthWrite: false,
   });
-  const sky = new T.Mesh(
-    new T.CylinderGeometry(104, 104, 62, 160, 1, true),
-    material,
-  );
+  // Keep the existing elevation and UVs at the horizon. Curve a crown above
+  // the upper rim, carrying the cloud band over the edge of an elevated view.
+  const rings = [new T.Vector2(104, -31), new T.Vector2(104, 31)];
+  const elevations = [0, 1];
+  for (let i = 1; i <= 12; i++) {
+    const angle = i * Math.PI / 24;
+    rings.push(new T.Vector2(104 * Math.cos(angle), 31 + 70 * Math.sin(angle)));
+    elevations.push(1 - 0.19 * Math.sin(angle));
+  }
+  const dome = new T.LatheGeometry(rings, 160);
+  const uv = dome.attributes.uv;
+  for (let i = 0; i < uv.count; i++) uv.setY(i, elevations[i % rings.length]);
+  const sky = new T.Mesh(dome, material);
   sky.position.y = 12;
   sky.rotation.y = 0.64;
   sky.renderOrder = -20;

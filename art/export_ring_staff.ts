@@ -1,20 +1,8 @@
 /** Bake the playable finial, shaft and six movable rings for Unreal Interchange.
  * Run with npx tsx art/export_ring_staff.ts. Requires Node 22 and the locked npm dependencies. */
-import { writeFile } from "node:fs/promises";
+import { bake } from "./bake_glb";
 import * as T from "three";
-import { GLTFExporter } from "three/addons/exporters/GLTFExporter.js";
 import { RingStaff } from "../src/ring-staff";
-
-// GLTFExporter's binary path uses this one FileReader operation on Node.
-class BinaryReader {
-  result?: ArrayBuffer;
-  onloadend?: () => void;
-  async readAsArrayBuffer(blob: Blob) {
-    this.result = await blob.arrayBuffer();
-    this.onloadend?.();
-  }
-}
-Object.defineProperty(globalThis, "FileReader", { value: BinaryReader, configurable: true });
 
 const materials = [
   new T.MeshStandardMaterial({ name: "Lacquered wood", color: 0x61382c, roughness: .50 }),
@@ -32,6 +20,4 @@ for (const child of staff.children) {
     ? "LooseRing_" + ++ring
     : solidNames.shift()!;
 }
-const output = await new GLTFExporter().parseAsync(staff, { binary: true });
-if (!(output instanceof ArrayBuffer)) throw Error("Expected a binary glTF asset");
-await writeFile(new URL("../native/Art/SaintsRingStaff.glb", import.meta.url), new Uint8Array(output));
+await bake(staff, "SaintsRingStaff");
