@@ -13,3 +13,13 @@ The [browser frame intervals](frame-intervals.json) were sampled during six seco
 ## Visual comparison
 
 The official dungeon image shows how one torch separates the hunter's silhouette from a succession of dark openings. In the belfry the long red skirts, brass fittings and wet paving read at fighting distance. The repeated bright bays along the court still compete with the opponent, and the hems still form broad smooth arcs at the end of a swing. The three screenshots and short sequence document the present visual gap. [PlayStation's Bloodborne dungeon image](https://www.flickr.com/photos/playstationblog/15829933072/) · [Original PlayStation article](https://blog.playstation.com/2014/11/20/new-bloodborne-weapon-and-hunter-emerge/)
+
+## Three victories in the shipped browser build
+
+On Pilgrim difficulty, a keyboard driver read the visible attack prompt, health, phase and stamina in the production HUD. It held movement and tapped the same attack, dodge, parry and healing keys available to a player. All three fights entered their awakened phase and reached the victory screen. The last encounter displayed *The last bell fades*. [Result screens](results.jpg) · [HUD readback](results.json)
+
+| Encounter | Game clock | Parries | Hits taken |
+| --- | ---: | ---: | ---: |
+| Bellwarden | 0:26 | 3 | 0 |
+| Veiled Heron | 0:27 | 5 | 0 |
+| Saint of Cinders | 0:40 | 4 | 5 |
