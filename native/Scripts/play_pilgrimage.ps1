@@ -95,6 +95,12 @@ if ($rebuildDuel -or $outfitReport.revision -ne 5 -or !(Test-Path "$project\Cont
 if (!(Test-Path "$project\Saved\WestPass.json")) {
     Invoke-MapPass 'raise_karst_pass' 'VESPER_WEST_PASS_READY'
 }
+if (!(Test-Path "$project\Saved\LotusLanterns.json")) {
+    Invoke-MapPass 'fit_lotus_lanterns' 'VESPER_LOTUS_LANTERNS_READY'
+}
+if (!(Test-Path "$project\Saved\PineFoliage.json")) {
+    Invoke-MapPass 'fit_pine_foliage' 'VESPER_PINE_FOLIAGE_READY'
+}
 Start-Process "$bin\UnrealEditor.exe" -WorkingDirectory $project -ArgumentList @(
     "`"$descriptor`"", "$map`?game=$gameMode", '-game', '-windowed', '-ResX=1600', '-ResY=900', '-NoP4',
     '-ForceEnablePython', '-ExecCmds="t.MaxFPS 60,py __import__(''runpy'').run_path(__import__(''unreal'').Paths.convert_relative_path_to_full(__import__(''unreal'').Paths.project_dir())+''Scripts/belfry_combat.py'')"'
