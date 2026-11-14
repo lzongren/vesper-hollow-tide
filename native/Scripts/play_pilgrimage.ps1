@@ -61,7 +61,7 @@ if ($fitReport.locomotion_revision -ne 2 -or $fitReport.palm_revision -ne 1) {
 $duelReport = if (Test-Path "$project\Saved\BelfryDuel.json") {
     Get-Content -Raw "$project\Saved\BelfryDuel.json" | ConvertFrom-Json
 }
-if ($duelReport.revision -ne 2 -or !(Test-Path "$project\Content\Vesper\Duel\BP_BelfryMode.uasset")) {
+if ($duelReport.revision -ne 3 -or !(Test-Path "$project\Content\Vesper\Duel\BP_BelfryMode.uasset")) {
     Invoke-MapPass 'build_bellwarden' 'VESPER_BELFRY_READY'
 }
 Start-Process "$bin\UnrealEditor.exe" -WorkingDirectory $project -ArgumentList @(

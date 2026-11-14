@@ -101,7 +101,8 @@ def build():
             unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks([task])
         return outfit(folder)
 
-    boss_skin = mesh_for("KeeperVestments", "wraith.glb", bellwarden=True)
+    boss_skin = mesh_for("TollKeeper", "pilgrim.glb", bellwarden=True)
+    runpy.run_path(str(project / "Scripts" / "keeper_materials.py"))["finish"](boss_skin)
     hero_skin = mesh_for("SwordPilgrim", "pilgrim.glb", armed=True)
     soldier = lib.load_asset(combat + "AI/BP_CombatEnemy")
     skeleton = unreal.get_default_object(
@@ -134,7 +135,8 @@ def build():
         {
             "Melee Knockback Impulse": 150.0,
             "Melee Launch Impulse": 55.0,
-            "Default Camera Distance": 400.0,
+            "Default Camera Distance": 420.0,
+            "Shoulder Offset": 118.0,
             "Max HP": 10.0,
             "Current HP": 10.0,
             "Melee Damage": 1.0,
@@ -190,7 +192,7 @@ def build():
         "mesh": boss_skin.get_path_name(),
         "player": player.get_name(),
         "center_cm": [4390, 120],
-        "revision": 2,
+        "revision": 3,
     }
     (project / "Saved" / "BelfryDuel.json").write_text(json.dumps(report, indent=2))
     unreal.log("VESPER_BELFRY_READY")

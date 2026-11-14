@@ -7,6 +7,8 @@ vertices and materials come from Vesper's assets. Coordinates here are glTF metr
 import copy
 import json
 import math
+from pathlib import Path
+import runpy
 import struct
 
 FORMATS = {5121: "B", 5123: "H", 5125: "I", 5126: "f"}
@@ -232,6 +234,10 @@ def build(reference, body_path, art, textures, output, *, bellwarden=False, arme
             translated[i] = out.image(
                 asset.view(img["bufferView"]), img["mimeType"], prefix + str(i)
             )
+        bronze = prefix in ("RightPlate", "LeftPlate")
+        if bronze:
+            patina = out.image((textures / "metal-color.jpg").read_bytes(), "image/jpeg", prefix + "Patina")
+            pitting = out.image((textures / "metal-normal.jpg").read_bytes(), "image/jpeg", prefix + "Hammer")
         for i, original in enumerate(asset.doc["materials"]):
             m = copy.deepcopy(original)
             m["name"] = prefix + "_" + str(i)
@@ -250,6 +256,10 @@ def build(reference, body_path, art, textures, output, *, bellwarden=False, arme
                     "image/jpeg",
                     "HeronStitch",
                 )
+            if bronze and original.get("name") == "Cast bronze":
+                m["pbrMetallicRoughness"].update(baseColorTexture=patina,
+                    baseColorFactor=[.74,.71,.61,1], roughnessFactor=.52, metallicFactor=.67)
+                m["normalTexture"] = dict(pitting, scale=.47)
             if bellwarden and prefix == "Pilgrim":
                 m.pop("emissiveTexture", None)
                 m["emissiveFactor"] = [0, 0, 0]
@@ -408,4 +418,7 @@ def build(reference, body_path, art, textures, output, *, bellwarden=False, arme
                     js.append(([lookup[b] for b in bones] + [0] * 4)[:4])
                     ws.append((w + [0.0] * 4)[:4])
                 primitive(asset, prim, vs, ns, js, ws, offset + prim["material"])
+    if bellwarden:
+        add_regalia = runpy.run_path(str(Path(__file__).with_name("keeper_regalia.py")))["add_regalia"]
+        add_regalia(out, lookup, textures)
     out.save(output)

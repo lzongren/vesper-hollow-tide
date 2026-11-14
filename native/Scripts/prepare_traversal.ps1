@@ -43,6 +43,13 @@ $models = Join-Path (Split-Path $project -Parent) 'public\models'
 foreach ($channel in @('color','normal')) {
     Stage-Source $source "pilgrim-brocade-$channel.jpg"
 }
-foreach ($model in @('pine.glb','rock_face_01.glb','pilgrim.glb','wraith.glb','tide-bell.glb')) {
+foreach ($model in @('pine.glb','rock_face_01.glb','pilgrim.glb','tide-bell.glb')) {
     Stage-Source $models $model
+}
+$courtArt = Join-Path (Split-Path $project -Parent) 'public\art'
+foreach ($piece in @('warden-mask.png','dragon-mantle.jpg')) {
+    Stage-Source $courtArt $piece
+}
+foreach ($channel in @('color','normal')) {
+    Stage-Source $source "metal-$channel.jpg"
 }
