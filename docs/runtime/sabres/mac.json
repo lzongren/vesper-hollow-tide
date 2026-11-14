@@ -1,0 +1,25 @@
+{
+  "arch": "arm64",
+  "browser": "157.0.8103.78",
+  "results": [
+    {
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+      "boss": "The Bellwarden",
+      "stamina": "83 STAMINA",
+      "health": "100 / 100"
+    },
+    {
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+      "boss": "The Veiled Heron",
+      "stamina": "83 STAMINA",
+      "health": "100 / 100"
+    },
+    {
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+      "boss": "Saint of Cinders",
+      "stamina": "83 STAMINA",
+      "health": "100 / 100"
+    }
+  ],
+  "errors": []
+}
