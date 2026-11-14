@@ -30,6 +30,7 @@ import {
   valleyHorizon,
 } from "./sanctuary";
 import { waitForOpeningDraw } from "./first-frame";
+import { karstSpurs } from "./karst";
 import { heronStroke } from "./heron-sabres";
 import { HeronWing, bridalMask, dressHeron } from "./heron";
 import { RingStaff } from "./ring-staff";
@@ -1255,6 +1256,7 @@ export class World {
     this.arena.add(leafDrifts(random(3248 + index), index === 1));
     this.decor.add(
       valleyHorizon(this.art.textures.get("karst-valley")!, index),
+      karstSpurs(index, this.art.textures.get("karst-limestone")!),
     );
     for (const [x, z, scale] of [
       [-12.8, -13.5, 1.3],

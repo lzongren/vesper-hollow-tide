@@ -1,5 +1,13 @@
 # Asset provenance
 
+The physical limestone spurs and summit trees are original geometry in `src/karst.ts`. The garden beacon is modeled in `src/ridge-pavilion.ts`. Their arrangement differs in each court. The built-in ImageGen tool supplied [the rock albedo](../public/art/karst-limestone.jpg). The geometry supplies the silhouette and depth. The renderer samples the albedo for color and fine bump detail.
+
+<details><summary>Limestone material prompt</summary>
+
+Seamless square photorealistic videogame environment base-color texture. Orthographic face-on view of a pale silver-gray karst limestone cliff covering the whole square edge to edge. Geological cross section extending about twelve metres wide, ancient erosion, strong VERTICAL fluting, broken vertical buttresses with pale faces, thin diagonal bedding and stepped ledges, a few deep cool grey fissures. Local stone varies from chalky silver to slate and faint bluish grey, a little dark green lichen deep in crevices. Naturalistic high detail, different spacing of the fissures, matte, uniformly overcast ambient light, readable medium scale in a small thumbnail. Tile in both directions, avoid obvious repetition. Absolutely no horizon, sky, landscape, ground, isolated boulder, text, border, plants, frame, mountain silhouette, or strong directional cast shadows. This is only a flat material albedo map for a 3D limestone mesh.
+
+</details>
+
 Story names, encounter rules, architecture, effects, cloak/hat/bell details and synthesized audio were created for this project. The realism revision also uses third-party CC0 models and scanned PBR materials, listed in [the machine-readable asset manifest](imported-assets.json). No assets from Bloodborne or Wuchang are included.
 
 - `public/art/vesper-cover.png`: generated with the built-in OpenAI image-generation tool for this project on 2026-11-11. The in-game scene uses separate 3D geometry and textures; the cover is concept/title art, not a gameplay screenshot.

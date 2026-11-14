@@ -88,6 +88,7 @@ export class ArtLibrary {
       }),
       ...[
         "karst-valley",
+        "karst-limestone",
         "tide-icon",
         "lacquer-bay",
         "heron-silk",
@@ -105,6 +106,7 @@ export class ArtLibrary {
         );
         map.colorSpace = T.SRGBColorSpace;
         map.anisotropy = 8;
+        if (name === "karst-limestone") map.wrapS = map.wrapT = T.MirroredRepeatWrapping;
         this.textures.set(name, map);
       }),
       new HDRLoader().loadAsync(`${base}textures/moonlight.hdr`).then((t) => {
