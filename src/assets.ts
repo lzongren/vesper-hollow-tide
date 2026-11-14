@@ -87,6 +87,7 @@ export class ArtLibrary {
         "rain-stones",
         "heron-quill",
         "warden-mask",
+        "belfry-plaque",
       ].map(async (name) => {
         const map = await images.loadAsync(
           `${base}art/${name}.${name === "heron-quill" || name === "warden-mask" ? "png" : "jpg"}`,

@@ -146,6 +146,18 @@ function solveArm(
   side: number,
 ) {
   upper.getWorldPosition(shoulder);
+  root.localToWorld(pole.set(side, shoulder.y - root.position.y - 0.25, -0.32));
+  solveTwoBone(upper, fore, hand, target, pole);
+}
+
+export function solveTwoBone(
+  upper: T.Bone,
+  fore: T.Bone,
+  hand: T.Bone,
+  target: T.Vector3,
+  bendPoint: T.Vector3,
+) {
+  upper.getWorldPosition(shoulder);
   fore.getWorldPosition(elbow);
   hand.getWorldPosition(wrist);
   const upperLength = shoulder.distanceTo(elbow),
@@ -158,9 +170,7 @@ function solveArm(
   );
   const along = (upperLength ** 2 - lowerLength ** 2 + d ** 2) / (2 * d);
   const offset = Math.sqrt(Math.max(0, upperLength ** 2 - along ** 2));
-  root
-    .localToWorld(pole.set(side, shoulder.y - root.position.y - 0.25, -0.32))
-    .sub(shoulder);
+  pole.copy(bendPoint).sub(shoulder);
   pole.addScaledVector(axis, -pole.dot(axis)).normalize();
   elbow
     .copy(shoulder)

@@ -34,7 +34,6 @@ let last = 0,
 const keys = new Set<string>();
 let padButtons: boolean[] = [];
 let lastHud = 0;
-let lastStep = 0;
 const chapterNumbers = ["I", "II", "III"],
   verbs = ["Enter the belfry", "Enter the garden", "Enter the reliquary"];
 const clock = (s: number) =>
@@ -126,6 +125,9 @@ async function begin(index = selected) {
     if (!world) {
       const { World: WorldClass } = await import("./scene");
       world = new WorldClass($<HTMLCanvasElement>("world"));
+      world.onPlayerStep = (x, z) => {
+        if (game?.mode === "combat") audio.event({ kind: "step", x, z });
+      };
       await world.ready;
       world.setQuality(save.quality);
       world.reducedMotion = save.reducedMotion;
@@ -145,7 +147,10 @@ async function begin(index = selected) {
     resultShown = false;
     locked = true;
     accumulator = 0;
-    lastStep = 0;
+    for (const actor of [world.player, world.boss]) {
+      actor.feet.reset();
+      actor.impactAge = 1;
+    }
     last = performance.now();
     $("menu").hidden = true;
     $("hud").hidden = false;
@@ -527,15 +532,6 @@ function frame(now: number) {
       $("damage-flash").style.opacity = ".55";
       setTimeout(() => ($("damage-flash").style.opacity = "0"), 150);
     }
-  }
-  if (
-    world.moving &&
-    game.mode === "combat" &&
-    game.player.action === "idle" &&
-    game.time - lastStep > 0.32
-  ) {
-    lastStep = game.time;
-    audio.event({ kind: "step", x: game.player.x, z: game.player.z });
   }
   audio.update(game.bossIndex, game.boss.phase, game.mode === "combat");
   world.update(game, dt, locked);

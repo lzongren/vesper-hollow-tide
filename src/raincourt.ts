@@ -46,12 +46,6 @@ export class RainCourt {
   private seed = { value: 0 };
   private lastCapture = -10;
   private cursor = 0;
-  private lastFoot = [
-    new T.Vector2(Infinity, Infinity),
-    new T.Vector2(Infinity, Infinity),
-  ];
-  private nextLeft = [false, false];
-
   constructor() {
     this.mirror.rotation.x = -Math.PI / 2;
     this.mirror.position.y = -0.002;
@@ -64,7 +58,6 @@ export class RainCourt {
     this.wet.value = [0.51, 0.49, 0.37][index];
     this.lastCapture = -10;
     this.step.forEach((s) => (s.z = -10));
-    this.lastFoot.forEach((v) => v.set(Infinity, Infinity));
   }
   finishStone(material: T.MeshStandardMaterial, inlay = false) {
     material.customProgramCacheKey = () =>
@@ -130,30 +123,9 @@ export class RainCourt {
     };
   }
 
-  footfall(
-    actor: number,
-    x: number,
-    z: number,
-    facing: number,
-    rolling: boolean,
-  ) {
-    const last = this.lastFoot[actor],
-      distance = Math.hypot(x - last.x, z - last.y);
-    if (distance > (actor === 0 ? 0.83 : 1.35)) {
-      if (distance < 3) {
-        const side =
-          (this.nextLeft[actor] ? 1 : -1) * (actor === 0 ? 0.14 : 0.26);
-        this.step[this.cursor].set(
-          x + side * Math.cos(facing),
-          z - side * Math.sin(facing),
-          this.clock.value,
-          rolling ? 2.1 : 1,
-        );
-        this.cursor = (this.cursor + 1) % this.step.length;
-        this.nextLeft[actor] = !this.nextLeft[actor];
-      }
-      last.set(x, z);
-    }
+  contact(x: number, z: number, strength: number) {
+    this.step[this.cursor].set(x, z, this.clock.value, strength);
+    this.cursor = (this.cursor + 1) % this.step.length;
   }
   capture(
     renderer: T.WebGLRenderer,

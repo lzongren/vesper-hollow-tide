@@ -30,6 +30,9 @@ import {
   valleyHorizon,
 } from "./sanctuary";
 import { batchCourt } from "./static-court";
+import { incenseVessel, incenseSmoke } from "./incense";
+import { travelHat } from "./travel-hat";
+import { Footwork } from "./footwork";
 import { RainCourt } from "./raincourt";
 import { courtPaving, runoffChannel } from "./court";
 import { heronGarden, cinderReliquary } from "./landmarks";
@@ -178,6 +181,10 @@ interface Actor {
   model: T.Group;
   bones: Map<string, T.Bone>;
   rest: Map<string, T.Quaternion>;
+  feet: Footwork;
+  impactAge: number;
+  impactSide: number;
+  impactForward: number;
   robe?: T.Mesh;
   clothMotion?: MantleMotion;
   weapon: T.Group;
@@ -198,6 +205,7 @@ interface Effect {
 
 export class World {
   readonly ready: Promise<void>;
+  onPlayerStep?: (x: number, z: number) => void;
   art = new ArtLibrary();
   renderer: T.WebGLRenderer;
   scene = new T.Scene();
@@ -230,6 +238,7 @@ export class World {
   loaded = false;
   moon: T.DirectionalLight;
   fill: T.PointLight;
+  incenseTime = { value: 0 };
   clothMeshes: T.Mesh[] = [];
   flames: T.Mesh[] = [];
   featherTemplate?: T.BufferGeometry;
@@ -360,6 +369,7 @@ export class World {
       wood: this.art.material("wood", 2, 2, 0xb06c55),
       gold: this.art.material("metal", 2, 2, 0xc8af71),
       roof: this.art.material("rock", 3, 2, 0x586062),
+      "censer-bronze": this.art.material("metal", 2, 2, 0x60766b),
       dark: standard(0x171c1b, 0.4, 0.35),
       ivory: standard(0xd1c9ad, 0.2, 0.35),
       fire: emissive(0xffb553, 3),
@@ -497,6 +507,10 @@ export class World {
       weapon,
       kind,
       height,
+      feet: new Footwork(root, bones, height),
+      impactAge: 1,
+      impactSide: 0,
+      impactForward: 0,
       rightHand: bones.get("RightHand"),
     };
     if (kind < 1) {
@@ -513,28 +527,8 @@ export class World {
         bones.get("Spine")?.attach(robe);
 
         // Woven travel hat and layered lacquered mantle give the pilgrim an original silhouette.
-        const headwear = new T.Group();
+        const headwear = travelHat();
         root.add(headwear);
-        const hat = mesh(
-          headwear,
-          new T.ConeGeometry(0.43, 0.19, 64),
-          this.materials.wood,
-          0,
-          1.97,
-          0,
-        );
-        hat.rotation.x = 0.05;
-        for (let j = 0; j < 9; j++)
-          torus(
-            headwear,
-            this.materials.wood,
-            0.12 + j * 0.035,
-            0.004,
-            0,
-            2.045 - j * 0.014,
-            0,
-            true,
-          );
         bones.get("Head")?.attach(headwear);
         const sword = this.art.model("sword", 1.65);
         sword.position.y = -0.22;
@@ -918,6 +912,35 @@ export class World {
     this.roof(g, 14, 8, 5.5);
     // Raised clerestory, carved fascia and fretwork make the hall read at combat distance.
     box(g, this.materials.wood, 0, 7.2, 0, 7.8, 1.5, 3.6);
+    // Recessed paper windows set a lit rhythm below the second eave.
+    const pane = new T.MeshStandardMaterial({
+      color: 0xb98c55,
+      emissive: 0xd69b53,
+      emissiveIntensity: 0.52,
+      roughness: 0.94,
+    });
+    for (let i = -3; i <= 3; i++) {
+      const x = i * 1.075;
+      box(g, this.materials.dark, x, 7.23, 1.827, 1.01, 1.11, 0.16);
+      box(g, pane, x, 7.23, 1.92, 0.85, 0.93, 0.025);
+      for (const dx of [-0.44, -0.24, 0.24, 0.44])
+        box(g, this.materials.wood, x + dx, 7.23, 1.956, 0.045, 0.97, 0.04);
+      for (const dy of [-0.33, 0.33])
+        box(g, this.materials.wood, x, 7.23 + dy, 1.961, 0.89, 0.04, 0.05);
+      const diamond = box(
+        g,
+        this.materials.dark,
+        x,
+        7.23,
+        1.963,
+        0.38,
+        0.38,
+        0.04,
+      );
+      diamond.rotation.z = Math.PI / 4;
+      const glass = box(g, pane, x, 7.23, 1.992, 0.294, 0.294, 0.02);
+      glass.rotation.z = Math.PI / 4;
+    }
     this.roof(g, 10, 5.5, 7.7);
     for (const side of [-1, 1])
       for (let i = 0; i < 6; i++) {
@@ -941,9 +964,24 @@ export class World {
       );
     }
     this.bell(g, 1.1, 0, 2.7, 0);
-    const sign = box(g, this.materials.dark, 0, 4.7, 3.05, 2.6, 0.65, 0.15);
-    for (let i = 0; i < 3; i++)
-      torus(sign, this.materials.gold, 0.14, 0.018, -0.7 + i * 0.7, 0, 0.1);
+    const sign = box(g, this.materials.wood, 0, 4.88, 3.23, 3.42, 1.06, 0.16);
+    mesh(
+      sign,
+      new T.PlaneGeometry(3.29, 1.0),
+      new T.MeshStandardMaterial({
+        map: this.art.textures.get("belfry-plaque"),
+        bumpMap: this.art.textures.get("belfry-plaque"),
+        bumpScale: 0.014,
+        roughness: 0.57,
+        metalness: 0.27,
+        emissiveMap: this.art.textures.get("belfry-plaque"),
+        emissive: 0xffe2ac,
+        emissiveIntensity: 0.24,
+      }),
+      0,
+      0,
+      0.082,
+    );
     for (const xx of [-4, -1.5, 1.5, 4]) {
       cylinder(g, this.materials.dark, xx, 4.4, 3, 0.015, 0.8);
       this.lantern(g, xx, 3.2, 3.05, true);
@@ -1041,6 +1079,20 @@ export class World {
       );
       carving.position.set(0, 4.2, -25.8);
       this.arena.add(carving);
+    }
+    for (const [i, [x, z]] of [
+      [-6.7, -9.5],
+      [7.4, -8.3],
+      [-8.8, 5.6],
+      [9.2, 3.4],
+    ].entries()) {
+      const vessel = incenseVessel(this.materials);
+      vessel.position.set(x, 0, z);
+      vessel.rotation.y = 0.48 * i - 0.37;
+      this.arena.add(vessel);
+      const plume = incenseSmoke(this.incenseTime, i * 3.7 + index * 1.9);
+      plume.position.set(x, 1.7, z);
+      this.decor.add(plume);
     }
     for (const side of [-1, 1]) {
       if (index === 1) {
@@ -1333,10 +1385,6 @@ export class World {
         );
     };
     const walk = moving ? Math.sin(t * 10) : 0;
-    rotate("LeftUpLeg", walk * 0.37);
-    rotate("RightUpLeg", -walk * 0.37);
-    rotate("LeftLeg", Math.max(0, -walk) * 0.55);
-    rotate("RightLeg", Math.max(0, walk) * 0.55);
     rotate("Spine", Math.sin(t * 1.8) * 0.015);
     rotate("LeftArm", -0.12 + walk * 0.12, 0, 0.1);
     rotate("RightArm", -0.15 - walk * 0.12, 0, -0.08);
@@ -1369,10 +1417,6 @@ export class World {
         0.08 * load - 0.12 * release,
         0.24 * load - 0.19 * release,
       );
-      rotate("LeftUpLeg", -0.32 * load + 0.18 * release, 0, -0.1 * load);
-      rotate("RightUpLeg", 0.17 * load - 0.32 * release, 0, 0.11 * release);
-      rotate("LeftLeg", 0.39 * load + 0.15 * release);
-      rotate("RightLeg", 0.15 * load + 0.4 * release);
       root.position.y = -0.12 * load - 0.17 * release;
     } else if (
       action === "light" ||
@@ -1401,6 +1445,39 @@ export class World {
     } else if (action === "dead") {
       root.rotation.z = -Math.PI / 2;
       root.position.y = 0.2;
+    }
+    a.impactAge += dt;
+    if (action !== "dead" && a.impactAge < 0.42) {
+      const phase = a.impactAge / 0.42;
+      const recoil = Math.sin(phase * Math.PI * 2.3) * Math.exp(-phase * 3.4);
+      rotate(
+        "Spine",
+        -a.impactForward * 0.44 * recoil,
+        a.impactSide * 0.24 * recoil,
+        -a.impactSide * 0.38 * recoil,
+      );
+      rotate(
+        "Head",
+        -a.impactForward * 0.19 * recoil,
+        a.impactSide * 0.32 * recoil,
+      );
+      root.position.y -= a.height * 0.038 * Math.abs(recoil);
+    }
+    if (action === "dodge" || action === "dead") {
+      a.feet.reset();
+      if (action === "dodge") {
+        const tuck = Math.sin(Math.PI * progress);
+        rotate("LeftUpLeg", -0.76 * tuck);
+        rotate("RightUpLeg", -0.47 * tuck);
+        rotate("LeftLeg", 1.03 * tuck);
+        rotate("RightLeg", 0.79 * tuck);
+      }
+    } else {
+      const landing = a.feet.pose(dt);
+      if (landing) {
+        this.rainCourt.contact(landing.x, landing.z, a.kind < 0 ? 1 : 1.55);
+        if (a.kind < 0) this.onPlayerStep?.(landing.x, landing.z);
+      }
     }
     a.pinions?.forEach((wing, i) => {
       const spread =
@@ -1444,6 +1521,19 @@ export class World {
   }
   burst(e: GameEvent) {
     if (e.kind === "swing") return;
+    if (e.kind === "dodge") this.rainCourt.contact(e.x, e.z, 2.1);
+    if (e.kind === "hit" || e.kind === "hurt") {
+      const victim = e.kind === "hit" ? this.boss : this.player;
+      const attacker = e.kind === "hit" ? this.player : this.boss;
+      const direction =
+        Math.atan2(
+          attacker.root.position.x - e.x,
+          attacker.root.position.z - e.z,
+        ) - victim.root.rotation.y;
+      victim.impactAge = 0;
+      victim.impactSide = Math.sin(direction);
+      victim.impactForward = Math.cos(direction);
+    }
     if (e.kind === "slam") {
       const actor = this.boss;
       const r = 3.9;
@@ -1506,6 +1596,7 @@ export class World {
     if (!this.loaded) return;
     this.setArena(game.bossIndex);
     this.time += dt;
+    this.incenseTime.value = this.time;
     const p = game.player,
       b = game.boss;
     this.animateActor(
@@ -1541,10 +1632,10 @@ export class World {
       d = Math.hypot(dx, dz);
     const desired = locked ? Math.atan2(-dx, -dz) : this.orbit;
     this.yaw += angleDiff(desired, this.yaw) * (1 - Math.exp(-dt * 1.8));
-    const distance = 5.6 + Math.min(d, 13) * 0.18;
+    const distance = 4.35 + Math.min(d, 13) * 0.225;
     const target = new T.Vector3(
       p.x + Math.sin(this.yaw) * distance + Math.cos(this.yaw) * 0.85,
-      2.95 + Math.min(d, 12) * 0.08,
+      2.32 + Math.min(d, 12) * 0.09,
       p.z + Math.cos(this.yaw) * distance - Math.sin(this.yaw) * 0.85,
     );
     const look = new T.Vector3(
@@ -1606,8 +1697,6 @@ export class World {
     for (let i = 0; i < rain.count; i++)
       rain.setY(i, (this.rainBase[i * 3 + 1] - this.time * 2.2 + 10000) % 25);
     rain.needsUpdate = true;
-    this.rainCourt.footfall(0, p.x, p.z, p.facing, p.action === "dodge");
-    this.rainCourt.footfall(1, b.x, b.z, b.facing, false);
     this.rainCourt.capture(
       this.renderer,
       this.scene,
