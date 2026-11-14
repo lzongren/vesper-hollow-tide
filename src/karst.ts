@@ -159,7 +159,7 @@ function crag(spur: Spur, seed: number, trees: T.Vector3[], summit: T.Vector3) {
   return g;
 }
 
-// Uneven whorls lean away from the exposed ridge. Keep a single geometry for
+// Wind-trained limbs carry separate pads of needles. Keep a single geometry for
 // every little crown so the entire summit treeline takes one draw.
 function summitPines(sites: T.Vector3[], seed: number) {
   const rng = random(seed),
@@ -178,37 +178,85 @@ function summitPines(sites: T.Vector3[], seed: number) {
       scale = h * (0.21 + rng() * 0.12);
     const crown = (t: number) =>
       new T.Vector3(p.x + lean * t * t, p.y + h * t, p.z + h * 0.1 * t);
-    for (let k = 0; k < 5; k++) {
-      const a = (k * 2 * Math.PI) / 5,
-        b = ((k + 1) * 2 * Math.PI) / 5,
-        r = h * 0.045;
-      tri(
-        p.clone().add(new T.Vector3(r * Math.cos(b), 0, r * Math.sin(b))),
-        p.clone().add(new T.Vector3(r * Math.cos(a), 0, r * Math.sin(a))),
-        crown(0.94),
-        bark,
-      );
-    }
-    for (let k = 0; k < 5; k++) {
-      const t = 0.33 + 0.14 * k,
-        c = crown(t),
-        theta = rng() * Math.PI * 2;
-      const reach = scale * (1.25 - 0.14 * k);
-      const radius = Array.from(
-        { length: 9 },
-        () => reach * (0.53 + 0.65 * rng()),
-      );
-      for (let j = 0; j < 9; j++) {
-        const edge = (i: number) =>
-          new T.Vector3(
-            c.x + radius[i % 9] * Math.cos(theta + (i * 2 * Math.PI) / 9),
-            c.y + 0.06 * h * Math.sin((i * 2 * Math.PI) / 9),
-            c.z + radius[i % 9] * Math.sin(theta + (i * 2 * Math.PI) / 9),
-          );
-        shade.copy(canopy).multiplyScalar(0.74 + 0.38 * rng());
-        tri(edge(j + 1), edge(j), crown(Math.min(1, t + 0.14)), shade);
+    function limb(a: T.Vector3, b: T.Vector3, r0: number, r1: number) {
+      const axis = b.clone().sub(a).normalize();
+      const x = new T.Vector3(1, 0, 0).cross(axis).normalize();
+      const z = axis.clone().cross(x);
+      const rim = (origin: T.Vector3, r: number, angle: number) =>
+        origin
+          .clone()
+          .addScaledVector(x, r * Math.cos(angle))
+          .addScaledVector(z, r * Math.sin(angle));
+      for (let k = 0; k < 4; k++) {
+        const t = (k * Math.PI) / 2,
+          u = t + Math.PI / 2;
+        const lo = rim(a, r0, t),
+          hi = rim(b, r1, t),
+          next = rim(a, r0, u),
+          top = rim(b, r1, u);
+        tri(lo, next, hi, bark);
+        tri(next, top, hi, bark);
       }
     }
+    function tuft(center: T.Vector3, reach: number, twist: number) {
+      const n = 8;
+      const shape = Array.from({ length: n }, (_, j) => {
+        const a = twist + (j * 2 * Math.PI) / n,
+          r = reach * (0.7 + 0.37 * rng());
+        return center
+          .clone()
+          .add(
+            new T.Vector3(
+              r * Math.cos(a),
+              reach * (rng() - 0.5) * 0.23,
+              r * Math.sin(a) * 0.77,
+            ),
+          );
+      });
+      const high = center.clone().add(new T.Vector3(0, reach * 0.42, 0));
+      const low = center.clone().add(new T.Vector3(0, -reach * 0.19, 0));
+      for (let j = 0; j < n; j++) {
+        const a = shape[j],
+          b = shape[(j + 1) % n];
+        shade.copy(canopy).multiplyScalar(0.9 + 0.38 * rng());
+        tri(b, a, high, shade);
+        shade.multiplyScalar(0.72);
+        tri(a, b, low, shade);
+      }
+    }
+    limb(p, crown(0.57), h * 0.043, h * 0.029);
+    limb(crown(0.57), crown(0.98), h * 0.029, h * 0.009);
+    const azimuth = rng() * Math.PI * 2;
+    for (let j = 0; j < 8; j++) {
+      const t = 0.32 + 0.077 * j,
+        angle = azimuth + j * 2.4 + 0.23 * rng();
+      const length = scale * (1.45 - 0.075 * j) * (0.72 + 0.42 * rng());
+      const start = crown(t),
+        bend = start
+          .clone()
+          .add(
+            new T.Vector3(
+              length * 0.53 * Math.cos(angle),
+              -h * 0.047,
+              length * 0.53 * Math.sin(angle),
+            ),
+          );
+      const end = start
+        .clone()
+        .add(
+          new T.Vector3(
+            length * Math.cos(angle),
+            h * (0.008 + 0.075 * rng()),
+            length * Math.sin(angle),
+          ),
+        );
+      limb(start, bend, h * 0.02, h * 0.014);
+      limb(bend, end, h * 0.014, h * 0.006);
+      tuft(end, scale * (0.49 + 0.21 * rng()), angle);
+      if (j % 2 === 0)
+        tuft(bend.clone().lerp(end, 0.19), scale * 0.39, angle + 1);
+    }
+    tuft(crown(0.95), scale * 0.53, azimuth);
   }
   const g = new T.BufferGeometry();
   g.setAttribute("position", new T.Float32BufferAttribute(xyz, 3));
