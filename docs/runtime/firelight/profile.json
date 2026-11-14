@@ -1,0 +1,204 @@
+{
+  "results": [
+    {
+      "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5080 (0x00002C02) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "boss": "Saint of Cinders",
+      "mode": "PILGRIM",
+      "timing": {
+        "samples": 2643,
+        "median": 16.7,
+        "p95": 16.8,
+        "max": 2035.5
+      },
+      "title": "Vigil released",
+      "stats": "0:44TIME3PARRIES6HITS TAKEN",
+      "bossHealth": "0%",
+      "playerHealth": 71,
+      "awakened": true,
+      "elapsed": 47.013199999964804,
+      "terminal": true,
+      "frames": [
+        {
+          "start": 859.7,
+          "duration": 5698.6,
+          "blocking": 5647.1,
+          "render": 1071.2,
+          "intro": "1",
+          "tell": "Observe. Endure. Answer.",
+          "scripts": [
+            {
+              "duration": 209.2,
+              "fn": "",
+              "source": "scene-BDTXmF5Z.js",
+              "char": 237621,
+              "invoker": "resolve-promise"
+            },
+            {
+              "duration": 5483.6,
+              "fn": "we",
+              "source": "index-DPD8ZZVq.js",
+              "char": 26974,
+              "invoker": "user-callback"
+            }
+          ]
+        },
+        {
+          "start": 30674.2,
+          "duration": 2040.5,
+          "blocking": 0,
+          "render": 32707.1,
+          "intro": "0",
+          "tell": "AN OPENING. ANSWER.",
+          "scripts": [
+            {
+              "duration": 7,
+              "fn": "we",
+              "source": "index-DPD8ZZVq.js",
+              "char": 26974,
+              "invoker": "user-callback"
+            }
+          ]
+        },
+        {
+          "start": 21881.6,
+          "duration": 1822.5,
+          "blocking": 0,
+          "render": 23698.2,
+          "intro": "0",
+          "tell": "POSTURE BROKEN · HEAVY STRIKE TO RIPOSTE",
+          "scripts": [
+            {
+              "duration": 5.4,
+              "fn": "we",
+              "source": "index-DPD8ZZVq.js",
+              "char": 26974,
+              "invoker": "user-callback"
+            }
+          ]
+        },
+        {
+          "start": 41919.4,
+          "duration": 1619.3,
+          "blocking": 0,
+          "render": 43534,
+          "intro": "0",
+          "tell": "Observe. Endure. Answer.",
+          "scripts": []
+        },
+        {
+          "start": 46006.5,
+          "duration": 1617.9,
+          "blocking": 0,
+          "render": 47618.9,
+          "intro": "0",
+          "tell": "AN OPENING. ANSWER.",
+          "scripts": []
+        },
+        {
+          "start": 13874.6,
+          "duration": 1318.6,
+          "blocking": 0,
+          "render": 15188.1,
+          "intro": "0",
+          "tell": "AN OPENING. ANSWER.",
+          "scripts": []
+        },
+        {
+          "start": 52546.5,
+          "duration": 1193.9,
+          "blocking": 0,
+          "render": 53734.4,
+          "intro": "0",
+          "tell": "AN OPENING. ANSWER.",
+          "scripts": [
+            {
+              "duration": 5.4,
+              "fn": "we",
+              "source": "index-DPD8ZZVq.js",
+              "char": 26974,
+              "invoker": "user-callback"
+            }
+          ]
+        },
+        {
+          "start": 59087,
+          "duration": 1162.6,
+          "blocking": 0,
+          "render": 60243.8,
+          "intro": "0",
+          "tell": "Ashen benediction · GOLD / PARRY OR DODGE",
+          "scripts": [
+            {
+              "duration": 5.3,
+              "fn": "we",
+              "source": "index-DPD8ZZVq.js",
+              "char": 26974,
+              "invoker": "user-callback"
+            }
+          ]
+        },
+        {
+          "start": 49326.7,
+          "duration": 1093.3,
+          "blocking": 0,
+          "render": 50414.3,
+          "intro": "0",
+          "tell": "Falling prayers · RED / EVADE",
+          "scripts": [
+            {
+              "duration": 5,
+              "fn": "we",
+              "source": "index-DPD8ZZVq.js",
+              "char": 26974,
+              "invoker": "user-callback"
+            }
+          ]
+        },
+        {
+          "start": 9503.1,
+          "duration": 954.7,
+          "blocking": 0,
+          "render": 10452.1,
+          "intro": "0",
+          "tell": "Observe. Endure. Answer.",
+          "scripts": [
+            {
+              "duration": 5.3,
+              "fn": "we",
+              "source": "index-DPD8ZZVq.js",
+              "char": 26974,
+              "invoker": "user-callback"
+            }
+          ]
+        },
+        {
+          "start": 75203,
+          "duration": 937.1,
+          "blocking": 0,
+          "render": 76134.2,
+          "intro": "0",
+          "tell": "AN OPENING. ANSWER.",
+          "scripts": [
+            {
+              "duration": 5.2,
+              "fn": "we",
+              "source": "index-DPD8ZZVq.js",
+              "char": 26974,
+              "invoker": "user-callback"
+            }
+          ]
+        },
+        {
+          "start": 67494.9,
+          "duration": 709.8,
+          "blocking": 0,
+          "render": 68199.8,
+          "intro": "0",
+          "tell": "AN OPENING. ANSWER.",
+          "scripts": []
+        }
+      ]
+    }
+  ],
+  "errors": []
+}

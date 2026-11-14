@@ -17,3 +17,19 @@ In the crest frame, the stone below the right-hand vent increases from 0.009 to 
 ## Apple Silicon
 
 On an M1 Max, arm64 Chrome reported the ANGLE Metal renderer and displayed all three combat arenas at 1440 × 900. In each one the tester approached, struck, observed 83 stamina, paused and returned to the menu. These were short entry tests. [Three in-game views](mac-courts.jpg) · [GPU and HUD readback](mac.json)
+
+## Combat verification
+
+[Full Saint of Cinders fight with game audio](shrine.mp4) · [Victories and callback timings](victories.json) · [Defeats](defeats.json) · [Separate long-frame profile of the shrine](profile.json)
+
+The recorded Pilgrim encounter goes from the opening to the awakened phase and the final victory screen. The film preserves 1024 screencast images with their original timing over 69.94 seconds (14.6 images per second). Its synchronized stereo track comes from the game's audio graph. The video clock measures wall time and the result screen measures simulation time.
+
+An independent keyboard run cleared all three fights. A second run took damage until death in each court, selected Retry and confirmed the player had 100/100 health. The Windows build and the public CI archive for code revision 279ed58 matched all 61 files.
+
+| Encounter | Victory clock | Parries | Hits taken | 95th percentile callback interval | Longest interval |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| The Bellwarden | 0:26 | 3 | 0 | 16.8 ms | 2.20 s |
+| The Veiled Heron | 0:26 | 5 | 0 | 16.8 ms | 1.69 s |
+| Saint of Cinders | 0:37 | 4 | 4 | 16.8 ms | 2.17 s |
+
+The previous three unrecorded runs had longest intervals of 2.80, 2.94 and 2.65 seconds in the same encounter order. Each figure is from one run. Both revisions still stalled visibly. In a separate shrine profile the first game-frame callback took 5.48 seconds during entry, compared with 4.09 seconds in the previous profile. One later 2.04-second frame reported only 7 ms of script execution. The remaining time cannot be attributed to a specific GPU pass from this trace.
