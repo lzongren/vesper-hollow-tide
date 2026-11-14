@@ -13,7 +13,15 @@ import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { Combat, angleDiff, type GameEvent, type Vec } from "./combat";
 import { ArtLibrary } from "./assets";
-import { PilgrimGrip, mantleGeometry, BladeTrail } from "./pilgrim";
+import {
+  bellGuard,
+  bellStroke,
+  lamellarShoulder,
+  MantleMotion,
+} from "./vestments";
+import { warningFiligree } from "./rites";
+import type { Attack } from "./combat";
+import { WeaponGrip, mantleGeometry, BladeTrail } from "./pilgrim";
 import {
   courtyardMaple,
   featherGeometry,
@@ -169,10 +177,11 @@ interface Actor {
   bones: Map<string, T.Bone>;
   rest: Map<string, T.Quaternion>;
   robe?: T.Mesh;
+  clothMotion?: MantleMotion;
   weapon: T.Group;
   kind: number;
   height: number;
-  grip?: PilgrimGrip;
+  grip?: WeaponGrip;
   rightHand?: T.Bone;
   halo?: T.Group;
   pinions?: T.Group[];
@@ -489,14 +498,13 @@ export class World {
         });
         const robe = mesh(root, mantleGeometry(), fabric, 0, 1.13, 0);
         a.robe = robe;
-        robe.userData.base = new Float32Array(
-          robe.geometry.attributes.position.array,
-        );
         bones.get("Spine")?.attach(robe);
 
         // Woven travel hat and layered lacquered mantle give the pilgrim an original silhouette.
+        const headwear = new T.Group();
+        root.add(headwear);
         const hat = mesh(
-          root,
+          headwear,
           new T.ConeGeometry(0.43, 0.19, 64),
           this.materials.wood,
           0,
@@ -506,7 +514,7 @@ export class World {
         hat.rotation.x = 0.05;
         for (let j = 0; j < 9; j++)
           torus(
-            root,
+            headwear,
             this.materials.wood,
             0.12 + j * 0.035,
             0.004,
@@ -515,13 +523,14 @@ export class World {
             0,
             true,
           );
+        bones.get("Head")?.attach(headwear);
         const sword = this.art.model("sword", 1.65);
         sword.position.y = -0.22;
         weapon.add(sword);
         const upper = bones.get("RightArm"),
           fore = bones.get("RightForeArm");
         if (upper && fore && a.rightHand)
-          a.grip = new PilgrimGrip(root, upper, fore, a.rightHand, weapon);
+          a.grip = new WeaponGrip(root, upper, fore, a.rightHand, weapon);
       } else {
         const robe = mesh(
           root,
@@ -530,9 +539,6 @@ export class World {
           0,
           2.35,
           0,
-        );
-        robe.userData.base = new Float32Array(
-          robe.geometry.attributes.position.array,
         );
         a.robe = robe;
         bones.get("Spine")?.attach(robe);
@@ -575,8 +581,10 @@ export class World {
         stole.rotation.y = Math.PI;
         bones.get("Spine")?.attach(stole);
         // A repoussé aureole with hanging bead strands clears the gaze and weapon.
+        const crown = new T.Group();
+        root.add(crown);
         const halo = torus(
-          root,
+          crown,
           this.materials.gold,
           0.58,
           0.043,
@@ -585,7 +593,7 @@ export class World {
           -0.2,
         );
         halo.scale.y = 1.14;
-        torus(root, this.materials.gold, 0.5, 0.015, 0, 3.58, -0.19).scale.y =
+        torus(crown, this.materials.gold, 0.5, 0.015, 0, 3.58, -0.19).scale.y =
           1.14;
         for (const side of [-1, 1])
           for (let j = 0; j < 4; j++) {
@@ -593,7 +601,7 @@ export class World {
               top = 3.58 + Math.sqrt(0.58 ** 2 - x * x);
             const drop = 0.75 + j * 0.085;
             cylinder(
-              root,
+              crown,
               this.materials.gold,
               x,
               top - drop / 2,
@@ -602,7 +610,7 @@ export class World {
               drop,
             );
             mesh(
-              root,
+              crown,
               new T.SphereGeometry(0.035, 10, 8),
               this.materials.ivory,
               x,
@@ -610,18 +618,41 @@ export class World {
               -0.17,
             );
           }
+        bones.get("Head")?.attach(crown);
         cylinder(weapon, this.materials.wood, 0, 0.65, 0, 0.07, 2.8);
         this.bell(weapon, 0.64, 0, 1.4, 0);
-        const mantle = mesh(
+        const bronze = this.materials["cinder-mask"];
+        for (const [side, joint] of [
+          [-1, "RightArm"],
+          [1, "LeftArm"],
+        ] as const) {
+          const pauldron = lamellarShoulder(
+            side,
+            bronze,
+            this.materials.gold,
+            this.materials.dark,
+          );
+          root.add(pauldron);
+          const upper = bones.get(joint)!;
+          upper.getWorldPosition(pauldron.position);
+          root.worldToLocal(pauldron.position);
+          upper.attach(pauldron);
+        }
+        const upper = bones.get("RightArm")!,
+          fore = bones.get("RightForeArm")!;
+        a.grip = new WeaponGrip(
           root,
-          new T.SphereGeometry(1, 32, 20, 0, Math.PI * 2, 0, 1.2),
-          this.materials.gold,
-          0,
-          3.05,
-          0,
+          upper,
+          fore,
+          bones.get("RightHand")!,
+          weapon,
+          bellGuard,
+          [
+            bones.get("LeftArm")!,
+            bones.get("LeftForeArm")!,
+            bones.get("LeftHand")!,
+          ],
         );
-        mantle.scale.set(0.7, 0.3, 0.48);
-        mantle.material = this.materials["cinder-mask"];
       }
     }
     if (kind === 1) {
@@ -632,9 +663,6 @@ export class World {
         0,
         1.85,
         -0.1,
-      );
-      drape.userData.base = new Float32Array(
-        drape.geometry.attributes.position.array,
       );
       a.robe = drape;
       const quill = new T.MeshStandardMaterial({
@@ -693,6 +721,7 @@ export class World {
       cylinder(weapon, this.materials.gold, 0, 1, 0, 0.045, 3);
       torus(weapon, this.materials.gold, 0.28, 0.035, 0, 2.4, 0);
     }
+    if (a.robe) a.clothMotion = new MantleMotion(a.robe);
     return a;
   }
   bell(parent: T.Object3D, r: number, x: number, y: number, z: number) {
@@ -1278,11 +1307,14 @@ export class World {
     moving: boolean,
     action: string,
     progress: number,
+    dt: number,
+    shape?: Attack["shape"],
   ) {
     const t = this.time;
     const root = a.root;
     root.position.set(x, 0, z);
-    root.rotation.y += angleDiff(facing, root.rotation.y) * 0.2;
+    root.rotation.y +=
+      angleDiff(facing, root.rotation.y) * (1 - Math.exp(-dt * 13.4));
     root.rotation.z = 0;
     root.rotation.x = 0;
     for (const [name, b] of a.bones) b.quaternion.copy(a.rest.get(name)!);
@@ -1302,7 +1334,44 @@ export class World {
     rotate("LeftArm", -0.12 + walk * 0.12, 0, 0.1);
     rotate("RightArm", -0.15 - walk * 0.12, 0, -0.08);
     rotate("RightForeArm", -0.12);
-    if (action === "light" || action === "heavy" || action === "active") {
+    if (
+      a.kind === 0 &&
+      (action === "windup" || action === "active" || action === "recover")
+    ) {
+      const ease = (v: number) => T.MathUtils.smoothstep(v, 0, 1);
+      const load =
+        action === "windup"
+          ? ease(progress / 0.62) * (1 - ease((progress - 0.76) / 0.24))
+          : 0;
+      const release =
+        action === "windup"
+          ? ease((progress - 0.76) / 0.24)
+          : action === "active"
+            ? 1
+            : 1 - ease(progress);
+      const sweep = shape === "sector",
+        overhead = shape === "circle";
+      rotate(
+        "Spine",
+        -0.16 * load + (0.22 + (overhead ? 0.24 : 0)) * release,
+        (sweep ? -0.76 : -0.3) * load + (sweep ? 0.64 : 0.1) * release,
+        -0.1 * load + 0.09 * release,
+      );
+      rotate(
+        "Head",
+        0.08 * load - 0.12 * release,
+        0.24 * load - 0.19 * release,
+      );
+      rotate("LeftUpLeg", -0.32 * load + 0.18 * release, 0, -0.1 * load);
+      rotate("RightUpLeg", 0.17 * load - 0.32 * release, 0, 0.11 * release);
+      rotate("LeftLeg", 0.39 * load + 0.15 * release);
+      rotate("RightLeg", 0.15 * load + 0.4 * release);
+      root.position.y = -0.12 * load - 0.17 * release;
+    } else if (
+      action === "light" ||
+      action === "heavy" ||
+      action === "active"
+    ) {
       const swing = Math.sin(Math.min(1, progress) * Math.PI);
       rotate("Spine", 0, -0.5 + swing * 0.85);
       rotate("RightArm", -0.8 - swing * 0.65, 0, -0.55 + swing * 1.2);
@@ -1336,25 +1405,19 @@ export class World {
       wing.rotation.z = (i ? 1 : -1) * (Math.sin(t * 1.7) * 0.055 + spread);
       wing.rotation.y = (i ? 1 : -1) * Math.sin(t * 1.2) * 0.11;
     });
-    if (a.robe) {
-      const pos = a.robe.geometry.attributes.position,
-        base = a.robe.userData.base as Float32Array;
-      for (let i = 0; i < pos.count; i++) {
-        const yy = base[i * 3 + 1],
-          weight = 1 - (yy / (a.kind < 0 ? 1.15 : 2.8) + 0.5);
-        pos.setZ(
-          i,
-          base[i * 3 + 2] -
-            (moving ? 0.2 : 0) * weight +
-            Math.sin(t * 3 + base[i * 3] * 8 + yy * 2) * 0.07 * weight,
-        );
-      }
-      pos.needsUpdate = true;
-      a.robe.geometry.computeVertexNormals();
-    }
+    a.clothMotion?.step(
+      x,
+      z,
+      root.rotation.y,
+      dt,
+      t,
+      action === "dodge" ? Math.sin(progress * Math.PI) : 0,
+    );
     root.updateMatrixWorld(true);
     if (a.grip) {
-      a.grip.pose(action, progress);
+      if (a.kind === 0 && shape)
+        a.grip.poseKeys(bellStroke(shape, action), progress);
+      else a.grip.pose(action, progress);
       return;
     }
     if (a.rightHand) {
@@ -1445,7 +1508,8 @@ export class World {
       p.facing,
       this.moving && p.action === "idle",
       game.mode === "dead" ? "dead" : p.action,
-      p.timer / p.duration,
+      p.duration ? p.timer / p.duration : 0,
+      dt,
     );
     this.bladeTrail.sample(
       this.player.weapon,
@@ -1459,7 +1523,9 @@ export class World {
       b.facing,
       b.state === "approach" && game.mode === "combat",
       game.mode === "won" ? "dead" : b.state,
-      b.timer / b.duration,
+      b.duration ? b.timer / b.duration : 0,
+      dt,
+      game.attack.shape,
     );
     this.player.root.visible = true;
     // A close chase camera frames the combatants rather than displaying a tabletop.
@@ -1544,49 +1610,18 @@ export class World {
     if (!this.telegraph.visible) return;
     const key = `${game.bossIndex}-${b.attack}`;
     if (key !== this.telegraphKey) {
-      this.telegraph.traverse((o) => {
-        if (isMesh(o)) {
-          o.geometry.dispose();
-          (o.material as T.Material).dispose();
-        }
-      });
-      this.telegraph.clear();
+      this.clear(this.telegraph);
       this.telegraphKey = key;
-      const m = new T.MeshBasicMaterial({
-        color: a.parryable ? 0xe7bc74 : 0xc25f49,
-        transparent: true,
-        opacity: 0.2,
-        side: T.DoubleSide,
-        depthWrite: false,
-      });
-      if (a.shape === "sector") {
-        const o = mesh(
-          this.telegraph,
-          new T.RingGeometry(
-            0.7,
-            a.range,
-            64,
-            1,
-            -Math.PI / 2 - a.arc / 2,
-            a.arc,
-          ),
-          m,
-        );
-        o.rotation.x = -Math.PI / 2;
-      } else if (a.shape === "dash")
-        box(this.telegraph, m, 0, 0, a.range / 2, 1.4, 0.01, a.range);
-      else {
-        const r = a.shape === "circle" ? a.range : 2;
-        const o = mesh(this.telegraph, new T.RingGeometry(r - 0.04, r, 80), m);
-        o.rotation.x = -Math.PI / 2;
-      }
+      this.telegraph.add(warningFiligree(a));
     }
     this.telegraph.position.set(b.x, 0.025, b.z);
     this.telegraph.rotation.y = b.facing;
     this.telegraph.traverse((o) => {
-      if (isMesh(o))
-        (o.material as T.MeshBasicMaterial).opacity =
-          b.state === "active" ? 0.45 : 0.06 + (0.23 * b.timer) / b.duration;
+      if (!isMesh(o)) return;
+      const material = o.material as T.MeshBasicMaterial;
+      const bright =
+        b.state === "active" ? 1 : 0.4 + (0.6 * b.timer) / b.duration;
+      material.opacity = material.userData.strength * bright;
     });
   }
   drawHazards(game: Combat) {

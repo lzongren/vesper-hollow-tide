@@ -2,7 +2,7 @@ import * as T from "three";
 
 // Keys describe the wrist and the blade direction in the actor's metre-scale frame.
 // The two contact keys coincide with the combat simulation at 0.14 s and 0.46 s.
-type GripKey = readonly [
+export type GripKey = readonly [
   time: number,
   x: number,
   y: number,
@@ -71,7 +71,7 @@ function aimBone(bone: T.Bone, end: T.Bone, destination: T.Vector3) {
   bone.updateWorldMatrix(false, true);
 }
 
-export class PilgrimGrip {
+export class WeaponGrip {
   private socketRotation: T.Quaternion;
   constructor(
     private root: T.Group,
@@ -79,6 +79,8 @@ export class PilgrimGrip {
     private fore: T.Bone,
     private hand: T.Bone,
     weapon: T.Group,
+    private rest: GripKey = guard,
+    private support?: readonly [T.Bone, T.Bone, T.Bone],
   ) {
     // Object3D.attach compensates for the source armature's centimetre units.
     this.hand.getWorldPosition(weapon.position);
@@ -91,9 +93,11 @@ export class PilgrimGrip {
     this.socketRotation = weapon.quaternion.clone().invert();
   }
   pose(action: string, progress: number) {
-    const keys = cuts[action];
-    let a = guard,
-      b = guard,
+    this.poseKeys(cuts[action], progress);
+  }
+  poseKeys(keys: readonly GripKey[] | undefined, progress: number) {
+    let a = this.rest,
+      b = this.rest,
       f = 0;
     if (keys) {
       const time = T.MathUtils.clamp(progress, 0, 1);
@@ -108,28 +112,7 @@ export class PilgrimGrip {
     const value = (i: number) => T.MathUtils.lerp(a[i], b[i], f);
     grip.set(value(1), value(2), value(3));
     this.root.localToWorld(grip);
-    this.upper.getWorldPosition(shoulder);
-    this.fore.getWorldPosition(elbow);
-    this.hand.getWorldPosition(wrist);
-    const upperLength = shoulder.distanceTo(elbow),
-      lowerLength = elbow.distanceTo(wrist);
-    const axis = desired.copy(grip).sub(shoulder).normalize();
-    const d = T.MathUtils.clamp(
-      shoulder.distanceTo(grip),
-      Math.abs(upperLength - lowerLength) + 0.001,
-      upperLength + lowerLength - 0.001,
-    );
-    const along = (upperLength ** 2 - lowerLength ** 2 + d ** 2) / (2 * d);
-    const offset = Math.sqrt(Math.max(0, upperLength ** 2 - along ** 2));
-    this.root.localToWorld(pole.set(-1, 0.85, -0.3)).sub(shoulder);
-    pole.addScaledVector(axis, -pole.dot(axis)).normalize();
-    elbow
-      .copy(shoulder)
-      .addScaledVector(axis, along)
-      .addScaledVector(pole, offset);
-    wrist.copy(shoulder).addScaledVector(axis, d);
-    aimBone(this.upper, this.fore, elbow);
-    aimBone(this.fore, this.hand, wrist);
+    solveArm(this.root, this.upper, this.fore, this.hand, grip, -1);
     const yaw = value(4),
       pitch = value(5);
     blade.set(
@@ -144,7 +127,48 @@ export class PilgrimGrip {
       .multiply(this.socketRotation);
     this.fore.getWorldQuaternion(parentQ).invert();
     this.hand.quaternion.copy(parentQ.multiply(desiredHand));
+
+    if (this.support) {
+      // The support palm rides the haft below the driving hand.
+      this.hand.getWorldPosition(grip);
+      this.root.getWorldQuaternion(worldQ);
+      grip.addScaledVector(blade.applyQuaternion(worldQ), -0.43);
+      solveArm(this.root, ...this.support, grip, 1);
+    }
   }
+}
+function solveArm(
+  root: T.Group,
+  upper: T.Bone,
+  fore: T.Bone,
+  hand: T.Bone,
+  target: T.Vector3,
+  side: number,
+) {
+  upper.getWorldPosition(shoulder);
+  fore.getWorldPosition(elbow);
+  hand.getWorldPosition(wrist);
+  const upperLength = shoulder.distanceTo(elbow),
+    lowerLength = elbow.distanceTo(wrist);
+  const axis = desired.copy(target).sub(shoulder).normalize();
+  const d = T.MathUtils.clamp(
+    shoulder.distanceTo(target),
+    Math.abs(upperLength - lowerLength) + 0.001,
+    upperLength + lowerLength - 0.001,
+  );
+  const along = (upperLength ** 2 - lowerLength ** 2 + d ** 2) / (2 * d);
+  const offset = Math.sqrt(Math.max(0, upperLength ** 2 - along ** 2));
+  root
+    .localToWorld(pole.set(side, shoulder.y - root.position.y - 0.25, -0.32))
+    .sub(shoulder);
+  pole.addScaledVector(axis, -pole.dot(axis)).normalize();
+  elbow
+    .copy(shoulder)
+    .addScaledVector(axis, along)
+    .addScaledVector(pole, offset);
+  wrist.copy(shoulder).addScaledVector(axis, d);
+  aimBone(upper, fore, elbow);
+  aimBone(fore, hand, wrist);
 }
 
 export function mantleGeometry() {

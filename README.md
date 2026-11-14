@@ -8,7 +8,7 @@ An original, playable 3D soulslike boss-rush chapter for the browser. Deliberate
 
 ![Veiled Heron in combat, captured from the playable browser build](docs/runtime/sanctuary/heron.jpg)
 
-[Three encounters and combat footage](docs/runtime/sanctuary/)
+[Three encounter galleries](docs/runtime/sanctuary/) · [Bellwarden combat with game audio](docs/runtime/bronze/bellwarden.mp4)
 
 ## Play locally
 
