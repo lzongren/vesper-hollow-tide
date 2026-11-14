@@ -205,6 +205,8 @@ interface Actor {
   bones: Map<string, T.Bone>;
   rest: Map<string, T.Quaternion>;
   feet: Footwork;
+  stridePhase: number;
+  gaitWeight: number;
   impactAge: number;
   impactSide: number;
   impactForward: number;
@@ -538,6 +540,8 @@ export class World {
       kind,
       height,
       feet: new Footwork(root, bones, height),
+      stridePhase: 0,
+      gaitWeight: 0,
       impactAge: 1,
       impactSide: 0,
       impactForward: 0,
@@ -1521,6 +1525,12 @@ export class World {
   ) {
     const t = this.time;
     const root = a.root;
+    const travelled = Math.hypot(x - root.position.x, z - root.position.z);
+    const locomotion = action === "idle" || action === "approach";
+    const stride = Math.min(travelled, 7 * dt);
+    if (locomotion) a.stridePhase += stride * 2.15;
+    a.gaitWeight = T.MathUtils.damp(a.gaitWeight,
+      locomotion && (moving || stride > .001) ? Math.min(1, stride / Math.max(.001, dt * 4.5)) : 0, 11, dt);
     root.position.set(x, 0, z);
     root.rotation.y +=
       angleDiff(facing, root.rotation.y) * (1 - Math.exp(-dt * 13.4));
@@ -1534,8 +1544,8 @@ export class World {
           new T.Quaternion().setFromEuler(new T.Euler(x, y, z)),
         );
     };
-    const walk = moving ? Math.sin(t * 10) : 0;
-    rotate("Spine", Math.sin(t * 1.8) * 0.015);
+    const walk = Math.sin(a.stridePhase) * a.gaitWeight;
+    rotate("Spine", Math.sin(t * 1.8) * 0.015, walk * 0.068, walk * 0.024);
     rotate("LeftArm", -0.12 + walk * 0.12, 0, 0.1);
     rotate("RightArm", -0.15 - walk * 0.12, 0, -0.08);
     rotate("RightForeArm", -0.12);
@@ -1574,9 +1584,10 @@ export class World {
       action === "active"
     ) {
       const swing = Math.sin(Math.min(1, progress) * Math.PI);
-      rotate("Spine", 0, -0.5 + swing * 0.85);
-      rotate("RightArm", -0.8 - swing * 0.65, 0, -0.55 + swing * 1.2);
-      rotate("RightForeArm", -0.3 - swing * 0.4);
+      const blend = Math.min(1, progress * 9, (1 - Math.min(1,progress)) * 7);
+      rotate("Spine", 0, (-0.5 + swing * 0.85) * blend);
+      rotate("RightArm", (-0.8 - swing * 0.65) * blend, 0, (-0.55 + swing * 1.2) * blend);
+      rotate("RightForeArm", (-0.3 - swing * 0.4) * blend);
     } else if (action === "windup") {
       rotate("RightArm", -progress * 1.8, 0, -0.5);
       rotate("Spine", 0, -progress * 0.4);
@@ -1798,17 +1809,21 @@ export class World {
     // Offset the eye towards the sword shoulder at melee range. Keep the
     // farther opening and unlocked orbit on their established camera track.
     const close = locked ? 1 - T.MathUtils.smoothstep(d, 2.4, 5.8) : 0;
-    const shoulder = 0.85 + 1.48 * close;
-    const focus = 0.30 + 0.16 * close;
+    const widthFactor = T.MathUtils.smoothstep(this.camera.aspect, 0.65, 1.45);
+    const shoulder = 0.85 + (1.48 + 0.83 * widthFactor) * close;
+    const focus = 0.30 + 0.31 * close;
+    // Give the locked fighter room to the left of the weapon silhouette.
+    // Narrow screens keep the two actors closer to the centre.
+    const framing = close * widthFactor * 0.46;
     const target = new T.Vector3(
       p.x + Math.sin(this.yaw) * distance + Math.cos(this.yaw) * shoulder,
       2.15 + Math.min(d, 12) * 0.09 + 0.24 * close,
       p.z + Math.cos(this.yaw) * distance - Math.sin(this.yaw) * shoulder,
     );
     const look = new T.Vector3(
-      p.x + (b.x - p.x) * focus,
+      p.x + (b.x - p.x) * focus + Math.cos(this.yaw) * framing,
       1.75,
-      p.z + (b.z - p.z) * focus,
+      p.z + (b.z - p.z) * focus - Math.sin(this.yaw) * framing,
     );
     if (!this.cameraInitialized) {
       this.camera.position.copy(target);

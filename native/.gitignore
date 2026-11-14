@@ -8,3 +8,11 @@ Content/External/
 *.sln
 *.suo
 __pycache__/
+
+Content/ThirdPerson/
+Content/Characters/
+Content/Input/
+Content/LevelPrototyping/
+Content/Vesper/RouteArt/
+Content/Vesper/RouteSurfaces/
+Content/Vesper/Maps/MountainPilgrimage.umap

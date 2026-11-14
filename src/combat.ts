@@ -273,6 +273,7 @@ export class Combat {
   parries = 0;
   damageDealt = 0;
   arenaRadius = 12.3;
+  private travelVelocity: Vec = { x: 0, z: 0 };
   constructor(
     readonly bossIndex = 0,
     readonly difficulty: Difficulty = "penitent",
@@ -428,12 +429,28 @@ export class Combat {
     }
     p.timer += dt;
     if (p.action === "idle") {
-      p.x += move.x * 5.2 * dt;
-      p.z += move.z * 5.2 * dt;
+      // Integrate the exponential velocity ramp exactly, including displacement.
+      // Braking takes less time than accelerating into a run.
+      const rate = ml > 0.01 ? 15 : 24;
+      const carry = -Math.expm1(-rate * dt) / rate;
+      for (const axis of ["x", "z"] as const) {
+        const desired = move[axis] * 5.2;
+        const delta = this.travelVelocity[axis] - desired;
+        p[axis] += desired * dt + delta * carry;
+        this.travelVelocity[axis] = desired + delta * Math.exp(-rate * dt);
+      }
+    } else {
+      this.travelVelocity.x = this.travelVelocity.z = 0;
     }
-    if (p.action === "dodge" && p.timer < 0.32) {
-      p.x += p.dodgeDir.x * 14 * dt;
-      p.z += p.dodgeDir.z * 14 * dt;
+    if (p.action === "dodge") {
+      // Same travel budget, with continuous velocity at lift-off and landing.
+      const travel = (time: number) => {
+        const t = Math.max(0, Math.min(1, time / 0.32));
+        return 4.48 * (t - Math.sin(2 * Math.PI * t) / (2 * Math.PI));
+      };
+      const advance = travel(p.timer) - travel(p.timer - dt);
+      p.x += p.dodgeDir.x * advance;
+      p.z += p.dodgeDir.z * advance;
     }
     if (p.action === "light" || p.action === "heavy") {
       const impact = p.action === "light" ? 0.14 : 0.46;

@@ -1,6 +1,6 @@
 # Vesper — The Hollow Tide
 
-**Visual rebuild in progress.** The browser prototype below did not meet the requested Bloodborne / Wuchang visual standard. A [native Unreal rebuild](native/README.md) is being prepared; it has no playable native level yet.
+**Visual rebuild in progress.** The browser prototype below did not meet the requested Bloodborne / Wuchang visual standard. The [native Unreal project](native/README.md) now includes a 205.4-metre route through three courtyards with third-person traversal. The three boss fights run in the browser build.
 
 **Three fallen saints. One last bell.**
 

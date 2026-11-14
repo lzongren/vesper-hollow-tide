@@ -1,15 +1,18 @@
-# Native visual rebuild — work in progress
+# Native Unreal project
 
-The browser prototype did not meet the requested visual quality. This directory starts a Windows / RTX 5080 Unreal project aimed at realistic, richly detailed Chinese dark fantasy, with visual quality exceeding Bloodborne and three complete boss encounters. **That target is not achieved.** There is no playable native level or packaged game yet.
+Mountain Pilgrimage links three courtyards with a 205.4-metre stone road. Two bends break the sightline between the belfry, garden and shrine. Each court has a staircase down to a 432 × 432 metre valley floor with outcrops and groups of mountain pines. UE 5.8.4 generated the level on Windows with an RTX 5080. The native player uses the locally installed Epic third-person template. The browser build contains the three playable boss encounters.
 
-## What exists
+## Run the native traversal
 
-- A Blueprint-only Unreal project descriptor and proposed Lumen, Nanite, virtual shadow map and TSR settings. These have not been opened or validated in Unreal.
-- Seven pinned CC0 environment sources from Poly Haven, approximately 307.5 MB: stone construction, sculptural detail, doors, ironwork, a Chinese chandelier and rocks. This is a source-material batch, not a finished Chinese architectural kit. Character art and authored combat animations are still missing.
-- A reproducible downloader, integrity checks and an unexecuted Unreal editor importer.
-- An explicit [visual acceptance target](Art/quality-target.json). Asset downloads, unit tests and renderer configuration cannot satisfy that target.
+From the repository root in Windows PowerShell:
 
-The existing browser combat in `../src/combat.ts` remains the behavioral reference for the Bellwarden, Veiled Heron and Saint of Cinders. Those fights have **not** been ported into this project.
+```powershell
+.\native\Scripts\play_pilgrimage.ps1 -EngineRoot 'C:\Program Files\Epic Games\UE_5.8'
+```
+
+Install the engine’s Templates and Feature Packs component. The first launch imports the repository’s GLBs and paving textures and creates the map. Subsequent launches reuse the saved level. Use WASD to move, the mouse to look and Space to jump. Generated project content stays on the machine. The project runs in standalone game mode through Unreal Editor and requires the editor installation.
+
+[Runtime captures and validation](../docs/runtime/mountain-pilgrimage/) · [Art direction and acceptance target](Art/quality-target.json)
 
 ## Prepare sources
 
@@ -25,9 +28,9 @@ Each download must match the provider's pinned size and MD5. The receipt also re
 
 The [lockfile](Art/assets.lock.json) includes source URLs and licenses. Poly Haven publishes these assets under [CC0](https://polyhaven.com/license). No Bloodborne, Wuchang, Epic sample or Fab assets are bundled or downloaded by these scripts.
 
-## Open and import — engine verification pending
+## Optional Poly Haven source import
 
-Install Unreal through the official Epic Games Launcher using your own account. The project currently targets 5.8; verify engine and plugin compatibility before treating it as a working baseline. The editor must include Python scripting, Editor Scripting Utilities and glTF Interchange support.
+The optional source importer targets Unreal 5.8. The editor must include Python scripting, Editor Scripting Utilities and glTF Interchange support.
 
 Set `VESPER_ASSET_ROOT` to the source directory **before launching the editor**, then open `Vesper.uproject`. In the editor Python console, execute the import script using its absolute path:
 
@@ -41,7 +44,7 @@ The importer verifies the complete source set, imports under `/Game/External/Pol
 
 ## Remaining work and acceptance
 
-1. Install and launch the engine, execute the importer, and inspect scale, normals, material channels, Nanite and shadow behavior in a real test map.
+1. Evaluate the optional source pack in the editor and inspect scale, normal maps and shadows.
 2. Build an original Chinese temple arena with coherent period-inspired architecture, layered surfaces, believable vegetation and composed lighting. A mixture of downloaded models is not a finished art direction.
 3. Create the player and three boss designs, rig and animate locomotion and combat; implement their readable telegraphs and physical contact.
 4. Port combat rules, camera, input, UI and adaptive audio; complete all three encounters and package a runnable build.
@@ -55,7 +58,7 @@ The [Saint's ring staff](Art/SaintsRingStaff.glb) uses the playable staff geomet
 
 The [Heron's bridal headpiece](Art/HeronBridalMask.glb) carries the pierced porcelain face, coiffure, metal hairpins and trim, garnets and silk side veils from the playable encounter. Six meshes retain their material assignments, including the openwork crown and pearls. The porcelain carries the embedded painted glaze with glTF-oriented UVs. Silk and metal use base material factors. Regenerate it with `npx tsx art/export_heron_mask.ts`. Editor import and fitting to a native head joint are pending.
 
-The [moon gate porch](Art/MoonGatePorch.glb) carries the playable garden's hipped roof, posts, carved brackets and hanging lamp. Five mesh groups have named material slots. The model units are metres, the origin is at ground level, and the court faces +Z in glTF coordinates. The export uses base material factors. The browser's scanned textures, point light, surrounding wall and bridge are separate. Run `npx tsx art/export_moon_gate.ts` to rebuild it. Unreal import and in-editor lighting are pending.
+The [moon gate porch](Art/MoonGatePorch.glb) carries the playable garden's hipped roof, posts, carved brackets and hanging lamp. Five mesh groups have named material slots. The model units are metres, the origin is at ground level, and the court faces +Z in glTF coordinates. The export uses base material factors. The browser's scanned textures, point light, surrounding wall and bridge are separate. Run `npx tsx art/export_moon_gate.ts` to rebuild it. The traversal builder imports this porch into the second court.
 
 The [pilgrim's bamboo hat](Art/PilgrimRainHat.glb) and [empty lacquer scabbard](Art/PilgrimScabbard.glb) use the playable travel gear geometry in local metres. The hat origin is the brim centre. The scabbard origin is the open throat, with the tip below it. Run `npx tsx art/export_pilgrim_travel_gear.ts` to rebuild them. The palm cape follows the browser cloth simulation. Unreal fitting is pending.
 
@@ -75,11 +78,11 @@ The [guardian and paired dragons](../public/models/cinder-relief.glb) is the sam
 
 The [Saint’s bronze head and mandorla](Art/CinderVotiveHead.glb) use the same sculpted geometry as the third browser encounter. The face and halo have separate pivots. The browser attaches the face to the head bone and drives the ember material from combat state. Regenerate the static reference with `npx tsx art/bake_cinder_head.ts`. The garment and character rig are separate. Unreal Editor import has not been verified.
 
-The three court pavements are exported at gameplay scale with registered color, normal and metallic/roughness images embedded in each GLB. The material uses vertex color for wear and individual stone tone. The browser adds dynamic water reflections and contact shading at runtime. Rebuild the maps with `python3 art/inlay_surfaces.py` and the geometry with `npx tsx art/export_flagstone_courts.ts`. Native editor rendering is unverified. [Belfry](Art/BelfryFlagstones.glb) · [Heron](Art/HeronFlagstones.glb) · [Cinder](Art/CinderFlagstones.glb)
+The three court pavements are exported at gameplay scale with registered color, normal and metallic/roughness images embedded in each GLB. The material uses vertex color for wear and individual stone tone. The browser adds dynamic water reflections and contact shading at runtime. Rebuild the maps with `python3 art/inlay_surfaces.py` and the geometry with `npx tsx art/export_flagstone_courts.ts`. The native traversal builder imports these three courts. [Belfry](Art/BelfryFlagstones.glb) · [Heron](Art/HeronFlagstones.glb) · [Cinder](Art/CinderFlagstones.glb)
 
 The [Saint’s skinned body](../public/models/cinder-ascetic.glb) embeds its color, normal, roughness, emission and two hand gestures. CastOpen and CastClench are relative morphs on the left fingers. The browser blends them with the attack state before applying the hand bone transform. The [paired armour](Art/CinderArmGuards.glb) uses separate upper-arm and forearm fittings in neutral actor coordinates. Native material, morph import and animation still require Unreal Editor verification.
 
-The [painted belfry front](Art/BelfryPaintedFront.glb) groups the columns, bracket sets, dragon-painted beams, six paper screen panels, rails and exposed rafter ends. It contains 10,966 triangles across eight material meshes. The four embedded JPEGs retain the browser artwork and stone and timber scans. Its local coordinates match the existing belfry hall; the browser places that hall at (0, 0, −24) and applies a uniform scale of 1.7. Rebuild with `python3 art/belfry_frieze.py` and `npx tsx art/export_belfry_front.ts`. Light placement and the surrounding temple belong to the runtime. Unreal import and rendering are unverified.
+The [painted belfry front](Art/BelfryPaintedFront.glb) groups the columns, bracket sets, dragon-painted beams, six paper screen panels, rails and exposed rafter ends. It contains 10,966 triangles across eight material meshes. The four embedded JPEGs retain the browser artwork and stone and timber scans. Its local coordinates match the existing belfry hall; the browser places that hall at (0, 0, −24) and applies a uniform scale of 1.7. Rebuild with `python3 art/belfry_frieze.py` and `npx tsx art/export_belfry_front.ts`. The traversal builder places this front in the first court.
 
 The Bellwarden’s matching shoulder fittings have independent socket origins and five animated layers each. The crown stays close to the collar and the four lower lames follow progressively more of the upper arm’s turn. Each glTF includes a fitting lift clip and the sculpted bronze, lacquer and lining materials. The game derives its actual poses from the solved arm during each attack. The exports use scalar PBR materials and omit the browser scan textures. Rebuild with `npx tsx art/export_bell_pauldrons.ts`. Import and playback in Unreal remain unverified. [Right fitting](Art/BellwardenRightPauldron.glb) · [Left fitting](Art/BellwardenLeftPauldron.glb)
 

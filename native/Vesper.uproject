@@ -4,6 +4,7 @@
   "Category": "Games",
   "Description": "Vesper native visual rebuild. Quality target remains unverified.",
   "Plugins": [
+    {"Name": "EnhancedInput", "Enabled": true},
     {"Name": "PythonScriptPlugin", "Enabled": true, "TargetAllowList": ["Editor"]},
     {"Name": "EditorScriptingUtilities", "Enabled": true, "TargetAllowList": ["Editor"]},
     {"Name": "InterchangeEditor", "Enabled": true, "TargetAllowList": ["Editor"]}

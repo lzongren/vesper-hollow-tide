@@ -1,0 +1,15 @@
+{
+  "map": "/Game/Vesper/Maps/MountainPilgrimage",
+  "route_length_metres": 205.4,
+  "court_count": 3,
+  "mesh_parts": {
+    "WestWaterGallery": 5,
+    "MountainPassBeacon": 4,
+    "MoonGatePorch": 5,
+    "BelfryPaintedFront": 8,
+    "ShrineLotusPortal": 2,
+    "BelfryFlagstones": 1,
+    "HeronFlagstones": 1,
+    "CinderFlagstones": 1
+  }
+}
