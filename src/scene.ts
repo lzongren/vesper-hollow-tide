@@ -1060,7 +1060,7 @@ export class World {
   async prepareCourt(index: number) {
     const scans =
       index === 2
-        ? ["rock_face_01", "chinese_chandelier"]
+        ? ["rock_face_01", "chinese_chandelier", "cinder-relief"]
         : index === 1
           ? ["rock_face_01"]
           : [];
@@ -1157,14 +1157,8 @@ export class World {
       this.arena.add(heronGarden(this.art, this.materials, random(1729)));
     else this.arena.add(cinderReliquary(this.art, this.materials));
     if (index === 2) {
-      const carving = foldingScreen(
-        this.materials["cinder-mask"],
-        this.materials.gold,
-        10.8,
-        7.8,
-        3,
-      );
-      carving.position.set(0, 4.2, -25.8);
+      const carving = this.art.model("cinder-relief", 7.8);
+      carving.position.set(0, 0.30, -24.85);
       this.arena.add(carving);
     }
     for (const [i, [x, z]] of [

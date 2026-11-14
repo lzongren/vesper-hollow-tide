@@ -427,18 +427,46 @@ export function cinderReliquary(art: ArtLibrary, m: Palette) {
   shrine.add(shrinePortal(m.rock, m.gold));
   masonry.block(m.dark, 0, 4, -27, 12, 8.3, 1.2);
   rock(art, shrine, -2.4, -33, 13.0, 0.43, 1.24);
-  const lamp = art.model("chinese_chandelier", 3.7);
-  lamp.position.set(0, 2.65, -22.6);
-  shrine.add(lamp);
-  masonry.add(
-    new T.CylinderGeometry(0.028, 0.028, 3.4, 9),
-    m.gold,
-    0,
-    8,
-    -22.6,
-  );
+  // The paired lamps frame the central guardian; their suspension points
+  // sit inside the stone reveal as the locked camera circles the court.
+  for (const side of [-1, 1]) {
+    const lamp = art.model("chinese_chandelier", 2.45);
+    lamp.traverse((part) => {
+      if (!(part instanceof T.Mesh)) return;
+      for (const material of Array.isArray(part.material) ? part.material : [part.material]) {
+        if (!(material instanceof T.MeshStandardMaterial)) continue;
+        material.emissiveMap = material.map;
+        material.emissive.setHex(0xffc284);
+        material.emissiveIntensity = 0.70;
+      }
+    });
+    lamp.position.set(side * 3.15, 2.45, -22.95);
+    shrine.add(lamp);
+    const light = new T.PointLight(side < 0 ? 0xffc185 : 0xffa56c, side < 0 ? 66 : 47, 10, 2);
+    light.position.set(side * 3.15, 3.85, -22.72);
+    shrine.add(light);
+    masonry.add(
+      new T.CylinderGeometry(0.026, 0.026, 2.85, 9),
+      m.gold,
+      side * 3.15,
+      6.3,
+      -22.95,
+    );
+  }
+  // Extend the reveal back to the casting with staggered stone joints.
+  for (let row = 0; row < 3; row++) {
+    const count = 15;
+    const offset = row % 2 === 1 ? Math.PI / (2 * count) : 0;
+    for (let i = -1; i < count; i++) {
+      const a = Math.max(0, (i * Math.PI) / count + offset);
+      const b = Math.min(Math.PI, ((i + 1) * Math.PI) / count + offset);
+      if (b - a < 0.02) continue;
+      masonry.add(archStone(4.46, 4.77, a + 0.003, b - 0.003, 1.23),
+        m.rock, 0, 4.14, -23.30 - row * 1.26);
+    }
+  }
   masonry.finish(shrine);
-  const glow = new T.PointLight(0xff9345, 115, 13, 2);
+  const glow = new T.PointLight(0xffa66a, 73, 13, 2);
   glow.position.set(0.8, 4, -19.5);
   shrine.add(glow);
   return shrine;
