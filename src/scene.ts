@@ -8,7 +8,7 @@ function isBone(o: T.Object3D): o is T.Bone {
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
-import { SSAOPass } from "three/addons/postprocessing/SSAOPass.js";
+import { CourtOcclusion, classifyCourtSurface, markNonOccluding } from "./court-occlusion";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { Combat, angleDiff, type GameEvent, type Vec } from "./combat";
@@ -29,7 +29,7 @@ import {
   leafDrifts,
   valleyHorizon,
 } from "./sanctuary";
-import { CinderFire } from "./cinder-fire";
+import { CinderFire, CinderLights } from "./cinder-fire";
 import { CourtLight, vigilLamp } from "./vigil-light";
 import { batchCourt } from "./static-court";
 import { incenseVessel, incenseSmoke } from "./incense";
@@ -215,7 +215,7 @@ export class World {
   scene = new T.Scene();
   camera = new T.PerspectiveCamera(54, 1, 0.1, 200);
   composer: EffectComposer;
-  ao: SSAOPass;
+  ao: CourtOcclusion;
   arena = new T.Group();
   rainCourt = new RainCourt();
   decor = new T.Group();
@@ -223,6 +223,7 @@ export class World {
   boss: Actor = { root: new T.Group() } as Actor;
   bossIndex = -1;
   bladeTrail = new BladeTrail();
+  cinderLights = new CinderLights();
   hazards = new Map<number, T.Group>();
   lock = new T.Group();
   particles: Effect[] = [];
@@ -266,6 +267,7 @@ export class World {
   fogSheets: T.Mesh[] = [];
   materials: Record<string, T.MeshStandardMaterial> = {};
   constructor(readonly canvas: HTMLCanvasElement) {
+    this.camera.layers.enable(1);
     this.renderer = new T.WebGLRenderer({
       canvas,
       antialias: true,
@@ -316,7 +318,7 @@ export class World {
     this.scene.add(this.rain);
     this.composer = new EffectComposer(this.renderer);
     this.composer.addPass(new RenderPass(this.scene, this.camera));
-    this.ao = new SSAOPass(this.scene, this.camera, innerWidth, innerHeight);
+    this.ao = new CourtOcclusion(this.scene, this.camera, innerWidth, innerHeight);
     this.ao.kernelRadius = 0.7;
     this.ao.minDistance = 0.005;
     this.ao.maxDistance = 0.2;
@@ -1094,6 +1096,7 @@ export class World {
     });
     this.hazards.clear();
     this.cameraInitialized = false;
+    if (index === 2) this.arena.add(this.cinderLights);
     this.lighting.setCourt(index);
     this.arena.add(vigilLamp(index, this.materials));
     this.materials.stone.color.setHex([0xffffff, 0xbdd0bd, 0xaaa398][index]);
@@ -1415,6 +1418,8 @@ export class World {
       });
       this.decor.add(guardian);
     }
+    this.decor.traverse(classifyCourtSurface);
+    markNonOccluding(this.bladeTrail);
     batchCourt(this.arena, new Set([...this.clothMeshes, ...this.flames]));
   }
   aim(clientX: number, clientY: number): Vec | undefined {
@@ -1631,6 +1636,7 @@ export class World {
         e.z,
       );
       m.rotation.set(-Math.PI / 2, 0, -actor.root.rotation.y);
+      markNonOccluding(m);
       this.trails.push({
         mesh: m,
         velocity: new T.Vector3(),
@@ -1653,6 +1659,7 @@ export class World {
         e.z,
       );
       const a = Math.random() * 6.28;
+      markNonOccluding(m);
       this.particles.push({
         mesh: m,
         velocity: new T.Vector3(
@@ -1799,6 +1806,7 @@ export class World {
     else this.composer.render();
   }
   drawHazards(game: Combat) {
+    if (game.bossIndex === 2) this.cinderLights.update(game.hazards);
     const ids = new Set(game.hazards.map((h) => h.id));
     for (const [id, g] of this.hazards)
       if (!ids.has(id)) {
@@ -1841,6 +1849,7 @@ export class World {
           o.rotation.x = -Math.PI / 2;
           if (h.type === "eruption") g.add(new CinderFire(h.id * 1.67));
         }
+        g.traverse(classifyCourtSurface);
       }
       g.position.set(h.x, h.type === "feather" ? 1 : 0.03, h.z);
       g.visible = h.type !== "ring" || h.age >= h.delay;

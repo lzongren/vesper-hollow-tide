@@ -31,6 +31,20 @@ function pattern(cut: Cut, u: number, t: number, h: number) {
     y = cut.shoulder
       ? 0.852 - 0.245 * t + 0.036 * across ** 2 * t
       : 0.71 - 0.511 * t + 0.077 * across ** 2 * t;
+    // The short cape hangs from the neckline and both upper arms. Three
+    // overlapping tension folds sag towards the centre of the back.
+    if (cut.shoulder) {
+      const span = Math.sin(Math.PI * u);
+      const slack = span * Math.sin(Math.PI * t);
+      const seam = t - .37 * span + .055 * across;
+      let relief = 0;
+      for (const ridge of [.04, .28, .56]) {
+        const d = (seam - ridge) / .083;
+        relief += .023 * Math.exp(-d * d) - .011 * Math.exp(-2 * (d - 1.15) ** 2);
+      }
+      z -= slack * relief;
+      y -= .023 * slack * span;
+    }
   } else {
     const a = (0.02 + u * 1.64) * s;
     x = Math.sin(a) * (0.116 + 0.07 * t) + s * (0.006 + 0.01 * t);

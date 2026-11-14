@@ -1,4 +1,33 @@
 import * as T from "three";
+import type { Hazard } from "./combat";
+
+/** Eight vents can coexist in the awakened cast. Keep their lights in the
+ * shrine throughout the encounter so the ignition cannot change shader variants. */
+export class CinderLights extends T.Group {
+  private sources = Array.from({ length: 8 }, () => new T.PointLight(0xffab69, 0, 9.5, 2));
+
+  constructor() {
+    super();
+    this.add(...this.sources);
+  }
+
+  update(hazards: readonly Hazard[]) {
+    let slot = 0;
+    for (const h of hazards) {
+      if (h.type !== "eruption" || slot >= this.sources.length) continue;
+      const lamp = this.sources[slot++];
+      const age = h.age - h.delay;
+      const duration = h.life - h.delay;
+      const rise = T.MathUtils.smoothstep(age, 0, .15);
+      const fade = 1 - T.MathUtils.smoothstep(age, duration - .26, duration);
+      const flicker = 1 + .07 * Math.sin(age * 18 + h.id) + .035 * Math.sin(age * 31 - h.id);
+      lamp.position.set(h.x, .36 + .88 * rise * fade, h.z);
+      lamp.intensity = 43 * rise * fade * flicker;
+    }
+    for (; slot < this.sources.length; slot++) this.sources[slot].intensity = 0;
+  }
+}
+
 
 /** Curved sheets grow from separate vents and curl around a common updraft.
  * Surface coordinates follow the tongues, so turning the camera keeps parallax. */

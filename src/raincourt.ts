@@ -52,6 +52,7 @@ export class RainCourt {
   private lastCapture = -10;
   private cursor = 0;
   constructor() {
+    this.mirror.camera.layers.enable(1);
     this.mirror.rotation.x = -Math.PI / 2;
     this.mirror.position.y = -0.002;
     this.mirror.updateMatrixWorld();
