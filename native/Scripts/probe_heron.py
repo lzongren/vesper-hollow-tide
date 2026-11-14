@@ -24,6 +24,7 @@ film = "-DuelFilm" in command
 start = None
 last_sample = last_attack = -1
 pressed = False
+hud_review = "-CourtHUDReview" in command
 observe_defeat = "-HeronDefeatTrial" in command or "-CinderDefeatTrial" in command
 original = None
 
@@ -97,6 +98,29 @@ def tick(dt):
                 round(pawn.get_actor_location().x),
             ]
         )
+    if hud_review:
+        hud = runtime["hud"]
+        name = None
+        if (
+            pawn is not original
+            and hud.pawn == pawn
+            and hud.current is None
+            and now > 0.6
+        ):
+            name = "respawn"
+        elif hp <= 0 and hud.player.last == 0:
+            name = "fallen"
+        elif 0 < hp < 10 and hud.player.last == hp / 10 and hud.current is duel:
+            name = "injured"
+        if name and name not in special_shots:
+            special_shots.add(name)
+            unreal.log(
+                "VESPER_LIFEBAR_VIEW "
+                + name
+                + " "
+                + str((hp, bhp, hud.player.last, hud.boss.last))
+            )
+            unreal.SystemLibrary.execute_console_command(pawn, "Shot SHOWUI", pc)
     special = None
     if cinder:
         if duel.state == "eruption" and now - duel.began > 0.49:
@@ -112,7 +136,9 @@ def tick(dt):
     elif not film and shots and t >= shots[0]:
         shots.pop(0)
         unreal.SystemLibrary.execute_console_command(pawn, "Shot", pc)
-    if t >= 49 or pawn is not original:
+    if t >= 49 or (
+        pawn is not original and (not hud_review or "respawn" in special_shots)
+    ):
         log = ("Cinder" if cinder else "Heron") + (
             "DefeatTrial"
             if observe_defeat

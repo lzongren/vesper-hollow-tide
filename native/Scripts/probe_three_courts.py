@@ -26,6 +26,8 @@ frame_intervals = []
 previous_frame = None
 player_mesh = None
 wins = []
+review = "-CourtHUDReview" in unreal.SystemLibrary.get_command_line()
+captured = set()
 start = last_sample = original = None
 last_attack = -1.0
 pressed = False
@@ -35,8 +37,10 @@ saved = Path(
 
 
 def finish(reason):
-    if runtime["live"](step.pc):
-        unreal.SystemLibrary.execute_console_command(step.pc, "CsvProfile STOP", step.pc)
+    if not review and runtime["live"](step.pc):
+        unreal.SystemLibrary.execute_console_command(
+            step.pc, "CsvProfile STOP", step.pc
+        )
     times = sorted(frame_intervals)
 
     def percentile(p):
@@ -85,7 +89,10 @@ def tick(dt):
     previous_frame = wall_time
     if start is None:
         player_mesh = pawn.mesh.skeletal_mesh_asset.get_name()
-        unreal.SystemLibrary.execute_console_command(pawn, "CsvProfile START", step.pc)
+        if not review:
+            unreal.SystemLibrary.execute_console_command(
+                pawn, "CsvProfile START", step.pc
+            )
         start = unreal.GameplayStatics.get_time_seconds(pawn)
         original = pawn
         last_sample = -1
@@ -116,6 +123,29 @@ def tick(dt):
         target = duel.actor.get_actor_location()
         x, y = target.x, target.y
         bhp = duel.actor.get_editor_property("Current HP")
+    if review:
+        hud = runtime["hud"]
+        name = None
+        if t > 2 and not captured:
+            name = "approach"
+        elif (
+            duel
+            and hud.current is duel
+            and bhp
+            and bhp < duel.actor.get_editor_property("Max HP") - 2
+            and abs(hud.boss.last * duel.actor.get_editor_property("Max HP") - bhp)
+            < 0.001
+        ):
+            name = duel.tag
+        if name and name not in captured:
+            captured.add(name)
+            unreal.log(
+                "VESPER_LIFEBAR_VIEW "
+                + name
+                + " "
+                + str((hp, bhp, hud.player.last, hud.boss.last))
+            )
+            unreal.SystemLibrary.execute_console_command(pawn, "Shot SHOWUI", pc)
     dx, dy = x - pos.x, y - pos.y
     distance = math.hypot(dx, dy)
     if now - last_sample > 0.24:

@@ -1,0 +1,29 @@
+[
+  {
+    "view": "injured",
+    "player_hp": 7.0,
+    "boss_hp": 18.0,
+    "player_fraction": 0.7,
+    "boss_fraction": 1,
+    "player_red_fraction_in_frame": 0.702,
+    "boss_red_fraction_in_frame": 1.0
+  },
+  {
+    "view": "fallen",
+    "player_hp": -1.0,
+    "boss_hp": 18.0,
+    "player_fraction": 0,
+    "boss_fraction": 1,
+    "player_red_fraction_in_frame": 0.0,
+    "boss_red_fraction_in_frame": 1.0
+  },
+  {
+    "view": "respawn",
+    "player_hp": 10.0,
+    "boss_hp": 18.0,
+    "player_fraction": 1,
+    "boss_fraction": null,
+    "player_red_fraction_in_frame": 1.0,
+    "boss_red_fraction_in_frame": null
+  }
+]

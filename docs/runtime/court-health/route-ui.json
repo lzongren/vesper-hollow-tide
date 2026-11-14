@@ -1,0 +1,38 @@
+[
+  {
+    "view": "approach",
+    "player_hp": 10.0,
+    "boss_hp": 12.0,
+    "player_fraction": 1,
+    "boss_fraction": null,
+    "player_red_fraction_in_frame": 1.0,
+    "boss_red_fraction_in_frame": null
+  },
+  {
+    "view": "Bellwarden",
+    "player_hp": 10.0,
+    "boss_hp": 9.0,
+    "player_fraction": 1,
+    "boss_fraction": 0.75,
+    "player_red_fraction_in_frame": 1.0,
+    "boss_red_fraction_in_frame": 0.751
+  },
+  {
+    "view": "VeiledHeron",
+    "player_hp": 10.0,
+    "boss_hp": 12.0,
+    "player_fraction": 1,
+    "boss_fraction": 0.8,
+    "player_red_fraction_in_frame": 1.0,
+    "boss_red_fraction_in_frame": 0.8
+  },
+  {
+    "view": "CinderSaint",
+    "player_hp": 10.0,
+    "boss_hp": 15.0,
+    "player_fraction": 1,
+    "boss_fraction": 0.8333333333333334,
+    "player_red_fraction_in_frame": 1.0,
+    "boss_red_fraction_in_frame": 0.833
+  }
+]
