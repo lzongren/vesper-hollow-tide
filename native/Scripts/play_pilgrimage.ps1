@@ -67,6 +67,9 @@ if ($duelReport.revision -ne 3 -or !(Test-Path "$project\Content\Vesper\Duel\BP_
 if (!(Test-Path "$project\Saved\BellHall.json")) {
     Invoke-MapPass 'raise_belfry' 'VESPER_BELL_HALL_SAVED'
 }
+if (!(Test-Path "$project\Saved\Forecourt.json")) {
+    Invoke-MapPass 'lay_belfry_court' 'VESPER_FORECOURT_SAVED'
+}
 Start-Process "$bin\UnrealEditor.exe" -WorkingDirectory $project -ArgumentList @(
     "`"$descriptor`"", "$map`?game=$gameMode", '-game', '-windowed', '-ResX=1600', '-ResY=900', '-NoP4',
     '-ForceEnablePython', '-ExecCmds="py __import__(''runpy'').run_path(__import__(''unreal'').Paths.convert_relative_path_to_full(__import__(''unreal'').Paths.project_dir())+''Scripts/belfry_combat.py'')"'
