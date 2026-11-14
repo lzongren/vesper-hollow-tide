@@ -6,6 +6,8 @@ function isBone(o: T.Object3D): o is T.Bone {
   return (o as T.Bone).isBone === true;
 }
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { CourtBeauty, courtSamples } from "./court-sampling";
+import { FXAAPass } from "three/addons/postprocessing/FXAAPass.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { CourtOcclusion, classifyCourtSurface, markNonOccluding } from "./court-occlusion";
@@ -344,7 +346,12 @@ export class World {
     );
     this.scene.add(this.rain);
     this.composer = new EffectComposer(this.renderer);
-    this.composer.addPass(new RenderPass(this.scene, this.camera));
+    const gl = this.renderer.getContext() as WebGL2RenderingContext;
+    const samples = courtSamples(
+      gl.getInternalformatParameter(gl.RENDERBUFFER, gl.RGBA16F, gl.SAMPLES),
+      gl.getInternalformatParameter(gl.RENDERBUFFER, gl.DEPTH_COMPONENT24, gl.SAMPLES),
+    );
+    this.composer.addPass(samples ? new CourtBeauty(this.scene, this.camera, samples) : new RenderPass(this.scene, this.camera));
     this.ao = new CourtOcclusion(this.scene, this.camera, innerWidth, innerHeight);
     this.ao.kernelRadius = 0.7;
     this.ao.minDistance = 0.005;
@@ -366,6 +373,7 @@ export class World {
       ),
     );
     this.composer.addPass(new OutputPass());
+    if (!samples) this.composer.addPass(new FXAAPass());
     this.ready = this.art.load().then(() => {
       this.createMaterials();
       this.player = this.actor(-1);
