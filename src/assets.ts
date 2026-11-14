@@ -48,7 +48,7 @@ export class ArtLibrary {
   async loadBelfryFrieze() {
     if (this.textures.has("belfry-dragon-beam")) return;
     const loader = new T.TextureLoader();
-    const names = ["belfry-dragon-beam", "belfry-paper"];
+    const names = ["belfry-dragon-beam", "belfry-paper", "river-procession"];
     const maps = await Promise.all(names.map(name =>
       loader.loadAsync(`${import.meta.env.BASE_URL}art/${name}.jpg`)));
     maps.forEach((map, index) => {

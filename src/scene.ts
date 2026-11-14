@@ -35,6 +35,7 @@ import { karstSpurs } from "./karst";
 import { heronStroke } from "./heron-sabres";
 import { HeronWing, bridalMask, dressHeron } from "./heron";
 import { RingStaff } from "./ring-staff";
+import { belfryGallery } from "./belfry-gallery";
 import { belfryFront } from "./belfry-front";
 import { cinderArmour } from "./cinder-armour";
 import { cinderIcon } from "./cinder-icon";
@@ -1207,27 +1208,13 @@ export class World {
     }
     for (const side of [-1, 1]) {
       if (index === 0) {
-        const corridor = new T.Group();
+        const corridor = belfryGallery(side > 0, this.art.textures.get("wood-color")!,
+          this.art.textures.get("rock-color")!, this.art.textures.get("belfry-dragon-beam")!,
+          this.art.textures.get("river-procession")!, this.materials.gold);
         corridor.position.set(side * 18, 0, -1);
         corridor.rotation.y = (-side * Math.PI) / 2;
         this.arena.add(corridor);
-        for (let i = 0; i < 7; i++) {
-          const x = -15 + i * 5;
-          cylinder(corridor, this.materials.wood, x, 2.9, 0, 0.22, 5.8);
-          box(corridor, this.materials.wood, x, 5.2, 0, 1.2, 0.22, 2);
-          if (i % 2 === 0) this.lantern(corridor, x, 3.6, 1.5, true);
-        }
-        for (let i = 0; i < 6; i++) {
-          const bay = foldingScreen(
-            this.materials["lacquer-bay"],
-            this.materials.wood,
-            5.06,
-            4.45,
-            1,
-          );
-          bay.position.set(-12.5 + i * 5, 2.65, -0.65);
-          corridor.add(bay);
-        }
+        for(const x of [-15,-5,5,15])this.lantern(corridor,x,3.72,1.66,true);
         this.roof(corridor, 34, 4.5, 5.7);
       }
       for (let i = 0; i < 5; i++) {
