@@ -647,7 +647,7 @@ export class World {
     if (kind === 1) {
       // Retain the animated rig and dress it with the Heron's own silhouette.
       model.traverse(o => { if (isMesh(o)) o.visible = false; });
-      a.sabres = dressHeron(root, bones, this.materials["heron-silk"], this.materials.gold, this.art.textures.get("pilgrim-brocade-normal")!);
+      a.sabres = dressHeron(root, bones, this.materials["heron-silk"], this.materials.gold, this.art.textures.get("pilgrim-brocade-normal")!, this.art.textures.get("heron-damask")!);
       const drape = mesh(
         root,
         mantleGeometry().scale(1.7, 1.6, 1.5),

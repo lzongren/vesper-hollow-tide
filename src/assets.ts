@@ -77,6 +77,12 @@ export class ArtLibrary {
           this.textures.set(`${name}-${channel}`, texture);
         }),
       ),
+      images.loadAsync(`${base}textures/heron-damask.jpg`).then((map) => {
+        map.wrapS = map.wrapT = T.RepeatWrapping;
+        map.colorSpace = T.SRGBColorSpace;
+        map.anisotropy = 8;
+        this.textures.set("heron-damask", map);
+      }),
       ...["color", "normal"].map(async (channel) => {
         const map = await images.loadAsync(
           `${base}textures/pilgrim-brocade-${channel}.jpg`,

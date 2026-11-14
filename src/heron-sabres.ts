@@ -131,6 +131,29 @@ export function duelistSabre(side: number, m: Finishes) {
       new T.TubeGeometry(path, Math.max(12, pts.length * 3), radius, 8, false),
     );
   }
+  // A taper through the knuckles and distal pad keeps the gripping fingers
+  // distinct where they cross the hilt. The oval section flattens at the grip.
+  function finger(points: number[][], radius: number) {
+    const path = new T.CatmullRomCurve3(points.map(([x, y, z]) => new T.Vector3(side * x, y, z)));
+    const g = new T.TubeGeometry(path, 34, 1, 12, false);
+    const verts = g.attributes.position;
+    const v = new T.Vector3(), center = new T.Vector3();
+    for (let ring = 0; ring <= 34; ring++) {
+      const t = ring / 34;
+      path.getPointAt(t, center);
+      const joint = Math.exp(-(((t - 0.44) / 0.095) ** 2)) + 0.65 * Math.exp(-(((t - 0.7) / 0.08) ** 2));
+      const girth = radius * (1.07 - 0.28 * t + 0.12 * joint);
+      for (let k = 0; k <= 12; k++) {
+        const index = ring * 13 + k;
+        v.fromBufferAttribute(verts, index).sub(center).multiplyScalar(girth);
+        v.y *= 0.86;
+        v.add(center);
+        verts.setXYZ(index, v.x, v.y, v.z);
+      }
+    }
+    g.computeVertexNormals();
+    add(m.skin, g);
+  }
   const shaftX = 0.042;
   add(
     m.binding,
@@ -154,8 +177,7 @@ export function duelistSabre(side: number, m: Finishes) {
     const y = 0.065 - j * 0.037,
       r = 0.019 - j * 0.0014;
     const zs = 0.005 + j * 0.002;
-    cord(
-      m.skin,
+    finger(
       [
         [0.002, y, -0.022],
         [0.044, y + 0.006, -0.021],
@@ -175,7 +197,9 @@ export function duelistSabre(side: number, m: Finishes) {
       r * 0.92,
       r * 0.9,
     );
-    ellipsoid(m.skin, 0.055, y + 0.006, -0.017, r * 1.17, r * 0.92, r * 0.9);
+    ellipsoid(m.skin, 0.055, y + 0.006, -0.017, r * 1.13, r * 0.88, r * 0.9);
+    // A thin shell of lacquer protects each nail.
+    ellipsoid(m.binding, 0.031 + j * 0.003, y - 0.018, 0.068, r * 0.58, r * 0.51, 0.0037);
   }
   cord(
     m.skin,

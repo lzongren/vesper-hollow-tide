@@ -1,3 +1,5 @@
+import { TessellateModifier } from "three/addons/modifiers/TessellateModifier.js";
+import { heronSleeve } from "./heron-sleeve";
 import { MantleMotion } from "./vestments";
 import { WeaponGrip } from "./pilgrim";
 import { duelistSabre, heronGuards } from "./heron-sabres";
@@ -120,6 +122,7 @@ export function bridalMask(gold: T.Material, silk: T.Material) {
   });
   const glaze = new T.MeshPhysicalMaterial({
     color: 0xd5ccaf,
+    vertexColors: true,
     roughness: 0.39,
     clearcoat: 0.72,
     clearcoatRoughness: 0.29,
@@ -128,6 +131,10 @@ export function bridalMask(gold: T.Material, silk: T.Material) {
   const bead = new T.MeshStandardMaterial({ color: 0x7b221a, roughness: 0.33 });
   const groups = new Map<T.Material, T.BufferGeometry[]>();
   const add = (m: T.Material, g: T.BufferGeometry) => {
+    if (m === glaze && !g.hasAttribute("color")) {
+      const tint = new Float32Array(g.attributes.position.count * 3).fill(1);
+      g.setAttribute("color", new T.BufferAttribute(tint, 3));
+    }
     if (!groups.has(m)) groups.set(m, []);
     const flat = g.index ? g.toNonIndexed() : g;
     if (flat !== g) g.dispose();
@@ -191,7 +198,9 @@ export function bridalMask(gold: T.Material, silk: T.Material) {
       );
   }
   const profile = (x: number, y: number) =>
-    0.216 -
+    0.209 +
+    0.034 * Math.exp(-(((x - 0.117) / 0.065) ** 2) - (((y + 0.011) / 0.061) ** 2)) -
+    0.019 * Math.exp(-(((x - 0.112) / 0.062) ** 2) - (((y - 0.066) / 0.035) ** 2)) -
     2.9 * x * x +
     0.17 * Math.exp(-155 * x * x) * T.MathUtils.clamp((0.13 - y) / 0.32, 0, 1);
   for (const side of [-1, 1]) {
@@ -206,7 +215,7 @@ export function bridalMask(gold: T.Material, silk: T.Material) {
     eye.bezierCurveTo(0.081, 0.09, 0.145, 0.115, 0.174, 0.108);
     eye.bezierCurveTo(0.145, 0.065, 0.077, 0.032, 0.042, 0.051);
     outline.holes.push(eye);
-    const g = new T.ExtrudeGeometry(outline, {
+    const shell = new T.ExtrudeGeometry(outline, {
       depth: 0.012,
       bevelEnabled: true,
       bevelSize: 0.004,
@@ -214,13 +223,33 @@ export function bridalMask(gold: T.Material, silk: T.Material) {
       bevelSegments: 2,
       curveSegments: 14,
     });
-    const p = g.attributes.position;
+    const g = new TessellateModifier(0.023, 7).modify(shell);
+    shell.dispose();
+    const p = g.attributes.position, normals = g.attributes.normal;
+    const hues = new Float32Array(p.count * 3);
+    const clay = new T.Color(0xf9ecce), celadon = new T.Color(0x68928c), tint = new T.Color();
+    // Differentiating the relief keeps glaze reflections smooth over the cheek
+    // and leaves the bevel and the pierced eye rim with their own normals.
+    const n = new T.Vector3();
     for (let i = 0; i < p.count; i++) {
-      const x = p.getX(i),
-        y = p.getY(i);
-      p.setXYZ(i, side * x, y, p.getZ(i) + profile(x, y));
+      const x = p.getX(i), y = p.getY(i);
+      p.setXYZ(i, x, y, p.getZ(i) + profile(x, y));
+      const dx = (profile(x + 0.001, y) - profile(x - 0.001, y)) * 500;
+      const dy = (profile(x, y + 0.001) - profile(x, y - 0.001)) * 500;
+      n.fromBufferAttribute(normals, i);
+      n.set(n.x - n.z * dx, n.y - n.z * dy, n.z).normalize();
+      normals.setXYZ(i, n.x, n.y, n.z);
+      const edge = T.MathUtils.smoothstep(x, 0.09, 0.21);
+      const hollow = Math.exp(-(((y - 0.069 - 0.36 * (x - 0.1)) / 0.032) ** 2));
+      tint.copy(clay).lerp(celadon, 0.10 + 0.62 * edge + 0.19 * hollow);
+      tint.toArray(hues, i * 3);
     }
-    g.computeVertexNormals();
+    g.setAttribute("color", new T.BufferAttribute(hues, 3));
+    if (side < 0) {
+      // Mirroring a half also reverses winding. Keep glaze on the outside.
+      g.scale(-1, 1, 1);
+      g.setIndex(Array.from({ length: p.count }, (_, i) => i % 3 === 0 ? i : i % 3 === 1 ? i + 1 : i - 1));
+    }
     add(glaze, g);
     const trace = (points: number[][], r: number) =>
       line(
@@ -253,6 +282,11 @@ export function bridalMask(gold: T.Material, silk: T.Material) {
       ],
       0.005,
     );
+    for (let j = 0; j < 4; j++) {
+      const x = 0.078 + 0.022 * j, y = -0.076 + 0.018 * j;
+      trace([[x, y], [x + 0.003, y + 0.026], [x + 0.018, y + 0.042],
+        [x + 0.027, y + 0.057]], 0.0019);
+    }
     for (let j = 0; j < 3; j++) {
       const x = side * (0.173 + j * 0.016),
         y = 0.09 + j * 0.028,
@@ -301,17 +335,18 @@ export function bridalMask(gold: T.Material, silk: T.Material) {
   return mask;
 }
 
-/** Fitted silk and a pleated skirt around the source skeleton. Each bracer,
- * hand and blade follows the corresponding animated joint. */
+/** Cross-collar jacket, weighted sleeves and a pleated skirt fitted to the animated skeleton. */
 export function dressHeron(
   root: T.Group,
   bones: Map<string, T.Bone>,
   brocade: T.Material,
   gold: T.Material,
   weave: T.Texture,
+  damask: T.Texture,
 ) {
   const satin = new T.MeshPhysicalMaterial({
-    color: 0x437576,
+    color: 0xe9eee0,
+    map: damask,
     roughness: 0.55,
     normalMap: weave,
     normalScale: new T.Vector2(0.24, 0.24),
@@ -349,8 +384,7 @@ export function dressHeron(
     neck = bones.get("neck")!;
   const waist = point(hip),
     collar = point(neck);
-  const dress = new T.LatheGeometry(
-    [
+  const pattern = [
       new T.Vector2(0.58, 0.18),
       new T.Vector2(0.55, 0.42),
       new T.Vector2(0.46, 0.71),
@@ -360,9 +394,15 @@ export function dressHeron(
       new T.Vector2(0.32, collar.y - 0.13),
       new T.Vector2(0.18, collar.y + 0.03),
       new T.Vector2(0.11, collar.y + 0.09),
-    ],
-    72,
-  );
+  ];
+
+  const rings = pattern.slice(1).flatMap((end, index) => {
+    const start = pattern[index];
+    const steps = Math.max(2, Math.ceil((end.y - start.y) / 0.026));
+    return Array.from({ length: steps }, (_, k) => start.clone().lerp(end, k / steps));
+  });
+  rings.push(pattern[pattern.length - 1]);
+  const dress = new T.LatheGeometry(rings, 112);
   const pos = dress.attributes.position;
   for (let i = 0; i < pos.count; i++) {
     const x = pos.getX(i),
@@ -371,12 +411,18 @@ export function dressHeron(
       theta = Math.atan2(x, z);
     const fall = T.MathUtils.clamp(1 - y / waist.y, 0, 1),
       f = 1 + (0.012 + 0.115 * fall) * Math.cos(theta * 12 + 0.6 * fall);
+    const chest = T.MathUtils.smoothstep(y, waist.y - 0.12, waist.y + 0.14)
+      * (1 - T.MathUtils.smoothstep(y, collar.y - 0.12, collar.y + 0.05));
+    const pull = chest * (0.018 * Math.sin(35 * y + 9 * x + 1.5 * Math.sin(theta))
+      + 0.009 * Math.cos(48 * y + 11 * x));
+    const radius = Math.max(0.01, Math.hypot(x, z));
     pos.setXYZ(
       i,
-      x * f,
+      x * (f + pull / radius),
       y + 0.065 * fall * Math.cos(theta * 6),
-      z * 0.81 * f - 0.08 * fall,
+      z * 0.81 * (f + pull / radius) - 0.08 * fall,
     );
+    dress.attributes.uv.setXY(i, dress.attributes.uv.getX(i) * 2.6, y * 1.16);
   }
   dress.computeVertexNormals();
   const skirts: MantleMotion[] = [];
@@ -452,13 +498,26 @@ export function dressHeron(
       new T.Vector3(side * 0.061, collar.y - 0.16, 0.239),
       new T.Vector3(-side * 0.18, waist.y + 0.19, 0.161),
     ];
-    cord(hip, edge, 0.028, brocade);
-    cord(
-      hip,
-      edge.map((p) => p.clone().add(new T.Vector3(0, -0.009, 0.019))),
-      0.006,
-      gold,
-    );
+    // The right front laps across the chest. The under-collar ends at the crossing.
+    if (side < 0) edge.splice(3, 1, new T.Vector3(-0.01, collar.y - 0.27, 0.274));
+    const path = new T.CatmullRomCurve3(edge);
+    const lapel = new T.PlaneGeometry(1, 1, 8, 36);
+    const points = lapel.attributes.position, facing = lapel.attributes.uv;
+    const border: T.Vector3[] = [];
+    for (let i = 0; i < points.count; i++) {
+      const t = 1 - facing.getY(i), across = facing.getX(i) * 2 - 1;
+      const p = path.getPoint(t), tangent = path.getTangent(t);
+      const width = 0.049 + 0.009 * Math.sin(t * Math.PI);
+      p.x -= tangent.y * across * width;
+      p.y += tangent.x * across * width;
+      p.z += 0.019 + 0.011 * (1 - across * across) + (side > 0 ? 0.017 : 0);
+      points.setXYZ(i, p.x, p.y, p.z);
+      facing.setXY(i, 0.34 + 0.19 * across, 0.15 + t * 0.7);
+      if (across === 1) border.push(p);
+    }
+    lapel.computeVertexNormals();
+    place(hip, lapel, brocade);
+    cord(hip, border, 0.0045, gold);
     const drop = [
       new T.Vector3(side * 0.097, waist.y + 0.09, 0.23),
       new T.Vector3(side * 0.142, waist.y - 0.075, 0.229),
@@ -473,54 +532,15 @@ export function dressHeron(
       enamel,
     );
   }
+  const sleeveSilk = satin.clone();
+  sleeveSilk.color.setHex(0xe0e7d4);
+  sleeveSilk.roughness = 0.67;
+  sleeveSilk.sheenColor.setHex(0xd3c4a0);
   const grips = {} as Record<"Left" | "Right", WeaponGrip>;
   for (const name of ["Left", "Right"] as const) {
     const side = name === "Left" ? 1 : -1;
-    for (const [start, end, r0, r1, mat] of [
-      ["Arm", "ForeArm", 0.121, 0.096, satin],
-      ["ForeArm", "Hand", 0.087, 0.052, enamel],
-    ] as const) {
-      const joint = bones.get(name + start)!,
-        a = point(joint),
-        b = point(bones.get(name + end)!);
-      const axis = b.clone().sub(a);
-      const orient = new T.Quaternion().setFromUnitVectors(
-        new T.Vector3(0, 1, 0),
-        axis.clone().normalize(),
-      );
-      const center = a.clone().lerp(b, 0.5);
-      if (start === "Arm") {
-        const shoulder = new T.SphereGeometry(1, 24, 14).scale(
-          0.155,
-          0.19,
-          0.155,
-        );
-        const p = a.clone().lerp(b, 0.25);
-        place(
-          joint,
-          shoulder.applyQuaternion(orient).translate(p.x, p.y, p.z),
-          brocade,
-        );
-      }
-      place(
-        joint,
-        new T.CylinderGeometry(r1, r0, axis.length(), 16)
-          .applyQuaternion(orient)
-          .translate(center.x, center.y, center.z),
-        mat,
-      );
-      for (const u of [0.12, 0.84]) {
-        const p = a.clone().lerp(b, u),
-          r = T.MathUtils.lerp(r0, r1, u) * 1.06;
-        place(
-          joint,
-          new T.CylinderGeometry(r, r, 0.024, 16)
-            .applyQuaternion(orient)
-            .translate(p.x, p.y, p.z),
-          gold,
-        );
-      }
-    }
+    heronSleeve(root, bones.get(name + "Arm")!, bones.get(name + "ForeArm")!,
+      bones.get(name + "Hand")!, side, sleeveSilk, brocade, gold);
     const sword = duelistSabre(side, {
       skin: ivory,
       steel,
