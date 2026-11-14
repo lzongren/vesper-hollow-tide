@@ -46,7 +46,10 @@ if (!(Test-Path "$project\Saved\Pines.json")) {
 if (!(Test-Path "$project\Saved\Ashlar.json")) {
     Invoke-MapPass 'fit_causeway' 'VESPER_ASHLAR_SAVED'
 }
-if (!(Test-Path "$project\Saved\FittedPilgrim.json") -or (Get-Content -Raw "$project\Saved\FittedPilgrim.json" | ConvertFrom-Json).locomotion_revision -ne 2) {
+$fitReport = if (Test-Path "$project\Saved\FittedPilgrim.json") {
+    Get-Content -Raw "$project\Saved\FittedPilgrim.json" | ConvertFrom-Json
+}
+if ($fitReport.locomotion_revision -ne 2 -or $fitReport.palm_revision -ne 1) {
     Invoke-MapPass 'fit_pilgrim' 'VESPER_PILGRIM_FITTED'
 }
 Start-Process "$bin\UnrealEditor.exe" -WorkingDirectory $project -ArgumentList @(

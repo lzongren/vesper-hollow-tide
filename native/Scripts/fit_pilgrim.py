@@ -33,7 +33,7 @@ runpy.run_path(str(project / "Scripts" / "bind_pilgrim.py"))["build"](
     project / "SourceAssets",
     out,
 )
-folder = root + "Outfit"
+folder = root + "PalmOutfit"
 if not any(str(lib.find_asset_data(p).asset_class_path.asset_name) == "SkeletalMesh" for p in lib.list_assets(folder)):
     imp = unreal.AssetImportTask()
     imp.filename = str(out)
@@ -100,6 +100,7 @@ if not lib.save_loaded_asset(mode, only_if_is_dirty=False):
     raise RuntimeError("Failed to save pilgrim game mode")
 report = {
     "locomotion_revision": 2,
+    "palm_revision": 1,
     "mesh": skin.get_path_name(),
     "pawn": pawn.generated_class().get_name(),
     "game_mode": mode.generated_class().get_name(),

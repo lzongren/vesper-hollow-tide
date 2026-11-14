@@ -1,3 +1,5 @@
+import { execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import * as T from "three";
 import { SilkPanel } from "../src/silk";
 import { bake } from "./bake_glb";
@@ -14,3 +16,7 @@ for (const cut of [
   panel.update(0, 0);
 }
 await bake(cloak, "PilgrimMantle");
+execFileSync(process.env.PYTHON || (process.platform === "win32" ? "python" : "python3"), [
+  fileURLToPath(new URL("./bake_palm_fibre.py", import.meta.url)),
+  fileURLToPath(new URL("../native/Art/PilgrimMantle.glb", import.meta.url)),
+], { stdio: "inherit" });

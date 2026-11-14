@@ -96,6 +96,13 @@ def record(dt):
                 json.dumps(
                     {
                         "pawn": pawn.get_class().get_name(),
+                        "skeletal_mesh": pawn.mesh.skeletal_mesh_asset.get_path_name(),
+                        "cape_material": pawn.mesh.get_material(
+                            pawn.mesh.get_material_index("Mantle_1")
+                        ).get_path_name(),
+                        "animation": pawn.mesh.get_anim_instance()
+                        .get_class()
+                        .get_name(),
                         "shots": shots,
                         "descent": track,
                         "ascent": ascent,
