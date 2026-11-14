@@ -16,17 +16,21 @@ export class ArtLibrary {
     const existing = this.seals.get(name);
     if (existing) return existing;
     const loader = new T.TextureLoader();
-    const map = await loader.loadAsync(
-      `${import.meta.env.BASE_URL}art/${name}-inlay.jpg`,
+    const [map, normal, surface] = await Promise.all(
+      ["inlay", "relief", "surface"].map(channel =>
+        loader.loadAsync(`${import.meta.env.BASE_URL}art/${name}-${channel}.jpg`)),
     );
     map.colorSpace = T.SRGBColorSpace;
-    map.anisotropy = 8;
+    for (const texture of [map, normal, surface]) texture.anisotropy = 8;
     const material = new T.MeshStandardMaterial({
       name: `${name} courtyard inlay`,
       map,
-      bumpMap: map,
-      bumpScale: 0.047,
-      roughness: 0.62,
+      vertexColors: true,
+      normalMap: normal,
+      roughnessMap: surface,
+      metalnessMap: surface,
+      roughness: 1,
+      metalness: 1,
     });
     this.seals.set(name, material);
     return material;

@@ -46,6 +46,7 @@ import { travelHat } from "./travel-hat";
 import { BladeImpact } from "./blade-impact";
 import { Footwork } from "./footwork";
 import { RainCourt } from "./raincourt";
+import { flagstoneSeal } from "./flagstone-seal";
 import { courtPaving, runoffChannel } from "./court";
 import { lotusGarden } from "./lotus-garden";
 import { porchLamp } from "./moon-gate";
@@ -243,7 +244,6 @@ export class World {
   hazards = new Map<number, T.Group>();
   lock = new T.Group();
   particles: Effect[] = [];
-  trails: Effect[] = [];
   quality = "high";
   reducedMotion = false;
   moving = false;
@@ -1080,8 +1080,8 @@ export class World {
       index === 2 ? this.art.loadCinderBrocade() : undefined,
       ...scans.map((name) => this.art.loadLandmark(name)),
     ]);
-    seal.color.setHex(index === 0 ? 0xd2d6ce : 0xb4bbb8);
-    this.rainCourt.finishStone(seal, index !== 1);
+    seal.color.setHex(index === 0 ? 0xf1eee2 : 0xf5f1e7);
+    this.rainCourt.finishStone(seal, true);
 
     this.materials[`seal-${index}`] = seal;
   }
@@ -1092,14 +1092,12 @@ export class World {
     this.shake = 0;
     // Clear short-lived effects from the previous attempt, including a retry in
     // the same arena. The new opening must not inherit a frozen swing or sparks.
-    for (const effects of [this.particles, this.trails]) {
-      for (const effect of effects) {
-        effect.mesh.removeFromParent();
-        effect.mesh.geometry.dispose();
-        (effect.mesh.material as T.Material).dispose();
-      }
-      effects.length = 0;
+    for (const effect of this.particles) {
+      effect.mesh.removeFromParent();
+      effect.mesh.geometry.dispose();
+      (effect.mesh.material as T.Material).dispose();
     }
+    this.particles.length = 0;
     this.update(game, 0, true);
     await waitForOpeningDraw(this.renderer.getContext() as WebGL2RenderingContext);
   }
@@ -1140,12 +1138,10 @@ export class World {
     ground.rotation.x = -Math.PI / 2;
     const seal = mesh(
       this.rainCourt.floor,
-      new T.CircleGeometry(6.35, 144),
+      flagstoneSeal(random(1901 + index)),
       this.materials[`seal-${index}`],
     );
     seal.name = "Engraved court seal";
-    seal.position.y = -0.009;
-    seal.rotation.x = -Math.PI / 2;
     seal.castShadow = false;
     const slabs = new T.MeshStandardMaterial({
       color: [0x6c797b, 0x788681, 0x776b61][index],
@@ -1652,31 +1648,7 @@ export class World {
       return;
     }
     if (e.kind === "slam") {
-      const actor = this.boss;
-      const r = 3.9;
-      const m = mesh(
-        this.scene,
-        new T.RingGeometry(r - 0.18, r, 64, 1, -Math.PI / 2 - 1.1, 2.2),
-        new T.MeshBasicMaterial({
-          color: 0xd5a86c,
-          transparent: true,
-          opacity: 0.35,
-          side: T.DoubleSide,
-          depthWrite: false,
-        }),
-        e.x,
-        1,
-        e.z,
-      );
-      m.rotation.set(-Math.PI / 2, 0, -actor.root.rotation.y);
-      markNonOccluding(m);
-      this.trails.push({
-        mesh: m,
-        velocity: new T.Vector3(),
-        life: 0.18,
-        max: 0.18,
-        spin: 0,
-      });
+      this.rainCourt.impact(e.x, e.z, this.boss.root.rotation.y, e.value === 1);
       return;
     }
     const color =
@@ -1807,21 +1779,20 @@ export class World {
     this.lock.lookAt(this.camera.position);
     this.rainCourt.rite.update(game);
     this.drawHazards(game);
-    for (const list of [this.particles, this.trails])
-      for (let i = list.length - 1; i >= 0; i--) {
-        const e = list[i];
-        e.life -= dt;
-        e.velocity.y -= dt * 7;
-        e.mesh.position.addScaledVector(e.velocity, dt);
-        (e.mesh.material as T.MeshBasicMaterial).opacity =
-          Math.max(0, e.life / e.max) * 0.7;
-        if (e.life <= 0) {
-          this.scene.remove(e.mesh);
-          e.mesh.geometry.dispose();
-          (e.mesh.material as T.Material).dispose();
-          list.splice(i, 1);
-        }
+    for (let i = this.particles.length - 1; i >= 0; i--) {
+      const e = this.particles[i];
+      e.life -= dt;
+      e.velocity.y -= dt * 7;
+      e.mesh.position.addScaledVector(e.velocity, dt);
+      (e.mesh.material as T.MeshBasicMaterial).opacity =
+        Math.max(0, e.life / e.max) * 0.7;
+      if (e.life <= 0) {
+        this.scene.remove(e.mesh);
+        e.mesh.geometry.dispose();
+        (e.mesh.material as T.Material).dispose();
+        this.particles.splice(i, 1);
       }
+    }
     for (const c of this.clothMeshes) {
       const pos = c.geometry.attributes.position,
         base = c.userData.base as Float32Array;

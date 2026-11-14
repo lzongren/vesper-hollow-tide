@@ -9,6 +9,8 @@ uniform sampler2D courtMirror;
 uniform mat4 courtProject;
 uniform float courtTime, courtWet, courtSeed;
 uniform vec4 courtSteps[6];
+uniform vec4 courtImpact;
+uniform float courtImpactFan;
 uniform vec4 courtSoles[4];
 uniform vec4 courtToes[4];
 varying vec3 courtPoint;
@@ -49,6 +51,8 @@ export class RainCourt {
   private toes = Array.from({ length: 4 }, () => new T.Vector4());
   private toe = new T.Vector3();
   private ankle = new T.Vector3();
+  private strike = { value: new T.Vector4(0, 0, -10, 0) };
+  private strikeFan = { value: 0 };
   private clock = { value: 0 };
   private wet = { value: 0 };
   private seed = { value: 0 };
@@ -66,6 +70,7 @@ export class RainCourt {
     this.seed.value = [3.4, 31.7, 85.2][index];
     this.wet.value = [0.51, 0.49, 0.37][index];
     this.lastCapture = -10;
+    this.strike.value.z = -10;
     this.step.forEach((s) => (s.z = -10));
   }
   gardenWater() {
@@ -102,7 +107,7 @@ export class RainCourt {
 
   finishStone(material: T.MeshStandardMaterial, inlay = false) {
     material.customProgramCacheKey = () =>
-      inlay ? "wet-bronze-inlay" : "wet-paving";
+      inlay ? "wet-jointed-medallion" : "wet-paving";
     material.onBeforeCompile = (shader) => {
       Object.assign(shader.uniforms, {
         courtMirror: { value: this.mirror.getRenderTarget().texture },
@@ -111,6 +116,8 @@ export class RainCourt {
         courtWet: this.wet,
         courtSeed: this.seed,
         courtSteps: { value: this.step },
+        courtImpact: this.strike,
+        courtImpactFan: this.strikeFan,
         courtSoles: { value: this.soles },
         courtToes: { value: this.toes },
         ritePose: this.rite.pose,
@@ -133,17 +140,14 @@ export class RainCourt {
           float height=.54*poolNoise(basin)+.28*poolNoise(basin*2.13+3.)+.12*poolNoise(basin*5.8)+.06*poolNoise(basin*14.3);
           float grain=poolNoise(p*8.5+vec2(1.7,4.1));
           height+=.052*(grain-.5);
-          float pool=smoothstep(height-.028,height+.028,courtWet);
-          float damp=smoothstep(height-.14,height+.06,courtWet);
-          diffuseColor.rgb *= mix(1.,.55,damp);
+          ${inlay ? `// The extra drainage and top elevation are registered to this slab.
+          height += .29*(texelRoughness.r-.5) + 3.0*(courtPoint.y+.018);` : ""}
+          float pool=smoothstep(height-.024,height+.024,courtWet-.042);
+          float damp=smoothstep(height-.15,height+.11,courtWet);
+          diffuseColor.rgb *= mix(1.,.75,damp);
           float baseRoughness=roughnessFactor;
-          float dampRoughness=mix(baseRoughness,max(.36,baseRoughness*.78),damp);
-          roughnessFactor=mix(dampRoughness,.125+.13*grain,pool);`,
-          )
-          .replace(
-            "#include <metalnessmap_fragment>",
-            `#include <metalnessmap_fragment>
-          ${inlay ? "metalnessFactor=.08+.63*smoothstep(.008,.065,diffuseColor.r-diffuseColor.b);" : ""}`,
+          float dampRoughness=mix(baseRoughness,max(.39,baseRoughness*.81),damp);
+          roughnessFactor=mix(dampRoughness,.18+.13*grain,pool);`,
           )
           .replace(
             "#include <opaque_fragment>",
@@ -158,6 +162,16 @@ export class RainCourt {
                 ripple+=d/max(.01,r)*cos(f*37.)*exp(-abs(f)*11.)*(1.-age/1.3)*courtSteps[i].w;
               }
             }
+            float age=courtTime-courtImpact.z;
+            vec2 delta=p-courtImpact.xy;
+            float distanceToStrike=length(delta);
+            if(age>=0. && age<.72 && distanceToStrike<4.1) {
+              vec2 dir=delta/max(.01,distanceToStrike);
+              float facing=dot(dir,vec2(sin(courtImpact.w),cos(courtImpact.w)));
+              float fan=mix(1.,smoothstep(.26,.65,facing),courtImpactFan);
+              float crest=distanceToStrike-age*6.;
+              ripple+=dir*fan*2.8*cos(crest*32.)*exp(-abs(crest)*6.)*(1.-age/.72);
+            }
             vec4 projected=courtProject*vec4(courtPoint,1.);
             vec2 uv=projected.xy/projected.w;
             float grazing=1.-clamp(normalize(cameraPosition-courtPoint).y,0.,1.);
@@ -165,7 +179,7 @@ export class RainCourt {
             vec2 at=clamp(uv+jitter,.002,.998);
             vec3 mirror=texture2D(courtMirror,at).rgb;
             float margin=smoothstep(0.,.035,min(min(uv.x,1.-uv.x),min(uv.y,1.-uv.y)));
-            float fresnel=.11+.61*pow(grazing,2.6);
+            float fresnel=.045+.51*pow(grazing,3.2);
             outgoingLight=mix(outgoingLight,mirror,pool*fresnel*margin);
           }
           float occlusion=0.;
@@ -200,6 +214,11 @@ export class RainCourt {
       height * 0.059 + heelLift * 0.28, 0.65 * Math.exp(-heelLift * 15 / height));
     tip.set(this.toe.x + dx * 0.14, this.toe.z + dz * 0.14,
       height * 0.055 + toeLift * 0.28, 0.68 * Math.exp(-toeLift * 16 / height));
+  }
+
+  impact(x: number, z: number, facing: number, sector: boolean) {
+    this.strike.value.set(x, z, this.clock.value, facing);
+    this.strikeFan.value = sector ? 1 : 0;
   }
 
   contact(x: number, z: number, strength: number) {
