@@ -1,6 +1,8 @@
 # Vesper — The Hollow Tide
 
-**Visual rebuild in progress.** The browser prototype below did not meet the requested Bloodborne / Wuchang visual standard. The [native Unreal project](native/README.md) now includes a 205.4-metre route through three courtyards with third-person traversal. The three boss fights run in the browser build.
+**Visual rebuild in progress.** The browser prototype below did not meet the requested Bloodborne / Wuchang visual standard. The [native Unreal project](native/README.md) now includes a 205.4-metre route through three courtyards. The Bellwarden and the Veiled Heron are playable in Unreal. The browser build also includes the Saint of Cinders.
+
+[Fight the Veiled Heron at the moon gate](docs/runtime/heron-duel/)
 
 [Walk the forest floor below the first court](docs/runtime/valley-understory/)
 

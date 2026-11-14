@@ -151,7 +151,7 @@ def joint_positions(asset):
     }
 
 
-def build(reference, body_path, art, textures, output, *, bellwarden=False, armed=False):
+def build(reference, body_path, art, textures, output, *, bellwarden=False, armed=False, heron=False):
     base, rig, out = Glb(body_path), Glb(reference), Output()
     skin = rig.doc["skins"][0]
     source = joint_positions(base)
@@ -336,12 +336,19 @@ def build(reference, body_path, art, textures, output, *, bellwarden=False, arme
             ("BellwardenRightPauldron", "RightPlate", "upperarm_r"),
             ("tide-bell", "Toll", "hand_r"),
         ]
+    if heron:
+        gear = [
+            ("HeronBridalMask", "Porcelain", "head"),
+            ("HeronSabres", "Sabres", "hand_r"),
+        ]
     for file, prefix, bone in gear:
         asset = Glb((textures if prefix == "Toll" else art) / (file + ".glb"))
         offset = materials(asset, prefix)
         for node in asset.doc["nodes"]:
             if "mesh" not in node:
                 continue
+            if heron and prefix == "Sabres":
+                bone = "hand_l" if node["name"].startswith("Left") else "hand_r"
             m = node.get("matrix")
             if m:
 
@@ -385,6 +392,16 @@ def build(reference, body_path, art, textures, output, *, bellwarden=False, arme
                         scale = 0.32 if prefix == "Toll" else 0.48
                         x, y, z = [v * scale + a for v, a in zip((x, y, z), target[bone])]
                         y += -0.57 if prefix == "Toll" else 0.045
+                    elif heron:
+                        if prefix == "Porcelain":
+                            x, y, z = [v * 0.79 + a for v, a in zip((x, y, z), target[bone])]
+                            y += 0.11
+                            z += 0.065
+                        else:
+                            # Fit each local wrist independently in the target bind pose.
+                            turn = align((0, 1, 0), (0.28 if bone == "hand_l" else -0.28, 0.1, 1))
+                            x, y, z = [v * 0.87 + a for v, a in zip(rotate(turn,(x,y,z)), target[bone])]
+                            normal = rotate(turn, normal)
                     elif prefix == "Jian":
                         turn = align((0, 1, 0), (0, .16, 1))
                         x, y, z = [v + a for v, a in zip(rotate(turn, (x, y, z)), target[bone])]
@@ -421,4 +438,7 @@ def build(reference, body_path, art, textures, output, *, bellwarden=False, arme
     if bellwarden:
         add_regalia = runpy.run_path(str(Path(__file__).with_name("keeper_regalia.py")))["add_regalia"]
         add_regalia(out, lookup, textures)
+    if heron:
+        add_dress = runpy.run_path(str(Path(__file__).with_name("heron_dress.py")))["add_dress"]
+        add_dress(out, lookup, target, textures)
     out.save(output)

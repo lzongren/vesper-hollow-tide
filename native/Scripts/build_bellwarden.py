@@ -81,26 +81,27 @@ def import_tone(name, fundamental):
         raise RuntimeError("Could not load " + name)
 
 
-def build():
-    def mesh_for(name, model, **gear):
-        folder = duel + name
-        if not lib.does_directory_exist(folder):
-            staging = project / "Saved" / "PilgrimFitting"
-            output = staging / (name + ".glb")
-            runpy.run_path(str(project / "Scripts" / "bind_pilgrim.py"))["build"](
-                staging / "LocalRig.glb",
-                project / "SourceAssets" / model,
-                project / "Art",
-                project / "SourceAssets",
-                output,
-                **gear,
-            )
-            task = unreal.AssetImportTask()
-            task.filename, task.destination_path = str(output), folder
-            task.replace_existing = task.automated = task.save = True
-            unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks([task])
-        return outfit(folder)
+def mesh_for(name, model, **gear):
+    folder = duel + name
+    if not lib.does_directory_exist(folder):
+        staging = project / "Saved" / "PilgrimFitting"
+        output = staging / (name + ".glb")
+        runpy.run_path(str(project / "Scripts" / "bind_pilgrim.py"))["build"](
+            staging / "LocalRig.glb",
+            project / "SourceAssets" / model,
+            project / "Art",
+            project / "SourceAssets",
+            output,
+            **gear,
+        )
+        task = unreal.AssetImportTask()
+        task.filename, task.destination_path = str(output), folder
+        task.replace_existing = task.automated = task.save = True
+        unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks([task])
+    return outfit(folder)
 
+
+def build():
     boss_skin = mesh_for("TollKeeper", "pilgrim.glb", bellwarden=True)
     runpy.run_path(str(project / "Scripts" / "keeper_materials.py"))["finish"](boss_skin)
     hero_skin = mesh_for("SwordPilgrim", "pilgrim.glb", armed=True)
@@ -198,4 +199,5 @@ def build():
     unreal.log("VESPER_BELFRY_READY")
 
 
-build()
+if __name__ == "__main__":
+    build()

@@ -1,90 +1,31 @@
 """Direct the Bellwarden's path, committed blows and recovery in standalone play."""
 
 import math
+import sys
 import runpy
 from pathlib import Path
 
 import unreal
 
 
-class Bellwarden:
-    def __init__(self, step):
-        self.step = step
-        self.actor = None
-        self.pc_target = None
-        self.state = "waiting"
-        self.deadline = 0.0
-        self.turn = 0
-        self.clips = []
-        self.tones = []
-        self.request_at = 0.0
+sys.path.insert(0, str(Path(__file__).parent))
+from court_encounter import CourtEncounter, live
+from heron_combat import Heron
+
+
+class Bellwarden(CourtEncounter):
+    tag = "Bellwarden"
 
     def acquire(self, pawn):
-        found = unreal.GameplayStatics.get_all_actors_with_tag(pawn, "Bellwarden")
-        if not found:
+        if not super().acquire(pawn):
             return False
-        self.actor = found[0]
-        folder = "/Game/Characters/Mannequins/Anims/Unarmed/Attack/"
-        self.clips = [
-            unreal.load_asset(folder + name)
-            for name in ("MM_Attack_01", "MM_Attack_02", "MM_ChargedAttack")
-        ]
         self.tones = [
             unreal.load_asset("/Game/Vesper/Duel/" + name)
             for name in ("BronzeSweep", "GraveToll")
         ]
         return True
 
-    def update(self, dt):
-        pawn = self.step.pawn
-        if not unreal.SystemLibrary.is_valid(pawn):
-            return
-        if self.pc_target is not None and self.pc_target != pawn:
-            self.actor = self.pc_target = None
-            self.state, self.turn, self.deadline, self.request_at = (
-                "waiting",
-                0,
-                0.0,
-                0.0,
-            )
-        # Death destroys the enemy actor. Avoid passing its stale Python
-        # wrapper back into Unreal while the player explores the cleared court.
-        if self.state == "defeated":
-            return
-        if self.actor is None and not self.acquire(pawn):
-            return
-        if (
-            not unreal.SystemLibrary.is_valid(self.actor)
-            or self.actor.get_editor_property("Current HP") <= 0
-        ):
-            self.actor = None
-            self.state = "defeated"
-            return
-        now = unreal.GameplayStatics.get_time_seconds(pawn)
-        if pawn.get_editor_property("Current HP") <= 0:
-            if self.state != "fallen":
-                self.actor.get_controller().stop_movement()
-                self.state, self.deadline = "fallen", now + 1.4
-            elif now >= self.deadline:
-                self.actor = self.pc_target = None
-                self.state, self.turn, self.deadline, self.request_at = (
-                    "waiting",
-                    0,
-                    0.0,
-                    0.0,
-                )
-                unreal.GameplayStatics.open_level(pawn, "MountainPilgrimage")
-            return
-        if pawn != self.pc_target:
-            self.pc_target = pawn
-            self.actor.get_controller().stop_movement()
-            self.state, self.deadline = "waiting", now + 0.8
-            return
-        offset = pawn.get_actor_location() - self.actor.get_actor_location()
-        distance = math.hypot(offset.x, offset.y)
-        ai = self.actor.get_controller()
-        if not ai:
-            return
+    def fight(self, pawn, ai, now, offset, distance, dt):
         if self.state == "windup":
             if now >= self.deadline:
                 forward = self.actor.get_actor_forward_vector()
@@ -142,5 +83,43 @@ class Bellwarden:
 
 step = runpy.run_path(str(Path(__file__).with_name("belfry_step.py")))["step"]
 boss = Bellwarden(step)
-handle = unreal.register_slate_post_tick_callback(boss.update)
+heron = Heron(step)
+fallen_at = None
+fallen_pawn = None
+
+
+def update_encounters(dt):
+    global fallen_at, fallen_pawn
+    pawn = step.pawn
+    if not live(pawn):
+        return
+    if pawn.get_editor_property("Current HP") <= 0:
+        now = unreal.GameplayStatics.get_time_seconds(pawn)
+        if fallen_pawn != pawn:
+            fallen_pawn, fallen_at = pawn, now + 1.4
+            for duel in (boss, heron):
+                if (
+                    live(duel.actor)
+                    and duel.actor.get_controller()
+                ):
+                    duel.actor.get_controller().stop_movement()
+        elif now >= fallen_at:
+            # Python actor wrappers outlive the world they wrap. Release them before
+            # travel, including the step controller, which is ticked independently.
+            for duel in (boss, heron):
+                duel.actor = duel.pc_target = None
+                duel.state = "waiting"
+                duel.turn = duel.deadline = duel.request_at = 0
+            heron.active = []
+            heron.feathers = []
+            step.release_world()
+            fallen_at = fallen_pawn = None
+            unreal.GameplayStatics.open_level(pawn, "MountainPilgrimage")
+        return
+    fallen_at = fallen_pawn = None
+    boss.update(dt)
+    heron.update(dt)
+
+
+handle = unreal.register_slate_post_tick_callback(update_encounters)
 unreal.log("VESPER_BELFRY_COMBAT_ACTIVE")

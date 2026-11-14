@@ -1,6 +1,7 @@
 """Short evasive step for the standalone, editor-hosted combat build."""
 
 import unreal
+from court_encounter import live
 
 
 def input_key(name):
@@ -19,8 +20,14 @@ class BelfryStep:
         self.restore_at = None
         self.old_damage = True
 
+    def release_world(self):
+        self.pc = self.pawn = self.restore_at = None
+        self.next_step = 0.0
+        self.was_down = False
+
     def update(self, dt):
-        if not unreal.SystemLibrary.is_valid(self.pc):
+        if not live(self.pc):
+            self.release_world()
             self.pc = next(
                 (
                     pc
@@ -29,11 +36,11 @@ class BelfryStep:
                 ),
                 None,
             )
-        if not unreal.SystemLibrary.is_valid(self.pc):
+        if not live(self.pc):
             return
         pawn = self.pc.get_controlled_pawn()
         if pawn != self.pawn:
-            if self.restore_at is not None and unreal.SystemLibrary.is_valid(self.pawn):
+            if self.restore_at is not None and live(self.pawn):
                 self.pawn.set_editor_property("can_be_damaged", self.old_damage)
             self.pawn, self.restore_at = pawn, None
             self.next_step = 0.0
