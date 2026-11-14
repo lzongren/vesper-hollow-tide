@@ -30,4 +30,4 @@ Windows gameplay checks took all three bosses through their awakened phase and o
 
 Each figure covers one unrecorded clear. The two-second gap in the garden remains visible in motion.
 
-The separate recorded run includes 835 timestamped frames at 1600 × 900 and 48 kHz stereo game audio. The clip lasts 50.55 seconds. The final HUD reports 28 seconds of combat, five parries and zero hits taken. [Watch the fight](duel.mp4)
+The separate recorded run includes 835 timestamped frames at 1600 × 900 and 48 kHz stereo game audio. The 51.80-second clip preserves 50.55 seconds of capture and holds the final victory screen for 1.25 seconds. The final HUD reports 28 seconds of combat, five parries and zero hits taken. [Watch the fight](duel.mp4)
