@@ -11,3 +11,5 @@ The face crops cover the same 232 × 250 pixels from each frame and are enlarged
 ![Previous wings above and new wings below](wing-pair.jpg)
 
 These are native-size crops of the two production frames. The long outer feathers now taper into individually twisted, slate-tipped primaries. The texture still repeats across neighbouring feathers. The two sword blades and the character's underlying rig are common to both captures.
+
+The same release cleared all three awakened encounters in a real-time Windows run on an RTX 5080, on Pilgrim difficulty. All 83 served files matched the Mac production build by SHA-256. [Windows outcomes and frame intervals](clears.json)
