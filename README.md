@@ -8,7 +8,7 @@ An original, playable 3D soulslike boss-rush chapter for the browser. Deliberate
 
 ![The Saint of Cinders raising fire beside the player during Falling Prayers](docs/runtime/embers/cinders.jpg)
 
-[Shrine fire and belfry sweep comparisons](docs/runtime/embers/) · [Watch a complete Bellwarden victory with sound](docs/runtime/vigil/bellwarden.mp4) · [Three courts in gameplay](docs/runtime/vigil/) · [Rain courts in motion](docs/runtime/rain/) · [Three encounter galleries](docs/runtime/sanctuary/) · [Bellwarden combat with game audio](docs/runtime/bronze/bellwarden.mp4)
+[Complete Saint of Cinders fight with sound](docs/runtime/embers/cinders.mp4) · [Shrine fire and belfry sweep comparisons](docs/runtime/embers/) · [Watch a complete Bellwarden victory with sound](docs/runtime/vigil/bellwarden.mp4) · [Three courts in gameplay](docs/runtime/vigil/) · [Rain courts in motion](docs/runtime/rain/) · [Three encounter galleries](docs/runtime/sanctuary/) · [Bellwarden combat with game audio](docs/runtime/bronze/bellwarden.mp4)
 
 ## Play locally
 
