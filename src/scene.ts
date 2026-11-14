@@ -30,6 +30,7 @@ import {
   leafDrifts,
   valleyHorizon,
 } from "./sanctuary";
+import { CourtLight, vigilLamp } from "./vigil-light";
 import { batchCourt } from "./static-court";
 import { incenseVessel, incenseSmoke } from "./incense";
 import { ceremonialSilks, type SilkPanel } from "./silk";
@@ -239,8 +240,7 @@ export class World {
   orbit = 0;
   cameraInitialized = false;
   loaded = false;
-  moon: T.DirectionalLight;
-  fill: T.PointLight;
+  lighting: CourtLight;
   environmentTime = { value: 0 };
   clothMeshes: T.Mesh[] = [];
   flames: T.Mesh[] = [];
@@ -280,28 +280,6 @@ export class World {
     this.renderer.toneMappingExposure = 1.1;
     this.scene.background = new T.Color(0x111d22);
     this.scene.fog = new T.FogExp2(0x19272b, 0.022);
-    this.scene.add(new T.HemisphereLight(0xc3daef, 0x4b3a33, 0.79));
-    this.moon = new T.DirectionalLight(0xbed9f6, 2.8);
-    this.moon.position.set(-12, 20, -15);
-    this.moon.castShadow = true;
-    this.moon.shadow.mapSize.set(2048, 2048);
-    Object.assign(this.moon.shadow.camera, {
-      left: -24,
-      right: 24,
-      top: 24,
-      bottom: -24,
-      near: 1,
-      far: 70,
-    });
-    this.moon.shadow.normalBias = 0.035;
-    this.moon.shadow.bias = -0.00012;
-    this.scene.add(this.moon);
-    this.fill = new T.PointLight(0xffb36d, 26, 18, 2);
-    this.fill.position.set(2, 4, 4);
-    this.scene.add(this.fill);
-    const portraitLight = new T.DirectionalLight(0xffdeb9, 1.26);
-    portraitLight.position.set(12, 7, 9);
-    this.scene.add(portraitLight);
     this.scene.add(
       this.arena,
       this.rainCourt.floor,
@@ -346,6 +324,13 @@ export class World {
     this.ao.minDistance = 0.005;
     this.ao.maxDistance = 0.2;
     this.composer.addPass(this.ao);
+    this.lighting = new CourtLight(
+      this.scene,
+      this.camera,
+      this.ao.normalRenderTarget.depthTexture!,
+      this.environmentTime,
+    );
+    this.composer.addPass(this.lighting.veil);
     this.composer.addPass(
       new UnrealBloomPass(
         new T.Vector2(innerWidth, innerHeight),
@@ -357,7 +342,7 @@ export class World {
     this.composer.addPass(new OutputPass());
     this.ready = this.art.load().then(() => {
       this.scene.environment = this.art.environment!;
-      this.scene.environmentIntensity = 1.1;
+      this.scene.environmentIntensity = 0.48;
       this.createMaterials();
       this.player = this.actor(-1);
       this.scene.add(this.player.root);
@@ -399,7 +384,14 @@ export class World {
         bumpScale: name.includes("silk") ? 0.012 : 0.055,
         emissiveMap: map,
         emissive: 0xffdfa9,
-        emissiveIntensity: name === "lacquer-bay" ? 0.13 : 0.1,
+        color:
+          name === "lacquer-bay"
+            ? 0xac9584
+            : name === "tide-icon"
+              ? 0xb0a392
+              : 0xffffff,
+        emissiveIntensity:
+          name === "lacquer-bay" || name === "tide-icon" ? 0.015 : 0.075,
         roughness: 0.74,
         metalness: 0.12,
         side: T.DoubleSide,
@@ -869,7 +861,69 @@ export class World {
           );
       }
     box(g, this.materials.wood, 0, 4.9, 0, 11, 0.3, 6);
-    box(g, this.materials.wall, 0, 2.8, -2.7, 10, 3.8, 0.4);
+    // The threshold, second lintel and inner shrine have distinct depths.
+    // The dark side returns keep the exterior moon from filling the nave.
+    box(g, this.materials.wood, 0, 2.9, -7.2, 9.9, 4.1, 0.38);
+    box(g, this.materials.wall, 0, 0.66, -4.85, 9.8, 0.86, 5.35);
+    box(g, this.materials.dark, 0, 4.94, -3.3, 10, 0.29, 7.8);
+    for (const side of [-1, 1]) {
+      box(g, this.materials.wood, side * 4.88, 2.96, -3.2, 0.28, 3.88, 8.4);
+      for (const depth of [-0.55, -3.22, -5.88]) {
+        cylinder(g, this.materials.wood, side * 2.05, 2.94, depth, 0.135, 3.7);
+        cylinder(g, this.materials.gold, side * 2.05, 1.24, depth, 0.19, 0.22);
+        if (side === 1)
+          box(g, this.materials.wood, 0, 4.65, depth, 4.36, 0.24, 0.32);
+      }
+      const door = new T.Group();
+      door.position.set(side * 2.45, 1.12, 1.76);
+      door.rotation.y = side * 0.98;
+      g.add(door);
+      const cx = -side * 0.7;
+      box(door, this.materials.wood, cx, 1.75, 0, 1.4, 3.5, 0.16);
+      box(door, this.materials.dark, cx, 2.26, 0.094, 1.16, 1.91, 0.035);
+      for (let j = -2; j <= 2; j++)
+        box(
+          door,
+          this.materials.wood,
+          cx + j * 0.225,
+          2.26,
+          0.125,
+          0.047,
+          1.91,
+          0.045,
+        );
+      for (let j = -3; j <= 3; j++)
+        box(
+          door,
+          this.materials.wood,
+          cx,
+          2.26 + j * 0.27,
+          0.136,
+          1.17,
+          0.047,
+          0.055,
+        );
+      for (let j = 0; j < 3; j++)
+        box(
+          door,
+          this.materials.gold,
+          cx,
+          0.25 + j * 0.39,
+          0.097,
+          1.18,
+          0.023,
+          0.035,
+        );
+      torus(
+        door,
+        this.materials.gold,
+        0.095,
+        0.018,
+        cx - side * 0.41,
+        1.3,
+        0.16,
+      );
+    }
     const icon = foldingScreen(
       this.materials["tide-icon"],
       this.materials.gold,
@@ -877,7 +931,7 @@ export class World {
       3.7,
       5,
     );
-    icon.position.set(0, 2.92, -2.12);
+    icon.position.set(0, 2.92, -6.95);
     g.add(icon);
     for (const side of [-1, 1]) {
       const bay = foldingScreen(
@@ -900,10 +954,18 @@ export class World {
       emissiveIntensity: 0.52,
       roughness: 0.94,
     });
+    const shaded = pane.clone();
+    shaded.color.setHex(0x5c5447);
+    shaded.emissiveIntensity = 0.055;
+    const shutter = pane.clone();
+    shutter.color.setHex(0x4a4440);
+    shutter.emissiveIntensity = 0.02;
     for (let i = -3; i <= 3; i++) {
+      const paper =
+        i === -2 || i === -1 ? pane : i === 0 || i === 3 ? shaded : shutter;
       const x = i * 1.075;
       box(g, this.materials.dark, x, 7.23, 1.827, 1.01, 1.11, 0.16);
-      box(g, pane, x, 7.23, 1.92, 0.85, 0.93, 0.025);
+      box(g, paper, x, 7.23, 1.92, 0.85, 0.93, 0.025);
       for (const dx of [-0.44, -0.24, 0.24, 0.44])
         box(g, this.materials.wood, x + dx, 7.23, 1.956, 0.045, 0.97, 0.04);
       for (const dy of [-0.33, 0.33])
@@ -919,7 +981,7 @@ export class World {
         0.04,
       );
       diamond.rotation.z = Math.PI / 4;
-      const glass = box(g, pane, x, 7.23, 1.992, 0.294, 0.294, 0.02);
+      const glass = box(g, paper, x, 7.23, 1.992, 0.294, 0.294, 0.02);
       glass.rotation.z = Math.PI / 4;
     }
     this.roof(g, 10, 5.5, 7.7);
@@ -944,7 +1006,38 @@ export class World {
         0.075,
       );
     }
-    this.bell(g, 1.1, 0, 2.7, 0);
+    this.bell(g, 0.94, -0.22, 1.95, -3.37);
+    cylinder(g, this.materials.dark, -0.22, 4.17, -3.37, 0.048, 0.93);
+    for (const side of [-1, 1]) {
+      const x = side * 1.53,
+        z = -3.65;
+      cylinder(g, this.materials.gold, x, 1.25, z, 0.24, 0.23, 0.17);
+      cylinder(g, this.materials.dark, x, 1.79, z, 0.07, 0.92);
+      cylinder(g, this.materials.gold, x, 2.25, z, 0.27, 0.1, 0.35);
+      for (let j = -1; j <= 1; j++) {
+        const height = 0.29 + 0.133 * (1 - Math.abs(j));
+        cylinder(
+          g,
+          this.materials.ivory,
+          x + j * 0.15,
+          2.3 + height * 0.5,
+          z,
+          0.053,
+          height,
+        );
+        mesh(
+          g,
+          new T.SphereGeometry(0.044, 8, 6),
+          this.materials.fire,
+          x + j * 0.15,
+          2.36 + height,
+          z,
+        ).scale.y = 2.45;
+      }
+    }
+    const altarLight = new T.PointLight(0xffac65, 39, 7, 2);
+    altarLight.position.set(1.54, 2.88, -3.62);
+    g.add(altarLight);
     const sign = box(g, this.materials.wood, 0, 4.88, 3.23, 3.42, 1.06, 0.16);
     mesh(
       sign,
@@ -1005,9 +1098,8 @@ export class World {
     this.hazards.clear();
     this.telegraphKey = "";
     this.cameraInitialized = false;
-    const colors = [0x23383b, 0x213737, 0x332a29];
-    this.scene.fog = new T.FogExp2(colors[index], 0.015);
-    this.scene.background = new T.Color(colors[index]);
+    this.lighting.setCourt(index);
+    this.arena.add(vigilLamp(index, this.materials));
     this.materials.stone.color.setHex([0xffffff, 0xbdd0bd, 0xaaa398][index]);
     const ground = mesh(
       this.rainCourt.floor,
@@ -1267,18 +1359,16 @@ export class World {
       );
       this.clothMeshes.push(c);
     }
-    // Warm lantern light against cold moonlit stone; the spaces stay legible in play.
+    // Low pools of light at the outer stations leave dark intervals in the gallery.
     for (const [x, z] of [
-      [-10, -8],
-      [10, -8],
-      [-10, 8],
-      [10, 8],
+      [-13.8, -7],
+      [13.8, 5],
       [0, -20],
     ]) {
       const light = new T.PointLight(
         index === 1 ? 0xb6d5ab : 0xffa951,
-        42,
-        15,
+        x === 0 ? 32 : 38,
+        11,
         2,
       );
       light.position.set(x, 2.7, z);
@@ -1644,7 +1734,7 @@ export class World {
       this.camera.position.y += (Math.random() - 0.5) * this.shake;
     }
     this.camera.lookAt(look);
-    this.fill.position.set(p.x + 2, 3, p.z + 2);
+
     this.lock.visible = locked && game.mode === "combat";
     this.lock.position.set(b.x, this.boss.height * 0.7, b.z);
     this.lock.lookAt(this.camera.position);

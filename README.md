@@ -6,9 +6,9 @@
 
 An original, playable 3D soulslike boss-rush chapter for the browser. Deliberate melee combat, weathered temple courtyards, detailed armoured and skeletal characters, pale feathers, and an adaptive dark-ambient score. Inspired by the tension and combat language of games such as Bloodborne and Wuchang: Fallen Feathers; no characters, music, models, or other assets from those games are used.
 
-![The Bellwarden raising his weapon in front of 鎮潮殿, captured during play](docs/runtime/silk/bellwarden.jpg)
+![The Bellwarden preparing a sweep in the lamplit court, captured during play](docs/runtime/vigil/bellwarden.jpg)
 
-[Play the latest combat recording](docs/runtime/silk/warden-silk.mp4) · [Three courts in gameplay](docs/runtime/silk/) · [Rain courts in motion](docs/runtime/rain/) · [Three encounter galleries](docs/runtime/sanctuary/) · [Bellwarden combat with game audio](docs/runtime/bronze/bellwarden.mp4)
+[Watch a complete Bellwarden victory with sound](docs/runtime/vigil/bellwarden.mp4) · [Three courts in gameplay](docs/runtime/vigil/) · [Rain courts in motion](docs/runtime/rain/) · [Three encounter galleries](docs/runtime/sanctuary/) · [Bellwarden combat with game audio](docs/runtime/bronze/bellwarden.mp4)
 
 ## Play locally
 
