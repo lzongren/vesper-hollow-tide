@@ -41,6 +41,13 @@ export class ArtLibrary {
     map.anisotropy = 8;
     this.textures.set("crane-fresco", map);
   }
+  async loadCinderBrocade() {
+    if (this.textures.has("cinder-brocade")) return;
+    const map = await new T.TextureLoader().loadAsync(`${import.meta.env.BASE_URL}textures/cinder-brocade.jpg`);
+    map.colorSpace = T.SRGBColorSpace;
+    map.anisotropy = 8;
+    this.textures.set("cinder-brocade", map);
+  }
   async loadLandmark(name: string) {
     if (this.models.has(name)) return;
     const model = await new GLTFLoader().loadAsync(

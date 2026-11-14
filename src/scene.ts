@@ -35,6 +35,7 @@ import { karstSpurs } from "./karst";
 import { heronStroke } from "./heron-sabres";
 import { HeronWing, bridalMask, dressHeron } from "./heron";
 import { RingStaff } from "./ring-staff";
+import { cinderIcon } from "./cinder-icon";
 import { CinderFire, CinderLights } from "./cinder-fire";
 import { CourtLight, vigilLamp } from "./vigil-light";
 import { batchCourt } from "./static-court";
@@ -207,6 +208,7 @@ interface Actor {
   grip?: WeaponGrip;
   rightHand?: T.Bone;
   halo?: T.Group;
+  votiveEmber?: T.MeshStandardMaterial;
   staff?: RingStaff;
   pinions?: HeronWing[];
   sabres?: ReturnType<typeof dressHeron>;
@@ -688,21 +690,18 @@ export class World {
       }
     }
     if (kind === 2) {
-      const halo = new T.Group();
-      halo.position.set(0, 3.55, -0.25);
-      root.add(halo);
-      torus(halo, this.materials.gold, 0.72, 0.025);
-      for (let i = 0; i < 12; i++) {
-        const ang = (i / 12) * Math.PI * 2;
-        mesh(
-          halo,
-          new T.SphereGeometry(0.035, 12, 8),
-          this.materials.fire,
-          Math.sin(ang) * 0.72,
-          Math.cos(ang) * 0.72,
-          0,
-        );
-      }
+      const { mask, halo, stole, tabs, ember } = cinderIcon(this.art.textures.get("cinder-brocade"));
+      const head = bones.get("Head")!;
+      root.add(mask);
+      head.getWorldPosition(mask.position);
+      root.worldToLocal(mask.position);
+      mask.position.y += 0.13;
+      head.attach(mask);
+      halo.position.set(0, 3.28, -0.42);
+      root.add(halo, stole, tabs);
+      bones.get("Hips")!.attach(tabs);
+      a.votiveEmber = ember;
+      bones.get("Spine")!.attach(stole);
       a.halo = halo;
       a.staff = new RingStaff(this.materials.wood, this.materials.gold, this.materials.dark, this.materials.fire);
       weapon.add(a.staff);
@@ -1078,6 +1077,7 @@ export class World {
     const [seal] = await Promise.all([
       this.art.courtSeal(["belfry", "heron", "cinder"][index]),
       index === 1 ? this.art.loadCraneFresco() : undefined,
+      index === 2 ? this.art.loadCinderBrocade() : undefined,
       ...scans.map((name) => this.art.loadLandmark(name)),
     ]);
     seal.color.setHex(index === 0 ? 0xd2d6ce : 0xb4bbb8);
@@ -1630,7 +1630,7 @@ export class World {
       );
     if (action === "windup") a.weapon.rotation.x = -2.5 * progress;
     a.staff?.update(a.weapon.rotation.x, dt);
-    if (a.halo) a.halo.rotation.z = t * 0.13;
+    if (a.halo) a.halo.rotation.z = 0.045 * Math.sin(t * 0.7);
   }
   burst(e: GameEvent) {
     if (e.kind === "swing" || e.kind === "dodge") return;
@@ -1747,6 +1747,13 @@ export class World {
       dt,
       game.attack.shape,
     );
+    if (this.boss.votiveEmber) {
+      const breath = b.state === "windup" ? Math.min(1, b.timer / b.duration) : 0;
+      const glow = game.mode === "won" ? 0.08 : (b.phase === 2 ? 2.8 : 0.62) + breath;
+      this.boss.votiveEmber.emissiveIntensity = T.MathUtils.damp(
+        this.boss.votiveEmber.emissiveIntensity, glow, 3, dt,
+      );
+    }
     this.impacts.track(this.player.weapon);
     for (const event of this.pendingStrikes) {
       this.impacts.strike(this.player.weapon, this.boss.root.position, this.boss.height,
