@@ -518,7 +518,12 @@ function frame(now: number) {
     accumulator -= 1 / 120;
   }
   for (const e of game.drainEvents()) {
-    audio.event(e);
+    if (e.kind === "ignition") {
+      const dx = e.x - game.player.x, dz = e.z - game.player.z;
+      const right = world.camera.matrixWorld.elements;
+      const pan = Math.max(-.92,Math.min(.92,(dx*right[0]+dz*right[2])/8));
+      audio.ignition(e.value ?? 0,pan,Math.hypot(dx,dz));
+    } else audio.event(e);
     if (
       [
         "swing",

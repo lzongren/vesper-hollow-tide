@@ -18,6 +18,7 @@ export type EventKind =
   | "parry"
   | "heal"
   | "telegraph"
+  | "ignition"
   | "slam"
   | "phase"
   | "stagger"
@@ -708,7 +709,10 @@ export class Combat {
   }
   updateHazards(dt: number) {
     for (const h of this.hazards) {
+      const previous = h.age;
       h.age += dt;
+      if (h.type === "eruption" && previous < h.delay && h.age >= h.delay)
+        this.event("ignition",h,h.id);
       if (h.age < h.delay) continue;
       if (h.type === "feather") {
         h.x += h.vx * dt;

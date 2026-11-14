@@ -9,6 +9,7 @@ export class Soundscape {
   volume = 0.55;
   muted = false;
   enabled = false;
+  private fireTakes: AudioBuffer[] = [];
   nextBeat = 0;
   beat = 0;
   boss = 0;
@@ -137,6 +138,41 @@ export class Soundscape {
     src.start(time);
     src.stop(time + duration);
   }
+  /** A low gust with a dry paper crackle. The three takes are generated once
+   * and reused for the staggered ignitions, including the awakened cast. */
+  ignition(id: number, pan: number, distance: number) {
+    const c=this.context;
+    if (!c || !this.running || !this.effects) return;
+    const take=id%3;
+    let buffer=this.fireTakes[take];
+    if (!buffer) {
+      buffer=c.createBuffer(1,Math.ceil(.73*c.sampleRate),c.sampleRate);
+      const samples=buffer.getChannelData(0);
+      let state=7823+take*5303, bass=0, body=0, crackle=0;
+      for (let i=0;i<samples.length;i++) {
+        const t=i/c.sampleRate;
+        state=(Math.imul(state,1664525)+1013904223)>>>0;
+        const random=state/4294967296, white=2*random-1;
+        bass+=(white-bass)*(1-Math.exp(-690/c.sampleRate));
+        body+=(white-body)*(1-Math.exp(-4500/c.sampleRate));
+        crackle*=Math.exp(-245/c.sampleRate);
+        if (random<27/c.sampleRate) crackle=.55+take*.1;
+        const swell=(1-Math.exp(-58*t))*Math.exp(-5.8*t)*(1+.18*Math.sin(26*t+take));
+        samples[i]=swell*(3.1*bass+1.15*body)+crackle*white*Math.exp(-3*t)*Math.min(1,80*t);
+      }
+      this.fireTakes[take]=buffer;
+    }
+    const source=c.createBufferSource(), gain=c.createGain(), stereo=c.createStereoPanner();
+    source.buffer=buffer;
+    source.playbackRate.value=.91+.048*(id%5);
+    gain.gain.value=.44/(1+.19*distance);
+    stereo.pan.value=pan;
+    source.connect(gain); gain.connect(stereo); stereo.connect(this.effects);
+    if (this.reverb) stereo.connect(this.reverb);
+    source.onended=()=>{source.disconnect();gain.disconnect();stereo.disconnect();};
+    source.start();
+  }
+
   bell(freq: number, t: number, amp = 0.15) {
     [1, 2.76, 5.4, 8.93].forEach((ratio, i) =>
       this.tone(

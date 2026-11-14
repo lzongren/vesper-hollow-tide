@@ -39,7 +39,7 @@ import { belfryGallery } from "./belfry-gallery";
 import { belfryFront } from "./belfry-front";
 import { cinderArmour } from "./cinder-armour";
 import { cinderIcon } from "./cinder-icon";
-import { CinderFire, CinderLights } from "./cinder-fire";
+import { CinderFire, CinderLights, shrineFireVolume } from "./cinder-fire";
 import { CourtLight, vigilLamp } from "./vigil-light";
 import { batchCourt } from "./static-court";
 import { incenseVessel, incenseSmoke } from "./incense";
@@ -246,6 +246,7 @@ export class World {
   private readonly impacts = new BladeImpact();
   private readonly pendingStrikes: GameEvent[] = [];
   cinderLights = new CinderLights();
+  private fireVolume?: Awaited<ReturnType<typeof shrineFireVolume>>;
   hazards = new Map<number, T.Group>();
   lock = new T.Group();
   particles: Effect[] = [];
@@ -1097,14 +1098,16 @@ export class World {
           ? ["rock_face_01"]
           : [];
     const name = ["belfry","garden","shrine"][index];
-    const [seal, environment] = await Promise.all([
+    const [seal, environment, fire] = await Promise.all([
       this.art.courtSeal(["belfry", "heron", "cinder"][index]),
       this.art.environment(captureEnvironment ? "moonlight" : name+"-court"),
+      index === 2 && !captureEnvironment ? this.fireVolume ?? shrineFireVolume() : undefined,
       index === 0 ? this.art.loadBelfryFrieze() : undefined,
       index === 1 ? this.art.loadCraneFresco() : undefined,
       index === 2 ? this.art.loadCinderBrocade() : undefined,
       ...scans.map((name) => this.art.loadLandmark(name)),
     ]);
+    if (fire) this.fireVolume = fire;
     this.courtEnvironments[index] = environment;
     seal.color.setHex(index === 0 ? 0xf1eee2 : 0xf5f1e7);
     this.rainCourt.finishStone(seal, true);
@@ -1913,7 +1916,7 @@ export class World {
         } else {
           const o = mesh(g, new T.RingGeometry(0.98, 1, 96), m);
           o.rotation.x = -Math.PI / 2;
-          if (h.type === "eruption") g.add(new CinderFire(h.id * 1.67));
+          if (h.type === "eruption") g.add(new CinderFire(h.id, this.fireVolume!));
         }
         g.traverse(classifyCourtSurface);
       }
