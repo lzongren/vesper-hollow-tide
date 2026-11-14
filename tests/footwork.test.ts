@@ -61,7 +61,7 @@ function rig(name: string) {
   return { frame, gait, root, pos };
 }
 
-for (const name of ["pilgrim", "wraith", "sorcerer"])
+for (const name of ["pilgrim", "wraith", "cinder-ascetic"])
   test(
     name + " plant, sidestep, stop and respawn on the authored leg chains",
     () => {

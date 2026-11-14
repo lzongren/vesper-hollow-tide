@@ -35,6 +35,7 @@ import { karstSpurs } from "./karst";
 import { heronStroke } from "./heron-sabres";
 import { HeronWing, bridalMask, dressHeron } from "./heron";
 import { RingStaff } from "./ring-staff";
+import { cinderArmour } from "./cinder-armour";
 import { cinderIcon } from "./cinder-icon";
 import { CinderFire, CinderLights } from "./cinder-fire";
 import { CourtLight, vigilLamp } from "./vigil-light";
@@ -472,7 +473,7 @@ export class World {
   actor(kind: number): Actor {
     const height = kind < 0 ? 1.9 : kind === 0 ? 3.9 : kind === 1 ? 3.2 : 3.7;
     const model = this.art.model(
-      kind < 1 ? "pilgrim" : kind === 1 ? "wraith" : "sorcerer",
+      kind < 1 ? "pilgrim" : kind === 1 ? "wraith" : "cinder-ascetic",
       height,
     );
     const root = new T.Group();
@@ -493,16 +494,17 @@ export class World {
           mm.envMapIntensity = kind < 1 ? 1.1 : 0.4;
           if (kind === 0) mm.color.setHex(0x9a8873);
           if (kind === 1) mm.color.setHex(0x8dc9c2);
-          if (kind === 2) mm.color.setHex(0x9b7c68);
-          if (kind > 0) {
-            if (kind === 1) {
-              mm.emissive.setHex(0x4c716c);
-              mm.emissiveIntensity = 0.25;
-            }
+          if (kind === 2) {
+            mm.color.setHex(0xf0e8d9);
+            mm.roughness = 1;
+          }
+          if (kind === 1) {
+            mm.emissive.setHex(0x4c716c);
+            mm.emissiveIntensity = 0.25;
             mm.onBeforeCompile = (shader) => {
               shader.fragmentShader = shader.fragmentShader.replace(
                 "#include <map_fragment>",
-                `#include <map_fragment>\n float lum=dot(diffuseColor.rgb, vec3(.299,.587,.114)); diffuseColor.rgb=${kind === 1 ? "mix(vec3(lum)*vec3(.72,.88,.90),diffuseColor.rgb,.45)+vec3(.025)" : "mix(vec3(lum),diffuseColor.rgb,.3)"};`,
+                `#include <map_fragment>\n float lum=dot(diffuseColor.rgb, vec3(.299,.587,.114)); diffuseColor.rgb=mix(vec3(lum)*vec3(.72,.88,.90),diffuseColor.rgb,.45)+vec3(.025);`,
               );
             };
           }
@@ -690,6 +692,12 @@ export class World {
       }
     }
     if (kind === 2) {
+      for (const { side, cap, bracer } of cinderArmour()) {
+        const arm = side < 0 ? "Right" : "Left";
+        root.add(cap, bracer);
+        bones.get(arm + "Arm")!.attach(cap);
+        bones.get(arm + "ForeArm")!.attach(bracer);
+      }
       const { mask, halo, stole, tabs, ember } = cinderIcon(this.art.textures.get("cinder-brocade"));
       const head = bones.get("Head")!;
       root.add(mask);
@@ -1070,7 +1078,7 @@ export class World {
   async prepareCourt(index: number) {
     const scans =
       index === 2
-        ? ["rock_face_01", "chinese_chandelier", "cinder-relief"]
+        ? ["rock_face_01", "chinese_chandelier", "cinder-relief", "cinder-ascetic"]
         : index === 1
           ? ["rock_face_01"]
           : [];
