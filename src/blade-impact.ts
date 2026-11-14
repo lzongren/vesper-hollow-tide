@@ -16,7 +16,7 @@ type Sliver = {
 
 // World-space fragments keep their launch direction as either fighter turns.
 // Six vertices give the hot core a tapered head and a thinner cooling tail.
-export class BladeImpact extends T.Mesh<T.BufferGeometry, T.MeshBasicMaterial> {
+export class BladeImpact extends T.Mesh<T.BufferGeometry, T.ShaderMaterial> {
   private static readonly capacity = 80;
   private readonly pieces: Sliver[] = [];
   private cursor = 0;
@@ -44,10 +44,32 @@ export class BladeImpact extends T.Mesh<T.BufferGeometry, T.MeshBasicMaterial> {
           T.DynamicDrawUsage,
         ),
       );
+    const profile = new Float32Array(vertices * 2);
+    for (let i = 0; i < BladeImpact.capacity; i++)
+      profile.set([0, 0.18, 1, 0, 0, -1, 0, 0.18, 0, -1, -1, 0], i * 12);
+    g.setAttribute("sparkUV", new T.BufferAttribute(profile, 2));
     super(
       g,
-      new T.MeshBasicMaterial({
-        vertexColors: true,
+      new T.ShaderMaterial({
+        vertexShader: `
+          attribute vec4 color;
+          attribute vec2 sparkUV;
+          varying vec4 tint;
+          varying vec2 profile;
+          void main(){
+            tint=color;
+            profile=sparkUV;
+            gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);
+          }`,
+        fragmentShader: `
+          varying vec4 tint;
+          varying vec2 profile;
+          void main(){
+            float crossSection=exp(-4.4*profile.x*profile.x);
+            float head=smoothstep(-1.,-.13,profile.y);
+            gl_FragColor=vec4(tint.rgb,tint.a*crossSection*(.16+.84*head));
+            #include <colorspace_fragment>
+          }`,
         transparent: true,
         depthWrite: false,
         side: T.DoubleSide,
@@ -142,7 +164,7 @@ export class BladeImpact extends T.Mesh<T.BufferGeometry, T.MeshBasicMaterial> {
       p.age = 0;
       p.life =
         (0.1 + Math.random() * 0.2) * (cinder ? 1.35 : ceramic ? 0.85 : 1);
-      p.width = (ceramic ? 0.012 : 0.008) + 0.012 * u;
+      p.width = (ceramic ? 0.012 : 0.006) + 0.009 * u;
       p.exposure = ceramic ? 0.013 : cinder ? 0.028 : 0.043;
       p.gravity = cinder ? 3.8 : ceramic ? 14 : 9.4;
       p.drag = cinder ? 2.7 : 1.35;
