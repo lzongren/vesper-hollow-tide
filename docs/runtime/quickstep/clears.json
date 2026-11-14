@@ -1,0 +1,119 @@
+{
+  "results": [
+    {
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+      "boss": "The Bellwarden",
+      "mode": "PILGRIM",
+      "timing": {
+        "samples": 1692,
+        "median": 16.7,
+        "p95": 16.8,
+        "max": 66.7
+      },
+      "title": "Vigil released",
+      "stats": "0:26TIME3PARRIES0HITS TAKEN",
+      "bossHealth": "0%",
+      "playerHealth": 100,
+      "awakened": true,
+      "elapsed": 28.655099999999646,
+      "terminal": true,
+      "entry": {
+        "loadMs": 1778,
+        "firstCallbackAfterReadyMs": 0,
+        "toCombatMs": 4244,
+        "intro": {
+          "count": 121,
+          "p95": 32.6,
+          "max": 98.5
+        },
+        "load": {
+          "count": 16,
+          "p95": 1307.8,
+          "max": 1307.8
+        },
+        "fight": {
+          "count": 1588,
+          "p95": 18.1,
+          "max": 59.2
+        }
+      }
+    },
+    {
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+      "boss": "The Veiled Heron",
+      "mode": "PILGRIM",
+      "timing": {
+        "samples": 1771,
+        "median": 16.7,
+        "p95": 16.7,
+        "max": 16.8
+      },
+      "title": "Vigil released",
+      "stats": "0:27TIME4PARRIES0HITS TAKEN",
+      "bossHealth": "0%",
+      "playerHealth": 100,
+      "awakened": true,
+      "elapsed": 29.50279999985629,
+      "terminal": true,
+      "entry": {
+        "loadMs": 848,
+        "firstCallbackAfterReadyMs": 16,
+        "toCombatMs": 3271,
+        "intro": {
+          "count": 145,
+          "p95": 18.4,
+          "max": 18.6
+        },
+        "load": {
+          "count": 5,
+          "p95": 801.5,
+          "max": 801.5
+        },
+        "fight": {
+          "count": 1630,
+          "p95": 18.3,
+          "max": 18.8
+        }
+      }
+    },
+    {
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+      "boss": "Saint of Cinders",
+      "mode": "PILGRIM",
+      "timing": {
+        "samples": 2186,
+        "median": 16.7,
+        "p95": 33.4,
+        "max": 449.9
+      },
+      "title": "The last bell fades",
+      "stats": "0:40TIME4PARRIES5HITS TAKEN",
+      "bossHealth": "0%",
+      "playerHealth": 75,
+      "awakened": true,
+      "elapsed": 42.3485000000482,
+      "terminal": true,
+      "entry": {
+        "loadMs": 744,
+        "firstCallbackAfterReadyMs": 4,
+        "toCombatMs": 3171,
+        "intro": {
+          "count": 146,
+          "p95": 18.4,
+          "max": 18.7
+        },
+        "load": {
+          "count": 6,
+          "p95": 671.7,
+          "max": 671.7
+        },
+        "fight": {
+          "count": 2043,
+          "p95": 25.7,
+          "max": 337.3
+        }
+      }
+    }
+  ],
+  "errors": []
+}
