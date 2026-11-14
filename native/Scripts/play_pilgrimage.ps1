@@ -32,6 +32,9 @@ if (!(Test-Path "$project\Saved\Valley.json")) {
 if (!(Test-Path "$project\Saved\RouteMeshes.json")) {
     Invoke-MapPass 'prepare_route_meshes' 'VESPER_ROUTE_MESHES_READY'
 }
+if (!(Test-Path "$project\Saved\Procession.json")) {
+    Invoke-MapPass 'dress_procession' 'VESPER_PROCESSION_SAVED'
+}
 Start-Process "$bin\UnrealEditor.exe" -WorkingDirectory $project -ArgumentList @(
     "`"$descriptor`"", "$map`?game=$gameMode", '-game', '-windowed', '-ResX=1600', '-ResY=900', '-NoP4'
 )

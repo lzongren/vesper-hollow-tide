@@ -12,7 +12,7 @@ From the repository root in Windows PowerShell:
 
 Install the engine’s Templates and Feature Packs component. The first launch imports the repository’s GLBs and paving textures and creates the map. Subsequent launches reuse the saved level. Use WASD to move, the mouse to look and Space to jump. Generated project content stays on the machine. The project runs in standalone game mode through Unreal Editor and requires the editor installation.
 
-[Runtime captures and validation](../docs/runtime/mountain-pilgrimage/) · [Art direction and acceptance target](Art/quality-target.json)
+[Procession road gameplay](../docs/runtime/procession-road/) · [Traversal measurements](../docs/runtime/mountain-pilgrimage/) · [Art direction and acceptance target](Art/quality-target.json)
 
 ## Prepare sources
 

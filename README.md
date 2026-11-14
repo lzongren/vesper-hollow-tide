@@ -2,6 +2,8 @@
 
 **Visual rebuild in progress.** The browser prototype below did not meet the requested Bloodborne / Wuchang visual standard. The [native Unreal project](native/README.md) now includes a 205.4-metre route through three courtyards with third-person traversal. The three boss fights run in the browser build.
 
+[Watch the updated Unreal approach to the belfry on RTX 5080](docs/runtime/procession-road/)
+
 **Three fallen saints. One last bell.**
 
 An original, playable 3D soulslike boss-rush chapter for the browser. Deliberate melee combat, weathered temple courtyards, detailed armoured and skeletal characters, pale feathers, and an adaptive dark-ambient score. Inspired by the tension and combat language of games such as Bloodborne and Wuchang: Fallen Feathers; no characters, music, models, or other assets from those games are used.

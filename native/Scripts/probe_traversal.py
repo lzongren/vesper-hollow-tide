@@ -11,12 +11,14 @@ ready = None
 controller = None
 samples = []
 frames = []
+return_start = None
+return_samples = []
 tick = None
 marks = [(0.1, "start")] + [(1 + n / 8, f"run-{n:02d}") for n in range(48)] + [(7.2,"stop")]
 
 
 def record(dt):
-    global controller, start, ready
+    global controller, start, ready, return_start
     if controller is None:
         for pc in unreal.ObjectIterator(unreal.PlayerController):
             if pc.get_controlled_pawn() is not None and pc.is_local_controller():
@@ -33,6 +35,23 @@ def record(dt):
     pawn = controller.get_controlled_pawn()
     if pawn is None:
         return
+    if return_start is not None:
+        # Allow the last PNG readback to finish, then measure a run with no captures.
+        elapsed = time.perf_counter() - return_start
+        if elapsed < 0:
+            return
+        if 0.9 <= elapsed < 6.25:
+            pawn.add_movement_input(unreal.Vector(-1,0,0), 1)
+        pos, vel = pawn.get_actor_location(), pawn.get_velocity()
+        return_samples.append([round(elapsed,5),round(dt*1000,2),round(pos.x,2),
+                               round(pos.y,2),round(pos.z,2),round(vel.length(),2)])
+        if elapsed >= 8:
+            (output / "return.json").write_text(json.dumps({
+                "pawn":pawn.get_class().get_name(), "samples":return_samples
+            }))
+            unreal.unregister_slate_post_tick_callback(tick)
+            unreal.log("VESPER_RETURN_MEASURED")
+        return
     if 0.9 <= t < 6.25:
         pawn.add_movement_input(unreal.Vector(1,0,0), 1)
     pos, vel = pawn.get_actor_location(), pawn.get_velocity()
@@ -46,7 +65,7 @@ def record(dt):
         frames.append([name,round(t,3)])
     if t >= 8:
         (output/'motion.json').write_text(json.dumps({"samples":samples,"frames":frames,"pawn":pawn.get_class().get_name()}))
-        unreal.unregister_slate_post_tick_callback(tick)
+        return_start = time.perf_counter() + 4
         unreal.log('VESPER_TRAVERSAL_PROBED')
 
 
