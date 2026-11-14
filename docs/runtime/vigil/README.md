@@ -19,3 +19,9 @@ The keyboard driver watched the public HUD and entered each fight from the encou
 | Bellwarden | 0:27 | 3 | 0 |
 | Veiled Heron | 0:28 | 5 | 0 |
 | Saint of Cinders | 0:39 | 4 | 5 |
+
+A second run stepped the simulation at 60 Hz and let each opponent defeat the player. All three reached the defeat screen. Retry restored 100/100 player health in each court, and the pause menu returned to the encounter selector. [Defeat results](defeats.json) · [Garden of Veils](heron.jpg) · [Ashen Reliquary](cinders.jpg)
+
+## Remaining visual and motion issues
+
+The garden entrance camera can put the orange canopy in front of a fighter during a lateral move. At the Bellwarden's feet the edge of the attack indicator reads as a flat sector. The captured gameplay also has visible stalls. The longest browser animation callback gaps were 3.09 seconds in the recorded bell fight, 1.64 seconds in the garden and 2.64 seconds at the shrine. Only the bell fight used screencast capture. The gaps include encounter transitions. Their cause has not been isolated.
