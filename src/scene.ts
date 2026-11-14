@@ -14,6 +14,7 @@ import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { Combat, angleDiff, type GameEvent, type Vec } from "./combat";
 import { ArtLibrary } from "./assets";
 import { courtPaving } from "./court";
+import { heronGarden, cinderReliquary } from "./landmarks";
 
 const Y = new T.Vector3(0, 1, 0);
 const standard = (color: number, metalness = 0, roughness = 0.6) =>
@@ -727,7 +728,12 @@ export class World {
     }
   }
   async prepareCourt(index: number) {
-    this.materials[`seal-${index}`] = await this.art.courtSeal(["lotus", "plume", "cinder"][index]);
+    const scans = index === 2 ? ["rock_face_01", "chinese_chandelier"] : index === 1 ? ["rock_face_01"] : [];
+    const [seal] = await Promise.all([
+      this.art.courtSeal(["lotus", "plume", "cinder"][index]),
+      ...scans.map(name => this.art.loadLandmark(name)),
+    ]);
+    this.materials[`seal-${index}`] = seal;
   }
   setArena(index: number) {
     if (!this.loaded || this.bossIndex === index) return;
@@ -789,19 +795,23 @@ export class World {
       );
       block.rotation.y = a;
     }
-    this.temple(this.arena, 0, -23, 1.5);
+    if (index === 0) this.temple(this.arena, 0, -23, 1.5);
+    else if (index === 1) this.arena.add(heronGarden(this.art, this.materials, random(1729)));
+    else this.arena.add(cinderReliquary(this.art, this.materials));
     for (const side of [-1, 1]) {
-      const corridor = new T.Group();
-      corridor.position.set(side * 18, 0, -1);
-      corridor.rotation.y = Math.PI / 2;
-      this.arena.add(corridor);
-      for (let i = 0; i < 7; i++) {
-        const x = -15 + i * 5;
-        cylinder(corridor, this.materials.wood, x, 2.9, 0, 0.22, 5.8);
-        box(corridor, this.materials.wood, x, 5.2, 0, 1.2, 0.22, 2);
-        if (i % 2 === 0) this.lantern(corridor, x, 3.6, 1.5, true);
+      if (index === 0) {
+        const corridor = new T.Group();
+        corridor.position.set(side * 18, 0, -1);
+        corridor.rotation.y = Math.PI / 2;
+        this.arena.add(corridor);
+        for (let i = 0; i < 7; i++) {
+          const x = -15 + i * 5;
+          cylinder(corridor, this.materials.wood, x, 2.9, 0, 0.22, 5.8);
+          box(corridor, this.materials.wood, x, 5.2, 0, 1.2, 0.22, 2);
+          if (i % 2 === 0) this.lantern(corridor, x, 3.6, 1.5, true);
+        }
+        this.roof(corridor, 34, 4.5, 5.7);
       }
-      this.roof(corridor, 34, 4.5, 5.7);
       for (let i = 0; i < 5; i++) {
         const z = -13 + i * 6;
         const pillar = new T.Group();
@@ -962,46 +972,17 @@ export class World {
       this.fogSheets.push(sheet);
     }
     // A large carved reliquary silhouette behind the belfry, seen through mist.
-    const guardian = this.art.model("pilgrim", 12);
-    guardian.position.set(0, 1, -40);
-    guardian.traverse((o) => {
-      if (isMesh(o)) {
-        for (const m of Array.isArray(o.material) ? o.material : [o.material])
-          m.dispose();
-        o.material = this.materials.wall;
-      }
-    });
-    this.decor.add(guardian);
-    if (index === 1) {
-      for (let i = 0; i < 70; i++) {
-        const a = rng() * 6.28,
-          r = 13 + rng() * 15;
-        const stalk = cylinder(
-          this.arena,
-          this.materials.moss,
-          Math.sin(a) * r,
-          3,
-          Math.cos(a) * r,
-          0.045,
-          6,
-        );
-        stalk.rotation.z = (rng() - 0.5) * 0.15;
-      }
-    }
-    if (index === 2) {
-      for (let i = 0; i < 16; i++) {
-        const a = (i / 16) * Math.PI * 2,
-          r = 14 + rng() * 3;
-        const fire = mesh(
-          this.arena,
-          new T.ConeGeometry(0.12, 0.9, 12),
-          this.materials.fire,
-          Math.sin(a) * r,
-          0.65,
-          Math.cos(a) * r,
-        );
-        this.flames.push(fire);
-      }
+    if (index === 0) {
+      const guardian = this.art.model("pilgrim", 12);
+      guardian.position.set(0, 1, -40);
+      guardian.traverse((o) => {
+        if (isMesh(o)) {
+          for (const m of Array.isArray(o.material) ? o.material : [o.material])
+            m.dispose();
+          o.material = this.materials.wall;
+        }
+      });
+      this.decor.add(guardian);
     }
   }
   aim(clientX: number, clientY: number): Vec | undefined {

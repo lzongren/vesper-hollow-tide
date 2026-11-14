@@ -114,5 +114,17 @@
     "file": "public/textures/moonlight.hdr",
     "source": "https://polyhaven.com/a/dikhololo_night",
     "license": "CC0"
+  },
+  {
+    "file": "public/models/rock_face_01.glb",
+    "source": "https://polyhaven.com/a/rock_face_01",
+    "license": "CC0-1.0",
+    "description": "Scanned rock face with resized base color, normals and roughness"
+  },
+  {
+    "file": "public/models/chinese_chandelier.glb",
+    "source": "https://polyhaven.com/a/chinese_chandelier",
+    "license": "CC0-1.0",
+    "description": "Suspended decorative lamp with original geometry and resized maps"
   }
 ]

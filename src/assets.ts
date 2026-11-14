@@ -30,6 +30,11 @@ export class ArtLibrary {
     return material;
   }
 
+  async loadLandmark(name: string) {
+    if (this.models.has(name)) return;
+    const model = await new GLTFLoader().loadAsync(`${import.meta.env.BASE_URL}models/${name}.glb`);
+    this.models.set(name, model);
+  }
   async load() {
     const gltf = new GLTFLoader(),
       images = new T.TextureLoader();
