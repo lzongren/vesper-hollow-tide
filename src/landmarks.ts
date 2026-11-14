@@ -99,6 +99,73 @@ function rock(
   group.add(cliff);
 }
 
+/** Raised garden crossing visible through the moon gate. A skewed span lets the
+ * bridge rails slide past the circular opening as the combat camera orbits. */
+function moonBridge(stone: Masonry, m: Palette, lantern: T.Material) {
+  const origin = new T.Vector3(0.48, 0, -30);
+  const yaw = -0.51;
+  const place = (g: T.BufferGeometry, mat: T.Material, x=0, y=0, z=0) => {
+    g.translate(x, y, z);
+    stone.add(g, mat, origin.x, origin.y, origin.z, yaw);
+  };
+  const deck = (x: number) => 1.34 + 1.12 * Math.cos(Math.PI * x / 14);
+  const radius = 2.46, spring = .17;
+  const body = new T.Shape();
+  body.moveTo(-7, -.15);
+  body.lineTo(-radius, -.15);
+  body.lineTo(-radius, spring);
+  body.absellipse(0, spring, radius, 1.75, Math.PI, 0, true, 0);
+  body.lineTo(radius, -.15);
+  body.lineTo(7, -.15);
+  for (let i=28; i>=0; i--) {
+    const x=-7+i*.5;
+    body.lineTo(x,deck(x)-.11);
+  }
+  body.closePath();
+  place(slab(body,1.63,.025),m.rock,0,0,-.815);
+  for (let i=0;i<19;i++) {
+    const a=Math.PI*i/19, b=Math.PI*(i+1)/19;
+    const block=archStone(radius,radius+.29,a+.004,b-.004,.13);
+    block.scale(1,1.75/radius,1);
+    place(block,m.wall,0,spring,.82);
+  }
+  const rail=(x1:number,y1:number,x2:number,y2:number,z:number,h:number,w:number) => {
+    const beam=new T.BoxGeometry(Math.hypot(x2-x1,y2-y1),h,w);
+    beam.rotateZ(Math.atan2(y2-y1,x2-x1));
+    place(beam,m.rock,(x1+x2)/2,(y1+y2)/2,z);
+  };
+  for(let i=0;i<28;i++) {
+    const x=-7+i*.5;
+    const tread=new T.BoxGeometry(.498,.14,2.04);
+    tread.rotateZ(Math.atan2(deck(x+.5)-deck(x),.5));
+    place(tread,m.rock,x+.25,deck(x+.25)-.05);
+  }
+  for(const z of [-.87,.87]) {
+    for(let i=0;i<=8;i++) {
+      const x=-7+i*1.75, y=deck(x);
+      place(new T.BoxGeometry(.22,.85,.23),m.wall,x,y+.415,z);
+      place(new T.CylinderGeometry(.126,.153,.16,8),m.rock,x,y+.90,z);
+      place(new T.SphereGeometry(.146,10,8).scale(.86,1.22,.86),m.rock,x,y+1.04,z);
+      if(i===8)continue;
+      const end=x+1.75;
+      rail(x,y+.71,end,deck(end)+.71,z,.105,.17);
+      rail(x,y+.26,end,deck(end)+.26,z,.085,.14);
+      for(const f of [.33,.67]) {
+        const px=x+1.75*f;
+        place(new T.BoxGeometry(.085,.43,.10),m.wall,px,T.MathUtils.lerp(y,deck(end),f)+.48,z);
+      }
+    }
+  }
+  const x=2.65, z=-1.02, y=deck(x);
+  place(new T.CylinderGeometry(.062,.10,1.32,8),m.wood,x,y+.64,z);
+  place(new T.BoxGeometry(.60,.11,.60),m.wood,x,y+1.35,z);
+  place(new T.BoxGeometry(.37,.56,.37),lantern,x,y+1.68,z);
+  for(const a of [-.2,.2])for(const b of [-.2,.2])
+    place(new T.BoxGeometry(.04,.61,.04),m.wood,x+a,y+1.68,z+b);
+  place(new T.ConeGeometry(.50,.32,4).rotateY(Math.PI/4),m.roof,x,y+2.11,z);
+  place(new T.SphereGeometry(.074,10,8),m.gold,x,y+2.30,z);
+}
+
 /** Weathered garden wall with a circular opening cut through its entire thickness. */
 export function heronGarden(art: ArtLibrary, m: Palette, rand: () => number) {
   const garden = new T.Group(),
@@ -193,6 +260,10 @@ export function heronGarden(art: ArtLibrary, m: Palette, rand: () => number) {
     tile.rotateY(Math.PI / 2);
     stone.add(tile, m.roof, -8.38 + i * 0.262, 6.84, -19.1);
   }
+  const paper = new T.MeshStandardMaterial({
+    color: 0xddcba3, emissive: 0xffbb68, emissiveIntensity: .85, roughness: .88,
+  });
+  moonBridge(stone, m, paper);
   stone.finish(garden);
   rock(art, garden, -8.4, -21, 6.8, 0.55, 1.05);
   rock(art, garden, 10.4, -23, 8.6, -0.62);

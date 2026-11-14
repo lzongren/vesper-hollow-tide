@@ -119,16 +119,21 @@ async function begin(index = selected) {
   if (startingEncounter) return;
   startingEncounter = true;
   $("loading").hidden = false;
+  $("loading-stage").textContent = "Opening the court…";
+  inGame = false;
+  $("hud").hidden = true;
+  $("error").hidden = true;
   hideModal();
   clearInput();
   try {
     if (!world) {
       const { World: WorldClass } = await import("./scene");
-      world = new WorldClass($<HTMLCanvasElement>("world"));
+      const openingWorld = new WorldClass($<HTMLCanvasElement>("world"));
+      await openingWorld.ready;
+      world = openingWorld;
       world.onPlayerStep = (x, z) => {
         if (game?.mode === "combat") audio.event({ kind: "step", x, z });
       };
-      await world.ready;
       world.setQuality(save.quality);
       world.reducedMotion = save.reducedMotion;
     }
@@ -139,9 +144,6 @@ async function begin(index = selected) {
     world.player.root.visible = true;
     world.cameraInitialized = false;
     world.yaw = 0;
-    save.attempts[index]++;
-    persist(save);
-    inGame = true;
     paused = false;
     resultShown = false;
     locked = true;
@@ -150,9 +152,9 @@ async function begin(index = selected) {
       actor.feet.reset();
       actor.impactAge = 1;
     }
-    last = performance.now();
+    $("loading-stage").textContent = "Lighting the court…";
+    await world.prepareOpening(game);
     $("menu").hidden = true;
-    $("hud").hidden = false;
     $("boss-name").textContent = game.spec.name;
     $("boss-epithet").textContent = game.spec.epithet;
     $("intro-chapter").textContent = `VIGIL ${chapterNumbers[index]}`;
@@ -166,10 +168,17 @@ async function begin(index = selected) {
     } catch {
       message("Audio unavailable — the pilgrimage continues in silence.", 3);
     }
-    $("loading").hidden = true;
+    clearInput();
+    last = performance.now();
+    save.attempts[index]++;
+    persist(save);
+    inGame = true;
     updateHud();
+    $("hud").hidden = false;
+    $("loading").hidden = true;
   } catch (err) {
     $("loading").hidden = true;
+    backToMenu();
     $("error").hidden = false;
     $("error").textContent =
       `The arena could not be opened. Check the connection and WebGL 2 support, then reload. ${err instanceof Error ? err.message : String(err)}`;
@@ -487,6 +496,7 @@ function menuController() {
 }
 function frame(now: number) {
   requestAnimationFrame(frame);
+  if (startingEncounter) return;
   const dt = Math.max(0, Math.min((now - last) / 1000, 0.05));
   last = now;
   if (!inGame || modal) {

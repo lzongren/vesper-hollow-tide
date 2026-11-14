@@ -29,6 +29,8 @@ import {
   leafDrifts,
   valleyHorizon,
 } from "./sanctuary";
+import { waitForOpeningDraw } from "./first-frame";
+import { HeronWing, bridalMask, dressHeron } from "./heron";
 import { RingStaff } from "./ring-staff";
 import { CinderFire, CinderLights } from "./cinder-fire";
 import { CourtLight, vigilLamp } from "./vigil-light";
@@ -199,7 +201,7 @@ interface Actor {
   rightHand?: T.Bone;
   halo?: T.Group;
   staff?: RingStaff;
-  pinions?: T.Group[];
+  pinions?: HeronWing[];
 }
 interface Effect {
   mesh: T.Mesh;
@@ -636,6 +638,9 @@ export class World {
       }
     }
     if (kind === 1) {
+      // Retain the animated rig and dress it with the Heron's own silhouette.
+      model.traverse(o => { if (isMesh(o)) o.visible = false; });
+      dressHeron(root, bones, this.materials["heron-silk"], this.materials.gold, this.art.textures.get("pilgrim-brocade-normal")!);
       const drape = mesh(
         root,
         mantleGeometry().scale(1.7, 1.6, 1.5),
@@ -650,35 +655,22 @@ export class World {
         alphaTest: 0.54,
         side: T.DoubleSide,
         roughness: 0.68,
+        emissiveMap: this.art.textures.get("heron-quill"),
+        emissive: 0xc7d3ce,
+        emissiveIntensity: 0.13,
       });
-      a.pinions = [];
-      for (const side of [-1, 1]) {
-        const wing = new T.Group(),
-          feathers: T.BufferGeometry[] = [];
-        wing.position.set(side * 0.35, 2.14, -0.04);
-        for (let row = 0; row < 2; row++)
-          for (let j = 0; j < 14; j++) {
-            const u = j / 13,
-              length = (row ? 1.02 : 1.55) + u * 0.45;
-            const feather = this.featherTemplate!.clone().scale(
-              length,
-              length,
-              length,
-            );
-            feather.translate(0, length * 0.41, 0);
-            feather.rotateZ(side * (-2.72 + u * 1.34));
-            feather.translate(
-              side * u * 0.72,
-              u * 0.53,
-              (row ? 0.11 : -0.01) + 0.14 * u,
-            );
-            feathers.push(feather);
-          }
-        const plumage = mesh(wing, mergeGeometries(feathers), quill);
-        plumage.receiveShadow = true;
-        feathers.forEach((g) => g.dispose());
-        root.add(wing);
-        a.pinions.push(wing);
+      quill.vertexColors = true;
+      a.pinions = [-1, 1].map(side => new HeronWing(side, this.featherTemplate!, quill));
+      root.add(...a.pinions);
+      const head = bones.get("Head");
+      if (head) {
+        const mask = bridalMask(this.materials.gold, this.materials["heron-silk"]);
+        root.add(mask);
+        head.getWorldPosition(mask.position);
+        root.worldToLocal(mask.position);
+        mask.position.y += 0.17;
+        mask.position.z += 0.03;
+        head.attach(mask);
       }
     }
     if (kind === 2) {
@@ -1078,6 +1070,23 @@ export class World {
 
     this.materials[`seal-${index}`] = seal;
   }
+  async prepareOpening(game: Combat) {
+    this.moving = false;
+    this.shake = 0;
+    // Clear short-lived effects from the previous attempt, including a retry in
+    // the same arena. The new opening must not inherit a frozen swing or sparks.
+    for (const effects of [this.particles, this.trails]) {
+      for (const effect of effects) {
+        effect.mesh.removeFromParent();
+        effect.mesh.geometry.dispose();
+        (effect.mesh.material as T.Material).dispose();
+      }
+      effects.length = 0;
+    }
+    this.update(game, 0, true);
+    await waitForOpeningDraw(this.renderer.getContext() as WebGL2RenderingContext);
+  }
+
   setArena(index: number) {
     if (!this.loaded || this.bossIndex === index) return;
     this.bossIndex = index;
@@ -1564,16 +1573,7 @@ export class World {
         if (a.kind < 0) this.onPlayerStep?.(landing.x, landing.z);
       }
     }
-    a.pinions?.forEach((wing, i) => {
-      const spread =
-        action === "windup"
-          ? progress * 0.3
-          : action === "active"
-            ? 0.3 * (1 - progress)
-            : 0;
-      wing.rotation.z = (i ? 1 : -1) * (Math.sin(t * 1.7) * 0.055 + spread);
-      wing.rotation.y = (i ? 1 : -1) * Math.sin(t * 1.2) * 0.11;
-    });
+    a.pinions?.forEach(wing => wing.pose(t, action, progress));
     a.clothMotion?.step(
       x,
       z,

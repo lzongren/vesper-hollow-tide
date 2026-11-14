@@ -95,10 +95,14 @@ export class RainCourt {
             `#include <roughnessmap_fragment>
           vec2 p=courtPoint.xz, basin=p*vec2(.31,.44)+courtSeed;
           float height=.54*poolNoise(basin)+.28*poolNoise(basin*2.13+3.)+.12*poolNoise(basin*5.8)+.06*poolNoise(basin*14.3);
+          float grain=poolNoise(p*8.5+vec2(1.7,4.1));
+          height+=.052*(grain-.5);
           float pool=smoothstep(height-.028,height+.028,courtWet);
           float damp=smoothstep(height-.14,height+.06,courtWet);
           diffuseColor.rgb *= mix(1.,.55,damp);
-          roughnessFactor=mix(roughnessFactor,.16,damp*.60+pool*.34);`,
+          float baseRoughness=roughnessFactor;
+          float dampRoughness=mix(baseRoughness,max(.36,baseRoughness*.78),damp);
+          roughnessFactor=mix(dampRoughness,.125+.13*grain,pool);`,
           )
           .replace(
             "#include <metalnessmap_fragment>",
