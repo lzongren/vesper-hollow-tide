@@ -6,6 +6,7 @@ from pathlib import Path
 
 import numpy as np
 from PIL import Image
+from cinder_gesture import add_gestures
 
 ROOT = Path(__file__).resolve().parents[1] / "public/models"
 
@@ -135,6 +136,11 @@ def bake():
         else:material["emissiveTexture"]=tex
     material["pbrMetallicRoughness"].update(roughnessFactor=1,metallicFactor=0)
     material["extensions"]["KHR_materials_specular"]={"specularFactor":.65}
+    primitive=doc["meshes"][0]["primitives"][0]
+    attr=primitive["attributes"]
+    add_gestures(doc, data, primitive,
+                 read_accessor(doc,data,attr["POSITION"]).copy(), read_accessor(doc,data,attr["NORMAL"]).copy(),
+                 read_accessor(doc,data,primitive["indices"]).reshape(-1,3).copy())
     data.extend(bytes((-len(data))%4))
     doc["buffers"][0]["byteLength"]=len(data)
     payload=json.dumps(doc,separators=(",",":")).encode()

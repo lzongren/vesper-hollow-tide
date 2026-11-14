@@ -138,3 +138,32 @@ test("the evade leads into travel, lifts the trailing boot and lands once at dif
     }
   }
 });
+
+test("the Saint's two casting gestures move the left digits while preserving the staff grip", () => {
+  const file = readFileSync(new URL("../public/models/cinder-ascetic.glb", import.meta.url));
+  const end = 20 + file.readUInt32LE(12);
+  const doc = JSON.parse(file.subarray(20, end).toString());
+  const mesh = doc.meshes[0], prim = mesh.primitives[0];
+  assert.deepEqual(mesh.extras.targetNames, ["CastOpen", "CastClench"]);
+  assert.deepEqual(mesh.weights, [0, 0]);
+  function attribute(index: number) {
+    const acc = doc.accessors[index], view = doc.bufferViews[acc.bufferView];
+    assert.equal(acc.componentType, 5126);
+    assert.equal(acc.type, "VEC3");
+    return new Float32Array(file.buffer, file.byteOffset + end + 8 + view.byteOffset, acc.count * 3);
+  }
+  const points = attribute(prim.attributes.POSITION);
+  const spread = attribute(prim.targets[0].POSITION);
+  const curl = attribute(prim.targets[1].POSITION);
+  const groups = new Set<number>();
+  for (let i = 0; i < points.length; i += 3) {
+    const x = points[i] * 1.85;
+    if (x < 0.83 || points[i + 1] * 1.85 > 2.45) {
+      assert.deepEqual(Array.from(spread.subarray(i, i + 3)), [0, 0, 0]);
+      assert.deepEqual(Array.from(curl.subarray(i, i + 3)), [0, 0, 0]);
+    } else if (spread[i + 2] > .017 && curl[i + 2] < -.017) {
+      groups.add(x < 1.04 ? 0 : x < 1.25 ? 1 : x < 1.412 ? 2 : 3);
+    }
+  }
+  assert.equal(groups.size, 4);
+});

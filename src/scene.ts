@@ -210,6 +210,7 @@ interface Actor {
   grip?: WeaponGrip;
   rightHand?: T.Bone;
   halo?: T.Group;
+  castingHand?: T.Mesh;
   votiveEmber?: T.MeshStandardMaterial;
   staff?: RingStaff;
   pinions?: HeronWing[];
@@ -692,6 +693,9 @@ export class World {
       }
     }
     if (kind === 2) {
+      model.traverse(o => {
+        if (isMesh(o) && o.morphTargetDictionary?.CastOpen !== undefined) a.castingHand = o;
+      });
       for (const { side, cap, bracer } of cinderArmour()) {
         const arm = side < 0 ? "Right" : "Left";
         root.add(cap, bracer);
@@ -1727,6 +1731,16 @@ export class World {
       dt,
       game.attack.shape,
     );
+    const fingers = this.boss.castingHand;
+    if (fingers?.morphTargetInfluences && fingers.morphTargetDictionary) {
+      const weights = fingers.morphTargetInfluences, names = fingers.morphTargetDictionary;
+      const progress = T.MathUtils.clamp(b.timer / Math.max(.001, b.duration), 0, 1);
+      const open = game.mode === "won" ? .35 : b.state === "windup" ? .35 + .65 * progress :
+        b.state === "recover" ? .28 * (1 - progress) : 0;
+      const close = game.mode === "combat" && (b.state === "active" || b.state === "stagger") ? 1 : 0;
+      weights[names.CastOpen] = T.MathUtils.damp(weights[names.CastOpen], open, 13, dt);
+      weights[names.CastClench] = T.MathUtils.damp(weights[names.CastClench], close, 17, dt);
+    }
     if (this.boss.votiveEmber) {
       const breath = b.state === "windup" ? Math.min(1, b.timer / b.duration) : 0;
       const glow = game.mode === "won" ? 0.08 : (b.phase === 2 ? 2.8 : 0.62) + breath;
