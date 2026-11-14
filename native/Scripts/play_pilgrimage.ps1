@@ -73,6 +73,9 @@ if (!(Test-Path "$project\Saved\Forecourt.json")) {
 if (!(Test-Path "$project\Saved\HeronDuel.json")) {
     Invoke-MapPass 'build_heron' 'VESPER_HERON_READY'
 }
+if (!(Test-Path "$project\Saved\CinderDuel.json")) {
+    Invoke-MapPass 'build_cinder' 'VESPER_CINDER_READY'
+}
 Start-Process "$bin\UnrealEditor.exe" -WorkingDirectory $project -ArgumentList @(
     "`"$descriptor`"", "$map`?game=$gameMode", '-game', '-windowed', '-ResX=1600', '-ResY=900', '-NoP4',
     '-ForceEnablePython', '-ExecCmds="py __import__(''runpy'').run_path(__import__(''unreal'').Paths.convert_relative_path_to_full(__import__(''unreal'').Paths.project_dir())+''Scripts/belfry_combat.py'')"'

@@ -72,7 +72,7 @@ def build():
                 u=j*600/length
                 block(x+dx*u+nx*side*435,y+dy*u+ny*side*435,25,55,75,85,angle,"Road marker")
         if i in (1,3):
-            piece("WestWaterGallery",(x+xx)/2+nx*700,(y+yy)/2+ny*700,0,angle+90)
+            piece("WestWaterGallery",(x+xx)/2+nx*700,(y+yy)/2+ny*700,0,angle)
     for (x,y),seal,portal in zip([points[1],points[3],points[5]],
             ["BelfryFlagstones","HeronFlagstones","CinderFlagstones"],
             ["BelfryPaintedFront","MoonGatePorch","ShrineLotusPortal"]):

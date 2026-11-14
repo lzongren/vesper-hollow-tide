@@ -1,4 +1,4 @@
-"""Optional 1440p gameplay probe. Run in place of belfry_combat.py with -game."""
+"""Optional standalone Heron or Saint trial. Pass -CinderTrial for the final court."""
 
 import json
 import math
@@ -10,23 +10,26 @@ import unreal
 runtime = runpy.run_path(str(Path(__file__).with_name("belfry_combat.py")))
 live = runtime["live"]
 step = runtime["step"]
-duel = runtime["heron"]
+command = unreal.SystemLibrary.get_command_line()
+cinder = "-CinderTrial" in command
+duel = runtime["saint" if cinder else "heron"]
 saved = Path(
     unreal.Paths.convert_relative_path_to_full(unreal.Paths.project_saved_dir())
 )
 rows = []
 frame_ms = []
-quill_shot = False
+special_shots = set()
 shots = [1.0, 3.4, 5.6, 8.6, 13.0, 19.0, 26.0, 33.0]
+film = "-DuelFilm" in command
 start = None
 last_sample = last_attack = -1
 pressed = False
-observe_defeat = "-HeronDefeatTrial" in unreal.SystemLibrary.get_command_line()
+observe_defeat = "-HeronDefeatTrial" in command or "-CinderDefeatTrial" in command
 original = None
 
 
 def tick(dt):
-    global start, last_sample, last_attack, pressed, original, quill_shot
+    global start, last_sample, last_attack, pressed, original
     pawn = step.pawn
     if not live(pawn):
         return
@@ -36,7 +39,12 @@ def tick(dt):
             return
         start = time.monotonic() + 3
         original = pawn
-        pawn.set_actor_location(unreal.Vector(11190, 1645, 105), False, True)
+        arrival = (
+            unreal.Vector(19010, -815, 108)
+            if cinder
+            else unreal.Vector(11190, 1645, 105)
+        )
+        pawn.set_actor_location(arrival, False, True)
         pc.set_control_rotation(unreal.Rotator(pitch=-5, yaw=-2))
         duel.deadline = unreal.GameplayStatics.get_time_seconds(pawn) + 5.5
     t = time.monotonic() - start
@@ -83,18 +91,33 @@ def tick(dt):
                 bhp,
                 duel.state,
                 getattr(duel, "move", -1),
-                len(getattr(duel, "active", [])),
+                round(getattr(duel, "radius", 0))
+                if cinder
+                else len(getattr(duel, "active", [])),
                 round(pawn.get_actor_location().x),
             ]
         )
-    if not quill_shot and getattr(duel, "active", None) and duel.active[0][3] > 225:
-        quill_shot = True
+    special = None
+    if cinder:
+        if duel.state == "eruption" and now - duel.began > 0.49:
+            special = "eruption"
+        elif duel.state == "wave" and duel.radius > 360:
+            special = "wave"
+    elif getattr(duel, "active", None) and duel.active[0][3] > 225:
+        special = "feathers"
+    if not film and special and special not in special_shots:
+        special_shots.add(special)
+        unreal.log("VESPER_SHOT " + special)
         unreal.SystemLibrary.execute_console_command(pawn, "Shot", pc)
-    elif shots and t >= shots[0]:
+    elif not film and shots and t >= shots[0]:
         shots.pop(0)
         unreal.SystemLibrary.execute_console_command(pawn, "Shot", pc)
     if t >= 49 or pawn is not original:
-        log = "HeronDefeatTrial" if observe_defeat else "HeronVictoryTrial"
+        log = ("Cinder" if cinder else "Heron") + (
+            "DefeatTrial"
+            if observe_defeat
+            else ("FilmTrial" if film else "VictoryTrial")
+        )
         (saved / (log + ".json")).write_text(
             json.dumps(
                 dict(
@@ -104,7 +127,7 @@ def tick(dt):
                         "boss_hp",
                         "state",
                         "move",
-                        "flying_feathers",
+                        "seal_radius_cm" if cinder else "flying_feathers",
                         "player_x",
                     ],
                     samples=rows,
@@ -113,7 +136,7 @@ def tick(dt):
                 )
             )
         )
-        unreal.log("VESPER_HERON_TRIAL " + log + " " + str(rows[-1]))
+        unreal.log("VESPER_DUEL_TRIAL " + log + " " + str(rows[-1]))
         unreal.unregister_slate_post_tick_callback(handle)
 
 
@@ -121,7 +144,7 @@ def safe(dt):
     try:
         tick(dt)
     except Exception as exc:
-        unreal.log_error("HERON_TRIAL_ERROR " + repr(exc))
+        unreal.log_error("DUEL_TRIAL_ERROR " + repr(exc))
         unreal.unregister_slate_post_tick_callback(handle)
 
 

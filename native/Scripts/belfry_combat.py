@@ -11,6 +11,7 @@ import unreal
 sys.path.insert(0, str(Path(__file__).parent))
 from court_encounter import CourtEncounter, live
 from heron_combat import Heron
+from cinder_combat import Saint
 
 
 class Bellwarden(CourtEncounter):
@@ -84,6 +85,7 @@ class Bellwarden(CourtEncounter):
 step = runpy.run_path(str(Path(__file__).with_name("belfry_step.py")))["step"]
 boss = Bellwarden(step)
 heron = Heron(step)
+saint = Saint(step)
 fallen_at = None
 fallen_pawn = None
 
@@ -97,7 +99,7 @@ def update_encounters(dt):
         now = unreal.GameplayStatics.get_time_seconds(pawn)
         if fallen_pawn != pawn:
             fallen_pawn, fallen_at = pawn, now + 1.4
-            for duel in (boss, heron):
+            for duel in (boss, heron, saint):
                 if (
                     live(duel.actor)
                     and duel.actor.get_controller()
@@ -106,10 +108,11 @@ def update_encounters(dt):
         elif now >= fallen_at:
             # Python actor wrappers outlive the world they wrap. Release them before
             # travel, including the step controller, which is ticked independently.
-            for duel in (boss, heron):
+            for duel in (boss, heron, saint):
                 duel.actor = duel.pc_target = None
                 duel.state = "waiting"
                 duel.turn = duel.deadline = duel.request_at = 0
+            saint.clear()
             heron.active = []
             heron.feathers = []
             step.release_world()
@@ -119,6 +122,7 @@ def update_encounters(dt):
     fallen_at = fallen_pawn = None
     boss.update(dt)
     heron.update(dt)
+    saint.update(dt)
 
 
 handle = unreal.register_slate_post_tick_callback(update_encounters)

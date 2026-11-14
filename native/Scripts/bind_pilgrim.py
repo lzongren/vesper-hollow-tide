@@ -151,7 +151,7 @@ def joint_positions(asset):
     }
 
 
-def build(reference, body_path, art, textures, output, *, bellwarden=False, armed=False, heron=False):
+def build(reference, body_path, art, textures, output, *, bellwarden=False, armed=False, heron=False, cinder=False):
     base, rig, out = Glb(body_path), Glb(reference), Output()
     skin = rig.doc["skins"][0]
     source = joint_positions(base)
@@ -341,12 +341,35 @@ def build(reference, body_path, art, textures, output, *, bellwarden=False, arme
             ("HeronBridalMask", "Porcelain", "head"),
             ("HeronSabres", "Sabres", "hand_r"),
         ]
+    if cinder:
+        gear = [
+            ("CinderVotiveHead", "Votive", "head"),
+            ("CinderArmGuards", "Cuffs", "upperarm_l"),
+            ("SaintsRingStaff", "Khakkhara", "hand_r"),
+        ]
     for file, prefix, bone in gear:
         asset = Glb((textures if prefix == "Toll" else art) / (file + ".glb"))
         offset = materials(asset, prefix)
-        for node in asset.doc["nodes"]:
+        parents = (
+            {
+                child: parent
+                for parent in asset.doc["nodes"]
+                for child in parent.get("children", [])
+            }
+            if cinder
+            else {}
+        )
+        for node_id, node in enumerate(asset.doc["nodes"]):
             if "mesh" not in node:
                 continue
+            if cinder:
+                parent = parents[node_id]["name"]
+                if prefix == "Cuffs":
+                    bone = ("lowerarm" if "forearm" in parent else "upperarm") + (
+                        "_r" if parent.startswith("Right") else "_l"
+                    )
+                elif prefix == "Votive":
+                    bone = "spine_05" if "mandorla" in parent else "head"
             if heron and prefix == "Sabres":
                 bone = "hand_l" if node["name"].startswith("Left") else "hand_r"
             m = node.get("matrix")
@@ -392,6 +415,27 @@ def build(reference, body_path, art, textures, output, *, bellwarden=False, arme
                         scale = 0.32 if prefix == "Toll" else 0.48
                         x, y, z = [v * scale + a for v, a in zip((x, y, z), target[bone])]
                         y += -0.57 if prefix == "Toll" else 0.045
+                    elif cinder:
+                        if prefix == "Votive":
+                            scale = 0.49
+                            shift = (
+                                (0, 0.34, -0.20)
+                                if bone == "spine_05"
+                                else (0, 0.06, -0.095)
+                            )
+                        elif prefix == "Cuffs":
+                            scale = 0.52
+                            shift = (0, 0.01, 0)
+                        else:
+                            scale = 0.85
+                            turn = align((0, 1, 0), (0.04, 0.60, 0.80))
+                            x, y, z = rotate(turn, (x, y, z))
+                            normal = rotate(turn, normal)
+                            shift = (0, 0, 0)
+                        x, y, z = [
+                            v * scale + a + d
+                            for v, a, d in zip((x, y, z), target[bone], shift)
+                        ]
                     elif heron:
                         if prefix == "Porcelain":
                             x, y, z = [v * 0.79 + a for v, a in zip((x, y, z), target[bone])]
@@ -441,4 +485,7 @@ def build(reference, body_path, art, textures, output, *, bellwarden=False, arme
     if heron:
         add_dress = runpy.run_path(str(Path(__file__).with_name("heron_dress.py")))["add_dress"]
         add_dress(out, lookup, target, textures)
+    if cinder:
+        add_stole = runpy.run_path(str(Path(__file__).with_name("cinder_vestment.py")))["stole"]
+        add_stole(out, lookup, textures)
     out.save(output)
