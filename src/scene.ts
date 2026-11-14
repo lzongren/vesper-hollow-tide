@@ -51,6 +51,7 @@ import { ceremonialSilks, type SilkPanel } from "./silk";
 import { pilgrimScabbard } from "./pilgrim-scabbard";
 import { travelHat } from "./travel-hat";
 import { BladeImpact } from "./blade-impact";
+import { fitTravelBoots } from "./pilgrim-footwear";
 import { Footwork } from "./footwork";
 import { RainCourt } from "./raincourt";
 import { flagstoneSeal } from "./flagstone-seal";
@@ -554,6 +555,7 @@ export class World {
       );
       if (kind < 0) {
         // Woven travel hat and layered lacquered mantle give the pilgrim an original silhouette.
+        fitTravelBoots(root, model, bones, this.art.textures.get("pilgrim-brocade-normal")!);
         const headwear = travelHat();
         root.add(headwear);
         bones.get("Head")?.attach(headwear);

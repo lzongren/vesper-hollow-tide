@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
 import * as T from "three";
+import { fitTravelBoots } from "../src/pilgrim-footwear";
 import { Footwork } from "../src/footwork";
 
 // Rebuild the authored GLB node hierarchy, including the scaled armature parent.
@@ -58,7 +59,7 @@ function rig(name: string) {
       landing: landing?.clone(),
     };
   }
-  return { frame, gait, root, pos };
+  return { frame, gait, root, pos, bones, model };
 }
 
 for (const name of ["pilgrim", "wraith", "cinder-ascetic"])
@@ -166,4 +167,26 @@ test("the Saint's two casting gestures move the left digits while preserving the
     }
   }
   assert.equal(groups.size, 4);
+});
+
+test("travel wraps fit both scaled shin bones and preserve the planted gait", () => {
+  const actor = rig("pilgrim");
+  const control = rig("pilgrim");
+  fitTravelBoots(actor.root, actor.model, actor.bones, new T.Texture());
+  for (const side of ["Left", "Right"]) {
+    const shin = actor.bones.get(side + "Leg")!;
+    const ankle = actor.pos(side + "Foot");
+    const knee = actor.pos(side + "Leg");
+    const wrap = shin.getObjectByName(side + " wrapped gaiter")!;
+    assert.equal(wrap.parent, shin);
+    const box = new T.Box3().setFromObject(wrap, true);
+    assert.ok(box.min.y > ankle.y && box.max.y < knee.y + 0.005);
+    assert.ok(box.max.x - box.min.x > 0.10 && box.max.x - box.min.x < 0.26);
+  }
+  for (let tick = 0; tick < 60; tick++) {
+    const step = actor.frame(tick / 70, tick / 100, 1 / 60);
+    const previous = control.frame(tick / 70, tick / 100, 1 / 60);
+    assert.ok(step.left.distanceTo(previous.left) < 1e-6);
+    assert.ok(step.right.distanceTo(previous.right) < 1e-6);
+  }
 });
