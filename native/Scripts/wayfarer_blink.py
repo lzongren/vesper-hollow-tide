@@ -66,14 +66,11 @@ class Blink:
             self.mesh = mesh
             self.skin = None
             slot = mesh.get_material_index("WayfarerSkin")
-            if slot >= 0:
+            names = mesh.skeletal_mesh_asset.get_all_morph_target_names()
+            if slot >= 0 and not any(str(n).lower().endswith("jawopen") for n in names):
                 self.skin = mesh.create_dynamic_material_instance(slot)
             self.target = next(
-                (
-                    n
-                    for n in mesh.skeletal_mesh_asset.get_all_morph_target_names()
-                    if str(n).lower().endswith("blink")
-                ),
+                (n for n in names if str(n).lower().endswith("blink")),
                 None,
             )
             self.age = self.last = 0.0

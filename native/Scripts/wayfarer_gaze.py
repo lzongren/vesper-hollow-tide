@@ -38,6 +38,8 @@ class Gaze:
         self.pawn = self.material = self.target = None
         self.angles = (0.0, 0.0)
         self.next_check = 0.0
+        self.shapes = {}
+        self.applied = {}
 
     def update(self, pawn, pc, duels, dt):
         mesh = pawn.mesh
@@ -47,8 +49,13 @@ class Gaze:
             slot = mesh.get_material_index("WetIris")
             if slot >= 0 and mesh.get_bone_index("head") >= 0:
                 self.axes = head_axes(pawn)
-                self.material = mesh.create_dynamic_material_instance(slot)
-        if not self.material:
+                for n in mesh.skeletal_mesh_asset.get_all_morph_target_names():
+                    for key in ("LookLeft", "LookRight", "LookUp", "LookDown"):
+                        if str(n).lower().endswith(key.lower()):
+                            self.shapes[key] = n
+                if len(self.shapes) != 4:
+                    self.material = mesh.create_dynamic_material_instance(slot)
+        if not (self.material or self.shapes):
             return
         now = unreal.GameplayStatics.get_time_seconds(pawn)
         head = mesh.get_socket_transform("head")
@@ -83,6 +90,23 @@ class Gaze:
         a, b = self.angles
         self.angles = (a + (yaw - a) * gain, b + (pitch - b) * gain)
         if max(abs(self.angles[0] - a), abs(self.angles[1] - b)) > 1e-7:
+            if len(self.shapes) == 4:
+                # Raw eye controls include orbital joint rotation and the lid follower.
+                yaw, pitch = self.angles
+                for key, weight in (
+                    ("LookRight", yaw / 0.55),
+                    ("LookLeft", -yaw / 0.55),
+                    ("LookUp", pitch / 0.45),
+                    ("LookDown", -pitch / 0.45),
+                ):
+                    value = max(0, min(1, weight))
+                    if value < 0.002:
+                        value = 0.0
+                    old = self.applied.get(key, 0.0)
+                    if abs(value - old) >= 0.003 or (value == 0 and old != 0):
+                        mesh.set_morph_target(self.shapes[key], value)
+                        self.applied[key] = value
+                return
             # Positive glTF X is the swordswoman's left, positive Y is up.
             self.material.set_vector_parameter_value(
                 "IrisDirection",

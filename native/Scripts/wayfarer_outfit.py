@@ -1,25 +1,22 @@
 """Fit the magnolia coat, crisscross sash, coiled hair and mapped portrait to the combat rig."""
 
-import json
-from collections import Counter
+from digital_head import add_head
 from bisect import bisect_right
 from math import atan2, cos, exp, pi, sin, tau
 
 from bind_pilgrim import cross, unit
 from garment_surfaces import garment_surfaces
-from portrait_subdivision import refine
 from spectre_regalia import regalia, shoulder_silks
 from jade_coiffure import coiffure
 from begonia_ribbons import knot
 from wayfarer_legs import riding_legs
-from portrait_fit import ExpressionFit
 from camellia_jewels import pendants
-from camellia_lids import aperture, blink_delta, eyelashes
-from wayfarer_blink import install_shape
 from scalp_fit import scalp_radius
 
 
 def dress(out, bones, rest, art):
+    cache = art.parents[1] / "Saved" / "DigitalHuman"
+
     def material(name, rgb, roughness, metallic=0, texture=None):
         pbr = dict(
             baseColorFactor=[*rgb, 1],
@@ -37,7 +34,9 @@ def dress(out, bones, rest, art):
         )
         return len(out.doc["materials"]) - 1
 
-    face = material("WayfarerSkin", (1, 1, 1), 0.60, texture="spectre-face.jpg")
+    face = material(
+        "WayfarerSkin", (1, 1, 1), 0.60, texture=str(cache / "HaitangDiffuse.jpg")
+    )
     silk = material("SpectreIvory", (1, 1, 1), 0.58, texture="spectre-silk.jpg")
     lining = material(
         "MourningSage", (0.48, 0.62, 0.52), 0.7, texture="spectre-silk.jpg"
@@ -54,10 +53,19 @@ def dress(out, bones, rest, art):
     out.doc["materials"][fringe].update(alphaMode="MASK", alphaCutoff=0.38)
     river = material("RiverBrocade", (1, 1, 1), 0.65, texture="river-sash.jpg")
     silver = material("AntiqueSilver", (0.61, 0.58, 0.46), 0.37, 0.80)
-    bare = material("NecklineSkin", (1, 1, 1), 0.60, texture="spectre-face.jpg")
+    bare = material(
+        "NecklineSkin", (1, 1, 1), 0.60, texture=str(cache / "HaitangDiffuse.jpg")
+    )
     ribbon = material("BegoniaRibbon", (1, 1, 1), 0.46, texture="begonia-ribbon.jpg")
-    eye = material("WetIris", (1, 1, 1), 0.23, texture="camellia-eye.jpg")
-    lash = material("LashFringe", (0.029, 0.014, 0.012), 0.57)
+    eye = material("WetIris", (1, 1, 1), 0.23, texture=str(cache / "HaitangEye.jpg"))
+    lash = material(
+        "LashFringe", (1, 1, 1), 0.62, texture=str(cache / "HaitangLashes.png")
+    )
+    out.doc["materials"][lash].update(alphaMode="MASK", alphaCutoff=0.32)
+    teeth = material(
+        "PorcelainTeeth", (1, 1, 1), 0.34, texture=str(cache / "HaitangTeeth.jpg")
+    )
+    ducts = material("TearDuct", (0.41, 0.18, 0.17), 0.25)
     trousers = material("IndigoTwill", (0.14, 0.20, 0.24), 0.81, texture="celadon.jpg")
     boots = material(
         "LinenGaiters", (0.64, 0.67, 0.61), 0.70, texture="spectre-silk.jpg"
@@ -71,171 +79,34 @@ def dress(out, bones, rest, art):
         t = min(1, max(0, t))
         return t * t * (3 - 2 * t)
 
-    # Preserve the open eyelids and lips of the CC0 human mesh. Only the face
-    # receives the frontal projection; the back of the skull carries wrapped hair.
-    source = json.loads((art / "head.json").read_text())
-    verts = source["vertices"]
-
-    offsets = json.loads((art / "camellia-head.json").read_text())
-    if len(offsets) != len(verts):
-        raise ValueError("The fitted head and sculpt must share topology")
-
-    def sculpt(point, offset):
-        x, y, z = (v + d for v, d in zip(point, offset))
-        jaw = smooth((7.04 - y) / 0.83)
-        front = smooth((z - 0.80) / 0.44)
-        # Give the cheeks a softer transition into the chin. Coordinates
-        # for the lids stay in register with their independent eye surfaces.
-        cheek = exp(-(((abs(x) - 0.42) / 0.27) ** 2) - ((y - 7.01) / 0.23) ** 2)
-        # Lift the lower cheek into the cheekbone and soften the chin in profile.
-        # Both envelope ends fade before the eyelids and the neck seam.
-        chin = exp(-(((y - 6.23) / 0.23) ** 2)) * smooth((y - 5.89) / 0.26)
-        lips = exp(-(((y - 6.60) / 0.115) ** 2) - (x / 0.35) ** 4) * front
-        brow = exp(-(((y - 7.54) / 0.13) ** 2) - ((abs(x) - 0.30) / 0.24) ** 4) * front
-        nose = exp(-(((y - 6.90) / 0.115) ** 2) - (x / 0.20) ** 4) * front
-        # Lift both mouth corners slightly and bring the resting lips together.
-        # The falloff ends inside the nasolabial fold and below the eye socket.
-        corner = (
-            exp(-(((abs(x) - 0.208) / 0.116) ** 2) - ((y - 6.61) / 0.105) ** 2) * front
-        )
-        lip_seal = (6.606 - y) * 0.48 * lips
-        return (
-            x
-            * (1 + 0.025 * cheek * front - 0.093 * jaw + 0.105 * lips - 0.055 * nose)
-            * (0.78 + 0.22 * smooth((y - 5.76) / 0.30)),
-            y
-            + 0.064 * cheek * front
-            + 0.014 * corner
-            + lip_seal
-            + 0.093 * chin * front
-            - 0.012 * brow
-            + (point[1] - 7.274) * aperture(*point),
-            z
-            + 0.041 * cheek * front
-            + 0.015 * chin * front
-            + 0.042 * lips
-            - 0.043 * nose
-            - 0.022 * jaw * max(0, z - 0.5),
-        )
-
-    shaped = [sculpt(point, offset) for point, offset in zip(verts, offsets)]
-    # Refine both spaces so the UV projection, lash landmarks and blink retain
-    # their registration after smoothing the silhouette.
-    shaped, faces = refine(shaped, source["faces"])
-    verts, _ = refine(verts, source["faces"])
-
     def pos(x, y, z):
-        return (0.104 * x, 1.625 + 0.103 * (y - 7.0), 0.104 * (z - 0.32))
+        return (0.104 * x, 1.625 + 0.103 * (y - 7), 0.104 * (z - 0.32))
 
-    fit = ExpressionFit(art)
-    original = [pos(*p) for p in shaped]
-    coords = [fit.warp(p, opened=True) for p in original]
-    closed = [
-        fit.warp(tuple(v + d for v, d in zip(p, blink_delta(*source_point))))
-        for p, source_point in zip(original, verts)
-    ]
-    blink_offsets = [
-        tuple(b - a for a, b in zip(op, cl)) for op, cl in zip(coords, closed)
-    ]
-    # Normals and the scalp radius follow the deformed geometry.
-    shaped = [
-        (x / 0.104, 7 + (y - 1.625) / 0.103, 0.32 + z / 0.104) for x, y, z in coords
-    ]
-    normals = [[0.0, 0.0, 0.0] for _ in verts]
-    batches = {face: [], hair: []}
-    for f in faces:
-        a, b, c = (shaped[i] for i in f[:3])
-        normal = cross([j - i for i, j in zip(a, b)], [j - i for i, j in zip(a, c)])
-        for i in f:
-            for k in range(3):
-                normals[i][k] += normal[k]
-        x, y, z = [sum(verts[i][k] for i in f) / len(f) for k in range(3)]
-        # Keep the photographed forehead, with the scalp continuing in one
-        # sweep from the temple past the ear to the nape.
-        angle = abs(atan2(x, z - 0.55))
-        # The fitted shell supplies the visible temple edge. Keep the vertex
-        # polygons under it skin-coloured to avoid a staircase across the brow.
-        hairline = 8.24 - 0.44 * smooth((angle - 0.55) / 0.70)
-        hairline -= 0.46 * smooth((angle - 1.40) / 0.62)
-        hairline -= 0.57 * smooth((angle - 1.98) / 0.72)
-        slot = hair if angle > 1.65 and y > hairline else face
-        for j in range(1, len(f) - 1):
-            batches[slot].extend([f[0], f[j], f[j + 1]])
-
-    uv = []
-    coverage = []
-    open_uv = []
-    neck_weights = []
-    for (x, y, z), shut, opened in zip(verts, closed, coords):
-        u, v = fit.base.photo(shut)
-        open_uv.append(fit.open_uv(opened, (x, y, z)))
-        # Keep the projected features straight. The skin shader fades their
-        # colour into a cheek swatch at the temples, ears and under the jaw.
-        uv.append((min(0.99, max(0.01, u)), min(0.99, max(0.01, v))))
-        front = smooth((z - 0.77) / 0.42) * smooth((y - 6.04) / 0.26)
-        side = smooth((abs(x) - 0.53) / 0.20) * (1 - smooth((z - 1.02) / 0.28))
-        temple = smooth((abs(u - 0.504) - 0.178) / 0.057) * smooth((y - 7.27) / 0.23)
-        forehead = smooth((0.285 - v) / 0.078)
-        # Fade only at the temple/hair boundary; let the albedo carry the
-        # full cheek and forehead of the portrait up to the fitted hairline.
-        coverage.append(
-            (
-                front * (1 - side * 0.85) * (1 - temple * 0.85) * (1 - forehead),
-                front * fit.eye_mask(u, v),
-            )
-        )
-        neck = 1 - smooth((y - 5.78) / 0.63)
-        neck_weights.append((1 - neck, neck, 0, 0))
-    attrs = dict(
-        POSITION=out.data(coords, "VEC3", bounds=True),
-        NORMAL=out.data([unit(n) for n in normals], "VEC3"),
-        TEXCOORD_0=out.data(uv, "VEC2"),
-        TEXCOORD_1=out.data(coverage, "VEC2"),
-        TEXCOORD_2=out.data(open_uv, "VEC2"),
-        JOINTS_0=out.data(
-            [(bones["head"], bones["neck_01"], 0, 0)] * len(verts), "VEC4", 5123
+    shaped, faces, neck_ring, finish_shapes = add_head(
+        out,
+        bones,
+        cache,
+        dict(
+            head=face,
+            eyeLeft=eye,
+            eyeRight=eye,
+            eyelashes=lash,
+            teeth=teeth,
+            cartilage=ducts,
         ),
-        WEIGHTS_0=out.data(neck_weights, "VEC4"),
     )
-    for mat, indices in batches.items():
-        material_attrs = dict(attrs)
-        if mat == hair:
-            # Brush the scalp in the direction of the knot instead of projecting
-            # the face image over the hairline and rear of the head.
-            hair_uv = [
-                (atan2(x, z - 0.44) / tau * 5 + 0.5 + 0.26 * (y - 7), (8.5 - y) * 0.65)
-                for x, y, z in verts
-            ]
-            material_attrs["TEXCOORD_0"] = out.data(hair_uv, "VEC2")
-        out.doc["meshes"][0]["primitives"].append(
-            dict(
-                attributes=material_attrs,
-                indices=out.data([(i,) for i in indices], "SCALAR", 5125),
-                material=mat,
-            )
-        )
 
-    def globe(mat, centre, radii, skin, texture_eyes=False, grooves=0):
+    def globe(mat, centre, radii, skin, grooves=0):
         def surface(u, v):
             a, b = u * tau, (v - 0.5) * pi
             ridges = 1 + 0.06 * cos(27 * a + 8 * b) * grooves
             x = centre[0] + radii[0] * cos(b) * sin(a) * ridges
             y = centre[1] + radii[1] * sin(b)
             z = centre[2] + radii[2] * cos(b) * cos(a) * ridges
-            uv = (
-                (0.5 + (x - centre[0]) / 0.0445, 0.5 - (y - centre[1]) / 0.0445)
-                if texture_eyes
-                else (u, v)
-            )
-            p = (x, y, z)
-            return (fit.warp(p, opened=True) if texture_eyes else p), uv, skin
+            return (x, y, z), (u, v), skin
 
         patch(mat, 48, 24, surface)
 
-    for side in (-1, 1):
-        globe(
-            eye, pos(side * 0.284, 7.288, 1.216), (0.0192, 0.0158, 0.0182), head, True
-        )
     # A low, offset chignon reads in silhouette in both profile and the combat view.
     globe(hair, (-0.021, 1.701, -0.079), (0.061, 0.048, 0.060), head, grooves=1)
 
@@ -465,19 +336,10 @@ def dress(out, bones, rest, art):
         p, skin = cloth(a, 0.982 + (opening(a) - 0.982) * v)
         return p, (u, 0.94 - 0.87 * v), skin
 
-    # The head is an open scan. Sew its actual cut edge into the jacket
-    # opening, using identical positions and neck weights at every vertex.
-    counts = Counter(
-        tuple(sorted((i, j))) for f in faces for i, j in zip(f, f[1:] + f[:1])
-    )
-    edge = {
-        i for pair, n in counts.items() if n == 1 for i in pair if verts[i][1] < 6.05
-    }
+    ring = list(range(len(neck_ring)))
 
     def angle(i):
-        return atan2(coords[i][0], coords[i][2] + 0.012) % tau
-
-    ring = sorted(edge, key=angle)
+        return i * tau / len(neck_ring)
 
     def decolletage(u, v):
         at = u * len(ring)
@@ -485,7 +347,7 @@ def dress(out, bones, rest, art):
         left, right = ring[k % len(ring)], ring[(k + 1) % len(ring)]
         t = at - k
         a = angle(left) + ((angle(right) - angle(left)) % tau) * t
-        neck = tuple(x + (y - x) * t for x, y in zip(coords[left], coords[right]))
+        neck = tuple(x + (y - x) * t for x, y in zip(neck_ring[left], neck_ring[right]))
         outside, body_weights = cloth(a, opening(a))
         # The upper third follows the throat before broadening over the
         # collarbones. A slight ridge follows each clavicle across the chest.
@@ -495,7 +357,7 @@ def dress(out, bones, rest, art):
         y = neck[1] + (outside[1] - neck[1]) * v
         ridge = 0.0045 * sin(pi * v) ** 2 * max(0, cos(a)) * sin(a) ** 2
         z += ridge
-        h = neck_weights[left][0] * (1 - t) + neck_weights[right][0] * t
+        h = (neck[1] - 1.512) / 0.045
         blend = smooth(v)
         w = [("head", h * (1 - blend)), ("neck_01", (1 - h) * (1 - blend))]
         w += [(bone, value * blend) for bone, value in body_weights if value > 0]
@@ -725,17 +587,4 @@ def dress(out, bones, rest, art):
     riding_legs(patch, rest, trousers, boots, sole, lining, silver)
     regalia(patch, strand, globe, lapel_surface, silk, lining, silver, jade)
     finish()
-    lash_shape = eyelashes(out, lash, verts, coords, bones["head"], blink_offsets)
-    # The globe retracts just behind the wet lid margin during a full blink.
-    eye_primitive = next(
-        p for p in out.doc["meshes"][0]["primitives"] if p["material"] == eye
-    )
-    eye_count = out.doc["accessors"][eye_primitive["attributes"]["POSITION"]]["count"]
-    globe_blink = out.data([(0, 0.0006, -0.0018)] * eye_count, "VEC3", bounds=True)
-    install_shape(
-        out,
-        face,
-        verts,
-        displacements=blink_offsets,
-        attachments={lash: lash_shape, eye: globe_blink},
-    )
+    finish_shapes()

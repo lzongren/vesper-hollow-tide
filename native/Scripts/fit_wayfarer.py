@@ -10,10 +10,10 @@ sys.path.insert(0, str(project / "Scripts"))
 from build_bellwarden import mesh_for, fit, lib, combat
 from keeper_materials import surface
 from sash_material import silk_motion
-from wayfarer_skin import complexion
-from camellia_materials import cornea, hair_roots, lashes
+from digital_skin import digital_finish
+from camellia_materials import hair_roots
 
-mesh = mesh_for("ZhaoyueHaitang", "pilgrim.glb", armed=True, wayfarer=True)
+mesh = mesh_for("YuhengHaitang", "pilgrim.glb", armed=True, wayfarer=True)
 if not any(
     str(name).lower().endswith("blink") for name in mesh.get_all_morph_target_names()
 ):
@@ -60,12 +60,22 @@ def tint_weave(mat, color):
 
 for slot in slots:
     name = str(slot.material_slot_name)
-    if name in ("WayfarerSkin", "NecklineSkin"):
-        slot.material_interface = complexion(root)
-    elif name == "WetIris":
-        slot.material_interface = cornea(root)
-    elif name == "LashFringe":
-        slot.material_interface = lashes(root)
+    if name in (
+        "WayfarerSkin",
+        "NecklineSkin",
+        "WetIris",
+        "LashFringe",
+        "PorcelainTeeth",
+    ):
+        slot.material_interface = digital_finish(
+            root, name, project / "Saved/DigitalHuman"
+        )
+    elif name == "TearDuct":
+        material = slot.material_interface
+        base = material.get_base_material()
+        base.set_editor_property("used_with_morph_targets", True)
+        unreal.MaterialEditingLibrary.recompile_material(base)
+        lib.save_loaded_asset(base, only_if_is_dirty=False)
     elif name in finishes:
         metal, rough = finishes[name]
         slot.material_interface = surface(root, name + "Surface", name, metal, rough)
@@ -99,9 +109,46 @@ for slot in slots:
             0.47 if gilt else 0.59,
         )
 mesh.set_editor_property("materials", slots)
+lod_editor = unreal.get_editor_subsystem(unreal.SkeletalMeshEditorSubsystem)
+lod_path = root + "/Finish/HaitangDistances"
+if lib.does_asset_exist(lod_path):
+    distances = lib.load_asset(lod_path)
+else:
+    factory = unreal.DataAssetFactory()
+    factory.set_editor_property("data_asset_class", unreal.SkeletalMeshLODSettings)
+    distances = unreal.AssetToolsHelpers.get_asset_tools().create_asset(
+        "HaitangDistances", root + "/Finish", unreal.SkeletalMeshLODSettings, factory
+    )
+    groups = []
+    for threshold, ratio in ((1.0, 1.0), (0.31, 0.48), (0.13, 0.21)):
+        group = unreal.SkeletalMeshLODGroupSettings()
+        screen = group.get_editor_property("screen_size")
+        screen.set_editor_property("default", threshold)
+        group.set_editor_property("screen_size", screen)
+        reduction = group.get_editor_property("reduction_settings")
+        reduction.set_editor_property("num_of_triangles_percentage", ratio)
+        reduction.set_editor_property("remap_morph_targets", True)
+        group.set_editor_property("reduction_settings", reduction)
+        groups.append(group)
+    distances.set_editor_property("lod_groups", groups)
+    lib.save_loaded_asset(distances, only_if_is_dirty=False)
+mesh.set_editor_property("lod_settings", distances)
+if lod_editor.get_lod_count(mesh) < 3:
+    if not lod_editor.regenerate_lod(mesh, 3, False, False):
+        raise RuntimeError("Player LOD generation failed")
+lod_vertices = [lod_editor.get_num_verts(mesh, i) for i in range(3)]
+if not lod_vertices[0] > lod_vertices[1] > lod_vertices[2] > 0:
+    raise RuntimeError(str(lod_vertices))
 lib.save_loaded_asset(mesh, only_if_is_dirty=False)
 fit("BP_CombatCharacter", "BP_BelfryPilgrim", mesh, {})
 (project / "Saved" / "WayfarerOutfit.json").write_text(
-    json.dumps({"mesh": mesh.get_path_name(), "revision": 25})
+    json.dumps(
+        {
+            "mesh": mesh.get_path_name(),
+            "revision": 28,
+            "lod_vertices": lod_vertices,
+            "morphs": [str(n) for n in mesh.get_all_morph_target_names()],
+        }
+    )
 )
 unreal.log("VESPER_WAYFARER_READY")

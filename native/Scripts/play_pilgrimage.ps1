@@ -1,4 +1,4 @@
-param([string]$EngineRoot = 'C:\Program Files\Epic Games\UE_5.8')
+param([string]$EngineRoot = 'C:\Program Files\Epic Games\UE_5.8', [switch]$PortraitReview)
 $ErrorActionPreference = 'Stop'
 $project = Split-Path $PSScriptRoot -Parent
 $descriptor = Join-Path $project 'Vesper.uproject'
@@ -96,7 +96,10 @@ if ($rebuildHeron -or $fanReport.revision -ne 3) {
 $outfitReport = if (Test-Path "$project\Saved\WayfarerOutfit.json") {
     Get-Content -Raw "$project\Saved\WayfarerOutfit.json" | ConvertFrom-Json
 }
-if ($rebuildDuel -or $outfitReport.revision -ne 25 -or !(Test-Path "$project\Content\Vesper\Duel\ZhaoyueHaitang\ZhaoyueHaitang\SkeletalMeshes\ZhaoyueHaitang.uasset")) {
+if ($rebuildDuel -or $outfitReport.revision -ne 28 -or !(Test-Path "$project\Content\Vesper\Duel\YuhengHaitang\YuhengHaitang\SkeletalMeshes\YuhengHaitang.uasset")) {
+    $python = Join-Path $EngineRoot 'Engine\Binaries\ThirdParty\Python3\Win64\python.exe'
+    & $python "$PSScriptRoot\prepare_digital_head.py" $project
+    if ($LASTEXITCODE -ne 0) { throw "Digital human face bake failed" }
     Invoke-MapPass 'fit_wayfarer' 'VESPER_WAYFARER_READY'
 }
 if (!(Test-Path "$project\Saved\WestPass.json")) {
@@ -138,7 +141,8 @@ $pondReport = if (Test-Path "$project\Saved\MoonWater.json") {
 if ($rebuildDuel -or $cinderReport.revision -ne 2 -or $ridgeReport.revision -ne 3 -or $screeReport.revision -ne 5 -or $pondReport.revision -ne 7) {
     Invoke-MapPass 'fit_moon_water' 'VESPER_MOON_WATER_READY'
 }
+$entry = if ($PortraitReview) { 'probe_portrait_match.py' } else { 'belfry_combat.py' }
 Start-Process "$bin\UnrealEditor.exe" -WorkingDirectory $project -ArgumentList @(
     "`"$descriptor`"", "$map`?game=$gameMode", '-game', '-windowed', '-ResX=1600', '-ResY=900', '-NoP4',
-    '-ForceEnablePython', '-ExecCmds="t.MaxFPS 60,py __import__(''runpy'').run_path(__import__(''unreal'').Paths.convert_relative_path_to_full(__import__(''unreal'').Paths.project_dir())+''Scripts/belfry_combat.py'')"'
+    '-ForceEnablePython', ('-ExecCmds="t.MaxFPS 60,py __import__(''runpy'').run_path(__import__(''unreal'').Paths.convert_relative_path_to_full(__import__(''unreal'').Paths.project_dir())+''Scripts/{0}'')"' -f $entry)
 )

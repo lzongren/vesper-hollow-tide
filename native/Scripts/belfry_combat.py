@@ -88,6 +88,9 @@ class Bellwarden(CourtEncounter):
 
 step = runpy.run_path(str(Path(__file__).with_name("belfry_step.py")))["step"]
 sash = SashMotion()
+from court_face import CourtFace
+
+acting = CourtFace()
 blink = Blink()
 gaze = Gaze()
 hud = CourtHUD()
@@ -137,6 +140,7 @@ def update_encounters(dt):
     heron.update(dt)
     saint.update(dt)
     gaze.update(pawn, step.pc, (boss, heron, saint), dt)
+    acting.update(pawn, gaze.target, dt)
     hud.update(pawn, (boss, heron, saint), dt)
 
 

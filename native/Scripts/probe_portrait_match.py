@@ -10,9 +10,19 @@ runtime = runpy.run_path(str(Path(__file__).with_name("belfry_combat.py")))
 from wayfarer_gaze import head_axes
 
 step = runtime["step"]
-views = [("closed", 0, 1), ("open", 0, 0), ("turn", 34, 0)]
+views = [
+    ("open", 0, 0),
+    ("closed", 0, 1),
+    ("turn", 38, 0),
+    ("profile", 88, 0),
+    ("jaw", 10, 0),
+]
+jaw = None
+turntable = "DigitalTurntable" in unreal.SystemLibrary.get_command_line()
+orbit_start = None
 index = 0
 blink_driver = runtime["blink"]
+runtime["acting"].enabled = False
 intervals = blink_driver.intervals
 # The ordinary combat tick runs before the photographic probe. Keep it from
 # starting another blink while an endpoint is being measured.
@@ -21,7 +31,7 @@ start = axes = requested = None
 
 
 def tick(dt):
-    global start, axes, index, requested
+    global start, axes, index, requested, jaw, views, turntable, orbit_start
     pawn = step.pawn
     if not runtime["live"](pawn) or not runtime["blink"].target:
         return
@@ -31,9 +41,37 @@ def tick(dt):
         )
         step.pc.set_control_rotation(unreal.Rotator(yaw=222))
         axes = head_axes(pawn)
+        jaw = next(
+            (
+                n
+                for n in pawn.mesh.skeletal_mesh_asset.get_all_morph_target_names()
+                if str(n).lower().endswith("jawopen")
+            ),
+            None,
+        )
+        if jaw is None:
+            views = [("closed", 0, 1), ("open", 0, 0), ("turn", 34, 0)]
         unreal.log("PORTRAIT_MATCH_MESH " + pawn.mesh.skeletal_mesh_asset.get_name())
         start = time.monotonic()
     mode, turn, blink = views[index]
+    jaw_weight = 0.38 if mode == "jaw" else 0
+    if turntable:
+        now = time.monotonic()
+        if orbit_start is None:
+            ready = captures.parent.parent / "DigitalHeadRecorder.ready"
+            if (
+                ready.exists() and abs(time.time() - ready.stat().st_mtime) < 12
+            ) or now - start > 20:
+                orbit_start = now
+                unreal.log("DIGITAL_HEAD_ORBIT_START")
+        t = 0 if orbit_start is None else now - orbit_start
+        turn = -12 + 98 * (0.5 - 0.5 * math.cos(math.tau * min(1, t / 12)))
+        blink = max(0, 1 - abs(t - 2.8) / 0.14)
+        jaw_weight = 0.20 * math.exp(-(((t - 8.0) / 0.9) ** 2))
+        if t >= 12:
+            turntable = False
+            start = now
+            unreal.log("DIGITAL_HEAD_ORBIT_END")
     head = pawn.mesh.get_socket_transform("head")
     fwd, right, up = (unreal.MathLibrary.transform_direction(head, x) for x in axes)
     angle = math.radians(turn)
@@ -50,6 +88,10 @@ def tick(dt):
     )
     cam.set_field_of_view(14.0)
     blink_driver.pose(blink)
+    if jaw:
+        pawn.mesh.set_morph_target(jaw, jaw_weight)
+    if turntable:
+        return
     now = time.monotonic()
     if requested is not None:
         # Shot completes during rendering and can spill into the following tick.
@@ -60,7 +102,10 @@ def tick(dt):
         start = now
         requested = None
         if index == len(views):
+            if jaw:
+                pawn.mesh.set_morph_target(jaw, 0)
             blink_driver.pose(0)
+            runtime["acting"].enabled = True
             blink_driver.intervals = intervals
             blink_driver.age = blink_driver.last = 0.0
             blink_driver.index = 0
