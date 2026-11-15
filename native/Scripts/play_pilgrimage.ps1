@@ -89,7 +89,7 @@ if ($cinderReport.revision -ne 2) {
 $outfitReport = if (Test-Path "$project\Saved\WayfarerOutfit.json") {
     Get-Content -Raw "$project\Saved\WayfarerOutfit.json" | ConvertFrom-Json
 }
-if ($rebuildDuel -or $outfitReport.revision -ne 6 -or !(Test-Path "$project\Content\Vesper\Duel\MeiSwordswoman\MeiSwordswoman\SkeletalMeshes\MeiSwordswoman.uasset")) {
+if ($rebuildDuel -or $outfitReport.revision -ne 7 -or !(Test-Path "$project\Content\Vesper\Duel\YulanJianxia\YulanJianxia\SkeletalMeshes\YulanJianxia.uasset")) {
     Invoke-MapPass 'fit_wayfarer' 'VESPER_WAYFARER_READY'
 }
 if (!(Test-Path "$project\Saved\WestPass.json")) {

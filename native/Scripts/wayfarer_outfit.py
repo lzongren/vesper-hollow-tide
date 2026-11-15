@@ -6,7 +6,7 @@ from math import atan2, cos, exp, pi, sin, tau
 from bind_pilgrim import cross, unit
 from garment_surfaces import garment_surfaces
 from cloud_collar import cloud_collar
-from plum_hairpin import butterfly
+from jade_coiffure import coiffure
 from wayfarer_blink import install_shape
 from scalp_fit import scalp_radius
 
@@ -29,7 +29,7 @@ def dress(out, bones, rest, art):
         )
         return len(out.doc["materials"]) - 1
 
-    face = material("WayfarerSkin", (1, 1, 1), 0.60, texture="plum-face.jpg")
+    face = material("WayfarerSkin", (1, 1, 1), 0.60, texture="jade-face.jpg")
     silk = material("MagnoliaSilk", (1, 1, 1), 0.66, texture="magnolia-silk.jpg")
     lining = material("CeladonSilk", (1, 1, 1), 0.76, texture="celadon.jpg")
     crimson = material("RoseBinding", (1, 1, 1), 0.71, texture="rosewood.jpg")
@@ -37,12 +37,14 @@ def dress(out, bones, rest, art):
     hair = material("InkHair", (1, 1, 1), 0.63, texture="hair.jpg")
     jade = material("CloudJade", (0.16, 0.40, 0.32), 0.27, 0.12)
     pearl = material("SeedPearl", (0.84, 0.75, 0.62), 0.28, 0.09)
-    enamel = material("KingfisherEnamel", (0.048, 0.34, 0.36), 0.24, 0.26)
+    flower = material("WhiteJadePetal", (0.80, 0.85, 0.69), 0.30, 0.04)
+    locks = material("WillowLocks", (1, 1, 1), 0.49, texture="willow-locks.png")
+    out.doc["materials"][locks].update(alphaMode="MASK", alphaCutoff=0.38)
     fringe = material("TempleStrands", (1, 1, 1), 0.64, texture="temple-strands.png")
     out.doc["materials"][fringe].update(alphaMode="MASK", alphaCutoff=0.38)
     river = material("RiverBrocade", (1, 1, 1), 0.65, texture="river-sash.jpg")
     brocade = material("RuyiBrocade", (1, 1, 1), 0.58, texture="ruyi-embroidery.jpg")
-    eye = material("WetIris", (1, 1, 1), 0.23, texture="ruyi-face.jpg")
+    eye = material("WetIris", (1, 1, 1), 0.23, texture="chestnut-eye.jpg")
     patch, finish = garment_surfaces(out, bones)
     head = [("head", 1)]
     waist = [("pelvis", 1)]
@@ -89,10 +91,12 @@ def dress(out, bones, rest, art):
         # Keep the photographed forehead, with the scalp continuing in one
         # sweep from the temple past the ear to the nape.
         angle = abs(atan2(x, z - 0.55))
-        hairline = 8.14 - 0.40 * smooth((angle - 0.50) / 0.57)
-        hairline -= 0.59 * smooth((angle - 1.07) / 0.40)
-        hairline -= 0.59 * smooth((angle - 1.53) / 0.95)
-        slot = hair if y > hairline - 0.20 * smooth((angle - 0.65) / 0.45) else face
+        # The fitted shell supplies the visible temple edge. Keep the vertex
+        # polygons under it skin-coloured to avoid a staircase across the brow.
+        hairline = 8.24 - 0.44 * smooth((angle - 0.55) / 0.70)
+        hairline -= 0.46 * smooth((angle - 1.40) / 0.62)
+        hairline -= 0.57 * smooth((angle - 1.98) / 0.72)
+        slot = hair if y > hairline else face
         for j in range(1, len(f) - 1):
             batches[slot].extend([f[0], f[j], f[j + 1]])
 
@@ -148,14 +152,18 @@ def dress(out, bones, rest, art):
             x = centre[0] + radii[0] * cos(b) * sin(a) * ridges
             y = centre[1] + radii[1] * sin(b)
             z = centre[2] + radii[2] * cos(b) * cos(a) * ridges
-            uv = face_uv(x / 0.104, 7 + (y - 1.625) / 0.103) if texture_eyes else (u, v)
+            uv = (
+                (0.5 + (x - centre[0]) / 0.041, 0.5 - (y - centre[1]) / 0.041)
+                if texture_eyes
+                else (u, v)
+            )
             return (x, y, z), uv, skin
 
         patch(mat, 48, 24, surface)
 
     for side in (-1, 1):
         globe(
-            eye, pos(side * 0.308, 7.284, 1.245), (0.0128, 0.0125, 0.0126), head, True
+            eye, pos(side * 0.312, 7.285, 1.211), (0.0195, 0.0152, 0.0177), head, True
         )
     # A low, offset chignon reads in silhouette in both profile and the combat view.
     globe(hair, (-0.015, 1.734, -0.076), (0.070, 0.061, 0.055), head, grooves=1)
@@ -278,24 +286,7 @@ def dress(out, bones, rest, art):
 
         strand(hair, coil, lambda t: 0.013 + 0.003 * sin(pi * t), head, 64)
 
-    # The openwork butterfly sits above the left ear on a pin through the coil.
-    strand(
-        brass,
-        lambda t: (-0.087 + 0.187 * t, 1.738 + 0.039 * t, -0.066 + 0.018 * t),
-        lambda t: 0.0027 + 0.0012 * t,
-        head,
-    )
-    butterfly(patch, strand, globe, brass, enamel, pearl, head)
-    for j in range(3):
-        x = 0.089 + 0.0075 * j
-        length = 0.048 + 0.019 * (j % 2)
-
-        def chain(t):
-            return (x + 0.004 * sin(t * pi), 1.755 - length * t, -0.036 + 0.002 * j)
-
-        strand(brass, chain, lambda t: 0.0011, head)
-        for t in (0.37, 0.73, 1):
-            globe(pearl, chain(t), (0.0034, 0.0048, 0.0034), head)
+    coiffure(patch, strand, globe, hair_shell, locks, flower, pearl, brass)
     for side in (-1, 1):
         globe(pearl, (side * 0.082, 1.628, 0.028), (0.0038, 0.0051, 0.0038), head)
 
@@ -388,6 +379,27 @@ def dress(out, bones, rest, art):
             return (x * 1.007, y, z * 1.008), tex, skin
 
         patch(brass if j % 2 == 0 else crimson, 2, 36, trim)
+
+    # The paired pleated fields flank flat embroidered front and rear panels.
+    # Their flared hem meets the leg weights of the existing split riding skirt.
+    for side in (-1, 1):
+
+        def pleats(u, v):
+            a = side * (0.54 + 2.06 * u)
+            y = 0.444 + 0.557 * v
+            fold = (0.5 + 0.5 * cos(tau * 12 * u)) ** 2
+            lift = 0.006 + (0.004 + 0.014 * (1 - v)) * fold
+            (x, h, z), weights = cloth(a, y, lift)
+            return (x, h, z), (u, 1 - v), weights
+
+        patch(lining, 120, 24, pleats)
+        for row, mat, width in ((0.025, crimson, 0.046), (0.080, brass, 0.007)):
+
+            def border(u, v):
+                (x, y, z), tex, weights = pleats(u, row + width * v)
+                return (1.009 * x, y, 1.009 * z), tex, weights
+
+            patch(mat, 120, 3, border)
 
     for side, suffix in [(-1, "r"), (1, "l")]:
         chain = [k + "_" + suffix for k in ("upperarm", "lowerarm", "hand")]

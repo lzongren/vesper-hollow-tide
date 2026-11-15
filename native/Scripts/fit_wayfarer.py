@@ -12,7 +12,7 @@ from keeper_materials import surface
 from sash_material import silk_motion
 from wayfarer_skin import complexion
 
-mesh = mesh_for("MeiSwordswoman", "pilgrim.glb", armed=True, wayfarer=True)
+mesh = mesh_for("YulanJianxia", "pilgrim.glb", armed=True, wayfarer=True)
 if not any(
     str(name).lower().endswith("blink") for name in mesh.get_all_morph_target_names()
 ):
@@ -42,6 +42,10 @@ for slot in slots:
         slot.material_interface = surface(root, name + "Surface", name, metal, rough)
     elif name == "RiverBrocade":
         slot.material_interface = silk_motion(root)
+    elif name == "WillowLocks":
+        slot.material_interface = surface(
+            root, "CombedWillowHair", name, 0, 0.48, cutout=True, specular=0.24
+        )
     elif name == "TempleStrands":
         slot.material_interface = surface(
             root, "FineTempleHair", name, 0, 0.62, cutout=True, specular=0.18
@@ -67,6 +71,6 @@ mesh.set_editor_property("materials", slots)
 lib.save_loaded_asset(mesh, only_if_is_dirty=False)
 fit("BP_CombatCharacter", "BP_BelfryPilgrim", mesh, {})
 (project / "Saved" / "WayfarerOutfit.json").write_text(
-    json.dumps({"mesh": mesh.get_path_name(), "revision": 6})
+    json.dumps({"mesh": mesh.get_path_name(), "revision": 7})
 )
 unreal.log("VESPER_WAYFARER_READY")

@@ -8,6 +8,10 @@ def complexion(root):
     lib = unreal.EditorAssetLibrary
     edit = unreal.MaterialEditingLibrary
     mat = surface(root, "RougeComplexion", "WayfarerSkin", 0, 0.52, specular=0.29)
+    if not mat.get_editor_property("used_with_morph_targets"):
+        mat.set_editor_property("used_with_morph_targets", True)
+        edit.recompile_material(mat)
+        lib.save_loaded_asset(mat, only_if_is_dirty=False)
     color = unreal.MaterialProperty.MP_BASE_COLOR
     projected = edit.get_material_property_input_node(mat, color)
 
