@@ -22,6 +22,7 @@ def cloud_collar(patch, brocade, piping, binding):
         # Scallop the lower edge but keep the throat and shoulder crest continuous.
         lobe = 0.5 + 0.5 * cos(4 * angle)
         reach = v - (1 - lobe) * 0.30 * v**2
+        reach *= 1 - 0.30 * abs(side) ** 2
         t = min(len(rings) - 1, reach * (len(rings) - 1))
         k = min(int(t), len(rings) - 2)
         fraction = t - k

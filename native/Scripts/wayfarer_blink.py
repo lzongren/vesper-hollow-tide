@@ -19,13 +19,15 @@ def lid_delta(x, y, z):
     return (0.0, (-0.075 if upper else 0.022) * 0.103 * amount, 0.0012 * amount)
 
 
-def install_shape(out, face_slot, vertices):
+def install_shape(out, face_slot, vertices, *, closure=lid_delta, attachments=None):
     mesh = out.doc["meshes"][0]
-    shape = out.data([lid_delta(*v) for v in vertices], "VEC3", bounds=True)
+    shape = out.data([closure(*v) for v in vertices], "VEC3", bounds=True)
     zeros = {}
     for primitive in mesh["primitives"]:
         if primitive["material"] == face_slot:
             delta = shape
+        elif attachments and primitive["material"] in attachments:
+            delta = attachments[primitive["material"]]
         else:
             count = out.doc["accessors"][primitive["attributes"]["POSITION"]]["count"]
             if count not in zeros:

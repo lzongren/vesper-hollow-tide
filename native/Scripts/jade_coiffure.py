@@ -22,7 +22,7 @@ def coiffure(patch, strand, globe, shell, hair, jade, pearl, brass):
             x = a * (0.048 + 0.058 * sin(0.85 * pi * v)) + 0.021 * v * sin(
                 7 * v + 2 * a
             )
-            y = 1.736 - length * v
+            y = 1.715 - length * v
             z = -0.095 - 0.100 * sin(0.62 * pi * v) - 0.007 * layer
             z += 0.022 * abs(a) ** 2 - 0.008 * sin(6 * v + k)
             across = (2 * u - 1) * width
@@ -54,7 +54,7 @@ def coiffure(patch, strand, globe, shell, hair, jade, pearl, brass):
                 # Bury the cut root and ease the width out through the combed shell.
                 emerge = min(1.0, v / 0.28)
                 emerge = emerge * emerge * (3 - 2 * emerge)
-                w = (2 * u - 1) * (0.0068 - 0.0011 * k) * (0.32 + 0.68 * emerge)
+                w = (2 * u - 1) * (0.0046 - 0.0008 * k) * (0.32 + 0.68 * emerge)
                 x = root[0] + side * (
                     0.015 * sin(pi * v) + 0.010 * v + w - 0.008 * (1 - emerge)
                 )
@@ -74,9 +74,9 @@ def coiffure(patch, strand, globe, shell, hair, jade, pearl, brass):
     # shallow shells with rolled rims and upward-curled tips.
     def twig(t):
         return (
-            0.021 + 0.096 * t,
-            1.735 + 0.061 * t - 0.018 * t * t,
-            -0.097 + 0.043 * t,
+            0.024 + 0.076 * t,
+            1.695 + 0.053 * t - 0.014 * t * t,
+            -0.114 + 0.061 * t,
         )
 
     strand(brass, twig, lambda t: 0.0025 - 0.0016 * t, head, 32)

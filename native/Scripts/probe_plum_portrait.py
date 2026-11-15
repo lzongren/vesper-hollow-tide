@@ -8,7 +8,11 @@ import unreal
 
 runtime = runpy.run_path(str(Path(__file__).with_name("belfry_combat.py")))
 step = runtime["step"]
-views = [("courtyard", 215, -23, 258, 72, 20), ("eaves", 192, -15, 265, 72, 20)]
+views = [
+    ("courtyard", 215, -23, 258, 72, 20),
+    ("eaves", 192, -15, 265, 72, 20),
+    ("close", 222, -10, 205, 66, 19),
+]
 idx = 0
 start = None
 

@@ -11,8 +11,9 @@ from build_bellwarden import mesh_for, fit, lib, combat
 from keeper_materials import surface
 from sash_material import silk_motion
 from wayfarer_skin import complexion
+from camellia_materials import cornea, hair_roots, lashes
 
-mesh = mesh_for("YulanJianxia", "pilgrim.glb", armed=True, wayfarer=True)
+mesh = mesh_for("HaitangWayfarer", "pilgrim.glb", armed=True, wayfarer=True)
 if not any(
     str(name).lower().endswith("blink") for name in mesh.get_all_morph_target_names()
 ):
@@ -26,7 +27,6 @@ lib.save_loaded_asset(mesh.skeleton, only_if_is_dirty=False)
 root = mesh.get_path_name().split("/SkeletalMeshes/")[0]
 slots = list(mesh.materials)
 finishes = {
-    "WetIris": (0, 0.23),
     "RuyiBrocade": (0.08, 0.62),
     "MagnoliaSilk": (0.06, 0.63),
     "CeladonSilk": (0.03, 0.77),
@@ -37,6 +37,10 @@ for slot in slots:
     name = str(slot.material_slot_name)
     if name == "WayfarerSkin":
         slot.material_interface = complexion(root)
+    elif name == "WetIris":
+        slot.material_interface = cornea(root)
+    elif name == "LashFringe":
+        slot.material_interface = lashes(root)
     elif name in finishes:
         metal, rough = finishes[name]
         slot.material_interface = surface(root, name + "Surface", name, metal, rough)
@@ -47,9 +51,7 @@ for slot in slots:
             root, "CombedWillowHair", name, 0, 0.48, cutout=True, specular=0.24
         )
     elif name == "TempleStrands":
-        slot.material_interface = surface(
-            root, "FineTempleHair", name, 0, 0.62, cutout=True, specular=0.18
-        )
+        slot.material_interface = hair_roots(root)
     elif name == "InkHair":
         slot.material_interface = surface(
             root, "BrushedInk", name, 0, 0.59, specular=0.21
@@ -71,6 +73,6 @@ mesh.set_editor_property("materials", slots)
 lib.save_loaded_asset(mesh, only_if_is_dirty=False)
 fit("BP_CombatCharacter", "BP_BelfryPilgrim", mesh, {})
 (project / "Saved" / "WayfarerOutfit.json").write_text(
-    json.dumps({"mesh": mesh.get_path_name(), "revision": 7})
+    json.dumps({"mesh": mesh.get_path_name(), "revision": 8})
 )
 unreal.log("VESPER_WAYFARER_READY")
