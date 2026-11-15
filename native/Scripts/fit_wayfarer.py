@@ -13,7 +13,7 @@ from sash_material import silk_motion
 from wayfarer_skin import complexion
 from camellia_materials import cornea, hair_roots, lashes
 
-mesh = mesh_for("ShuanghuaHaitang", "pilgrim.glb", armed=True, wayfarer=True)
+mesh = mesh_for("ZhaoyueHaitang", "pilgrim.glb", armed=True, wayfarer=True)
 if not any(
     str(name).lower().endswith("blink") for name in mesh.get_all_morph_target_names()
 ):
@@ -102,6 +102,6 @@ mesh.set_editor_property("materials", slots)
 lib.save_loaded_asset(mesh, only_if_is_dirty=False)
 fit("BP_CombatCharacter", "BP_BelfryPilgrim", mesh, {})
 (project / "Saved" / "WayfarerOutfit.json").write_text(
-    json.dumps({"mesh": mesh.get_path_name(), "revision": 21})
+    json.dumps({"mesh": mesh.get_path_name(), "revision": 25})
 )
 unreal.log("VESPER_WAYFARER_READY")

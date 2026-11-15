@@ -27,7 +27,7 @@ def rim(t, ids, fitted, shifts):
     return lerp(fitted[ids[k]], fitted[ids[k + 1]]), lerp(shifts[k], shifts[k + 1])
 
 
-def eyelashes(out, slot, source, fitted, bone):
+def eyelashes(out, slot, source, fitted, bone, displacements):
     # Follow the existing upper rim from the inner to the outer canthus.
     upper = (
         2287,
@@ -59,7 +59,7 @@ def eyelashes(out, slot, source, fitted, bone):
                 )
                 for i in upper
             ]
-        shifts = [blink_delta(*source[i]) for i in ids]
+        shifts = [displacements[i] for i in ids]
 
         # The fine, dark strip also forms the lash roots at mid-distance.
         base = len(points)

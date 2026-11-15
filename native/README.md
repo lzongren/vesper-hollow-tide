@@ -1,5 +1,7 @@
 # Native Unreal project
 
+[海棠面部对照 · 原设定图、旧版与新版 Unreal 实机](../docs/runtime/portrait-match/)
+
 [披纱鹭展扇、七羽齐射与海棠闪身 · Unreal 实机](../docs/runtime/heron-fan/) · [Moon court bridge and lotus pond](../docs/runtime/moon-water/)
 
 Haitang wears an ivory ceremonial crown and a crossed silk stole, with layered streamers fitted to her moving shoulders. The first court opens onto a roofed gallery with a carved egret screen. [Shoulders, face and sword motion](../docs/runtime/white-spectre/) · [Bell court](../docs/runtime/bell-gallery/)

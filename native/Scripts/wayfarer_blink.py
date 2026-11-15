@@ -19,9 +19,15 @@ def lid_delta(x, y, z):
     return (0.0, (-0.075 if upper else 0.022) * 0.103 * amount, 0.0012 * amount)
 
 
-def install_shape(out, face_slot, vertices, *, closure=lid_delta, attachments=None):
+def install_shape(
+    out, face_slot, vertices, *, closure=lid_delta, attachments=None, displacements=None
+):
     mesh = out.doc["meshes"][0]
-    shape = out.data([closure(*v) for v in vertices], "VEC3", bounds=True)
+    shape = out.data(
+        displacements if displacements is not None else [closure(*v) for v in vertices],
+        "VEC3",
+        bounds=True,
+    )
     zeros = {}
     for primitive in mesh["primitives"]:
         if primitive["material"] == face_slot:
@@ -42,10 +48,15 @@ class Blink:
     """Drive the morph on the currently possessed mesh, including after respawn."""
 
     def __init__(self):
-        self.mesh = self.target = None
+        self.mesh = self.target = self.skin = None
         self.age = self.last = 0.0
         self.index = 0
         self.intervals = (3.38, 4.76, 2.94, 5.31, 3.89)
+
+    def pose(self, weight):
+        self.mesh.set_morph_target(self.target, weight)
+        if self.skin:
+            self.skin.set_scalar_parameter_value("LidClosure", weight)
 
     def update(self, pawn, dt):
         mesh = pawn.mesh
@@ -53,6 +64,10 @@ class Blink:
             if not mesh or not mesh.skeletal_mesh_asset:
                 return
             self.mesh = mesh
+            self.skin = None
+            slot = mesh.get_material_index("WayfarerSkin")
+            if slot >= 0:
+                self.skin = mesh.create_dynamic_material_instance(slot)
             self.target = next(
                 (
                     n
@@ -81,5 +96,5 @@ class Blink:
             self.age = 0.0
         weight = a * a * (3 - 2 * a)
         if weight != self.last:
-            mesh.set_morph_target(self.target, weight)
+            self.pose(weight)
             self.last = weight

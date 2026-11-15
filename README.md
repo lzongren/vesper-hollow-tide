@@ -1,5 +1,7 @@
 # Vesper — The Hollow Tide
 
+[海棠面部对照 · 原设定图、旧版与新版 Unreal 实机](docs/runtime/portrait-match/)
+
 [披纱鹭展扇、七羽齐射与海棠闪身 · Unreal 实机](docs/runtime/heron-fan/)
 
 [白无常装束 · 海棠的脸、肩与交手实机](docs/runtime/white-spectre/) · [上一版骑装](docs/runtime/lingbo-haitang/) · [守钟人的双鹭照壁与木构雨廊](docs/runtime/bell-gallery/) · [月门石桥、荷塘与实机过桥](docs/runtime/moon-water/)

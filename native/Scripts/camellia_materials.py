@@ -27,19 +27,20 @@ def lashes(root):
 
 
 def cornea(root):
-    mat = surface(root, "CourtyardCornea", "WetIris", 0, 0.18, specular=0.52)
+    mat = surface(root, "CourtyardCornea", "WetIris", 0, 0.31, specular=0.25)
     edit = unreal.MaterialEditingLibrary
     prop = unreal.MaterialProperty
+    if not mat.get_editor_property("used_with_morph_targets"):
+        mat.set_editor_property("used_with_morph_targets", True)
+        edit.recompile_material(mat)
+        unreal.EditorAssetLibrary.save_loaded_asset(mat, only_if_is_dirty=False)
     if edit.get_material_property_input_node(mat, prop.MP_EMISSIVE_COLOR):
         return mat
 
     def node(cls, x, y):
         return edit.create_material_expression(mat, cls, x, y)
 
-    mat.set_editor_property("shading_model", unreal.MaterialShadingModel.MSM_CLEAR_COAT)
-    # The clear-coat model defaults to a full coat at 0.1 roughness.
-    # Reproject the iris atlas on the front ellipsoid. Leave the corneal
-    # normals and the reflection in place as the pigment moves under them.
+    # Use the lit surface for environmental highlights. The iris rotates under it.
     uv = node(unreal.MaterialExpressionTextureCoordinate, -900, -120)
     direction = node(unreal.MaterialExpressionVectorParameter, -900, 40)
     direction.set_editor_property("parameter_name", "IrisDirection")
@@ -77,47 +78,35 @@ def cornea(root):
     ):
         if not edit.connect_material_expressions(source, "", dest, pin):
             raise RuntimeError("Could not wire iris projection at " + pin)
-    # Approximate two soft reflections from the open side of the gallery.
-    # Evaluate on the curved cornea, independently of the moving pigment.
-    reflection = node(unreal.MaterialExpressionReflectionVectorWS, -690, 620)
-    view = node(unreal.MaterialExpressionCameraVectorWS, -690, 750)
-    glint = node(unreal.MaterialExpressionCustom, -420, 620)
-    glint.set_editor_property("description", "Soft corneal catchlights")
-    glint.set_editor_property(
-        "output_type", unreal.CustomMaterialOutputType.CMOT_FLOAT3
-    )
-    pins = []
-    for key in ("Reflection", "View", "EyeUV"):
+    iris = node(unreal.MaterialExpressionCustom, -340, 280)
+    iris.set_editor_property("description", "Dark limbus and brown iris")
+    iris.set_editor_property("output_type", unreal.CustomMaterialOutputType.CMOT_FLOAT3)
+    inputs = []
+    for name in ("AtlasUV", "Pigment"):
         pin = unreal.CustomInput()
-        pin.set_editor_property("input_name", key)
-        pins.append(pin)
-    glint.set_editor_property("inputs", pins)
+        pin.set_editor_property("input_name", name)
+        inputs.append(pin)
+    iris.set_editor_property("inputs", inputs)
+    iris.set_editor_property(
+        "code",
+        "float r=length(AtlasUV-.5); return Pigment*lerp(.47,1.,smoothstep(.13,.16,r));",
+    )
+    edit.connect_material_expressions(project, "", iris, "AtlasUV")
+    edit.connect_material_expressions(pigment, "RGB", iris, "Pigment")
+    edit.connect_material_property(iris, "", prop.MP_BASE_COLOR)
+    glint = node(unreal.MaterialExpressionCustom, -340, 450)
+    glint.set_editor_property(
+        "output_type", unreal.CustomMaterialOutputType.CMOT_FLOAT1
+    )
+    pin = unreal.CustomInput()
+    pin.set_editor_property("input_name", "EyeUV")
+    glint.set_editor_property("inputs", [pin])
     glint.set_editor_property(
         "code",
-        """
-        float3 v = normalize(View);
-        float3 axis = abs(v.z) < .98 ? float3(0,0,1) : float3(0,1,0);
-        float3 right = normalize(cross(axis,v));
-        float3 up = cross(v,right);
-        float3 r = normalize(Reflection);
-        float2 uv = float2(dot(r,right),dot(r,up));
-        float2 main = (uv-float2(-.22,.18))/float2(.108,.069);
-        float2 edge = (uv-float2(.175,-.085))/float2(.042,.032);
-        float lit = .86*exp(-1.7*dot(main,main)) + .25*exp(-1.5*dot(edge,edge));
-        // The small softbox reflection sits on the cornea, independent
-        // of the iris texture as the gaze tracks an opponent.
-        float2 bead=(EyeUV-float2(.457,.440))/float2(.013,.017);
-        float2 spill=(EyeUV-float2(.485,.425))/float2(.006,.008);
-        float front=smoothstep(.62,.94,dot(r,v));
-        float catchlight=.85*exp(-dot(bead,bead)) + .27*exp(-dot(spill,spill));
-        return float3(.96,.97,1.0)*(lit*front+catchlight);
-    """,
+        "float2 d=(EyeUV-float2(.457,.440))/float2(.009,.011); return .23*exp(-dot(d,d));",
     )
-    for source, pin in ((reflection, "Reflection"), (view, "View"), (uv, "EyeUV")):
-        if not edit.connect_material_expressions(source, "", glint, pin):
-            raise RuntimeError("Could not connect corneal reflection input " + pin)
-    if not edit.connect_material_property(glint, "", prop.MP_EMISSIVE_COLOR):
-        raise RuntimeError("Could not attach corneal reflection")
+    edit.connect_material_expressions(uv, "", glint, "EyeUV")
+    edit.connect_material_property(glint, "", prop.MP_EMISSIVE_COLOR)
     edit.recompile_material(mat)
     unreal.EditorAssetLibrary.save_loaded_asset(mat, only_if_is_dirty=False)
     return mat

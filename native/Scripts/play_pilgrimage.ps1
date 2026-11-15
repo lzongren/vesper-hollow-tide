@@ -96,7 +96,7 @@ if ($rebuildHeron -or $fanReport.revision -ne 3) {
 $outfitReport = if (Test-Path "$project\Saved\WayfarerOutfit.json") {
     Get-Content -Raw "$project\Saved\WayfarerOutfit.json" | ConvertFrom-Json
 }
-if ($rebuildDuel -or $outfitReport.revision -ne 21 -or !(Test-Path "$project\Content\Vesper\Duel\ShuanghuaHaitang\ShuanghuaHaitang\SkeletalMeshes\ShuanghuaHaitang.uasset")) {
+if ($rebuildDuel -or $outfitReport.revision -ne 25 -or !(Test-Path "$project\Content\Vesper\Duel\ZhaoyueHaitang\ZhaoyueHaitang\SkeletalMeshes\ZhaoyueHaitang.uasset")) {
     Invoke-MapPass 'fit_wayfarer' 'VESPER_WAYFARER_READY'
 }
 if (!(Test-Path "$project\Saved\WestPass.json")) {

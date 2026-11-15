@@ -8,7 +8,7 @@ from PIL import Image, ImageFilter
 folder = Path(__file__).resolve().parents[1] / "native/Art/Wayfarer"
 size = 2048
 face = (
-    Image.open(folder / "camellia-face.jpg")
+    Image.open(folder / "spectre-face.jpg")
     .convert("RGB")
     .resize((size, size), Image.Resampling.LANCZOS)
 )

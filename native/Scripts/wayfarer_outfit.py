@@ -12,7 +12,7 @@ from spectre_regalia import regalia, shoulder_silks
 from jade_coiffure import coiffure
 from begonia_ribbons import knot
 from wayfarer_legs import riding_legs
-from camellia_face import projection
+from portrait_fit import ExpressionFit
 from camellia_jewels import pendants
 from camellia_lids import aperture, blink_delta, eyelashes
 from wayfarer_blink import install_shape
@@ -98,7 +98,7 @@ def dress(out, bones, rest, art):
         corner = (
             exp(-(((abs(x) - 0.208) / 0.116) ** 2) - ((y - 6.61) / 0.105) ** 2) * front
         )
-        lip_seal = (6.606 - y) * 0.34 * lips
+        lip_seal = (6.606 - y) * 0.48 * lips
         return (
             x
             * (1 + 0.025 * cheek * front - 0.093 * jaw + 0.105 * lips - 0.055 * nose)
@@ -114,7 +114,7 @@ def dress(out, bones, rest, art):
             + 0.041 * cheek * front
             + 0.015 * chin * front
             + 0.042 * lips
-            - 0.027 * nose
+            - 0.043 * nose
             - 0.022 * jaw * max(0, z - 0.5),
         )
 
@@ -123,6 +123,24 @@ def dress(out, bones, rest, art):
     # their registration after smoothing the silhouette.
     shaped, faces = refine(shaped, source["faces"])
     verts, _ = refine(verts, source["faces"])
+
+    def pos(x, y, z):
+        return (0.104 * x, 1.625 + 0.103 * (y - 7.0), 0.104 * (z - 0.32))
+
+    fit = ExpressionFit(art)
+    original = [pos(*p) for p in shaped]
+    coords = [fit.warp(p, opened=True) for p in original]
+    closed = [
+        fit.warp(tuple(v + d for v, d in zip(p, blink_delta(*source_point))))
+        for p, source_point in zip(original, verts)
+    ]
+    blink_offsets = [
+        tuple(b - a for a, b in zip(op, cl)) for op, cl in zip(coords, closed)
+    ]
+    # Normals and the scalp radius follow the deformed geometry.
+    shaped = [
+        (x / 0.104, 7 + (y - 1.625) / 0.103, 0.32 + z / 0.104) for x, y, z in coords
+    ]
     normals = [[0.0, 0.0, 0.0] for _ in verts]
     batches = {face: [], hair: []}
     for f in faces:
@@ -144,15 +162,13 @@ def dress(out, bones, rest, art):
         for j in range(1, len(f) - 1):
             batches[slot].extend([f[0], f[j], f[j + 1]])
 
-    def pos(x, y, z):
-        return (0.104 * x, 1.625 + 0.103 * (y - 7.0), 0.104 * (z - 0.32))
-
-    coords = [pos(*v) for v in shaped]
     uv = []
     coverage = []
+    open_uv = []
     neck_weights = []
-    for x, y, z in verts:
-        u, v = projection(x, y)
+    for (x, y, z), shut, opened in zip(verts, closed, coords):
+        u, v = fit.base.photo(shut)
+        open_uv.append(fit.open_uv(opened, (x, y, z)))
         # Keep the projected features straight. The skin shader fades their
         # colour into a cheek swatch at the temples, ears and under the jaw.
         uv.append((min(0.99, max(0.01, u)), min(0.99, max(0.01, v))))
@@ -160,7 +176,14 @@ def dress(out, bones, rest, art):
         side = smooth((abs(x) - 0.53) / 0.20) * (1 - smooth((z - 1.02) / 0.28))
         temple = smooth((abs(u - 0.504) - 0.178) / 0.057) * smooth((y - 7.27) / 0.23)
         forehead = smooth((0.285 - v) / 0.078)
-        coverage.append((front * (1 - side) * (1 - temple) * (1 - forehead), 0))
+        # Fade only at the temple/hair boundary; let the albedo carry the
+        # full cheek and forehead of the portrait up to the fitted hairline.
+        coverage.append(
+            (
+                front * (1 - side * 0.85) * (1 - temple * 0.85) * (1 - forehead),
+                front * fit.eye_mask(u, v),
+            )
+        )
         neck = 1 - smooth((y - 5.78) / 0.63)
         neck_weights.append((1 - neck, neck, 0, 0))
     attrs = dict(
@@ -168,6 +191,7 @@ def dress(out, bones, rest, art):
         NORMAL=out.data([unit(n) for n in normals], "VEC3"),
         TEXCOORD_0=out.data(uv, "VEC2"),
         TEXCOORD_1=out.data(coverage, "VEC2"),
+        TEXCOORD_2=out.data(open_uv, "VEC2"),
         JOINTS_0=out.data(
             [(bones["head"], bones["neck_01"], 0, 0)] * len(verts), "VEC4", 5123
         ),
@@ -203,7 +227,8 @@ def dress(out, bones, rest, art):
                 if texture_eyes
                 else (u, v)
             )
-            return (x, y, z), uv, skin
+            p = (x, y, z)
+            return (fit.warp(p, opened=True) if texture_eyes else p), uv, skin
 
         patch(mat, 48, 24, surface)
 
@@ -700,5 +725,17 @@ def dress(out, bones, rest, art):
     riding_legs(patch, rest, trousers, boots, sole, lining, silver)
     regalia(patch, strand, globe, lapel_surface, silk, lining, silver, jade)
     finish()
-    lash_shape = eyelashes(out, lash, verts, coords, bones["head"])
-    install_shape(out, face, verts, closure=blink_delta, attachments={lash: lash_shape})
+    lash_shape = eyelashes(out, lash, verts, coords, bones["head"], blink_offsets)
+    # The globe retracts just behind the wet lid margin during a full blink.
+    eye_primitive = next(
+        p for p in out.doc["meshes"][0]["primitives"] if p["material"] == eye
+    )
+    eye_count = out.doc["accessors"][eye_primitive["attributes"]["POSITION"]]["count"]
+    globe_blink = out.data([(0, 0.0006, -0.0018)] * eye_count, "VEC3", bounds=True)
+    install_shape(
+        out,
+        face,
+        verts,
+        displacements=blink_offsets,
+        attachments={lash: lash_shape, eye: globe_blink},
+    )
