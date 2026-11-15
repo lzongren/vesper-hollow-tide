@@ -1,3 +1,4 @@
+import math
 from pathlib import Path
 import sys
 import unittest
@@ -5,6 +6,7 @@ from types import SimpleNamespace
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "Scripts"))
 from court_face import CourtFace
+from scalp_fit import fit_hair_margin
 from digital_head import head_weight, neck_section, skin_reflectance
 
 
@@ -30,9 +32,26 @@ class DigitalHeadTest(unittest.TestCase):
         self.assertLess(underside[2], underside[0])
         self.assertLess(underside[0], face[0])
 
-    def test_neckline_has_a_continuous_front_and_back(self):
-        import math
+    def test_roots_follow_the_margin_past_the_ear_on_either_side(self):
+        def cap(a, row):
+            # A lower section crosses the helix and suddenly widens.
+            radius = 0.10 + 0.02 * math.exp(-(((row - 0.05) / 0.01) ** 2))
+            return (
+                radius * math.sin(a),
+                1.65 + row * 0.15,
+                0.025 + radius * math.cos(a),
+            )
 
+        surface = fit_hair_margin(cap, lambda _: 0.10)
+        for angle in (-1.90, 1.90):
+            root, middle, tip = (surface(angle, row) for row in (0.10, 0.075, 0.05))
+            self.assertLess(tip[1], root[1])
+            self.assertAlmostEqual(math.dist(tip, root), 0.05 * 0.153, places=5)
+            for r, m, t in zip(root, middle, tip):
+                self.assertAlmostEqual(m, (r + t) / 2, places=7)
+        self.assertEqual(surface(0, 0.05), cap(0, 0.05))
+
+    def test_neckline_has_a_continuous_front_and_back(self):
         points = [
             (
                 0.05 * math.sin(i * math.tau / 24),

@@ -11,7 +11,7 @@ from jade_coiffure import coiffure
 from begonia_ribbons import knot
 from wayfarer_legs import riding_legs
 from camellia_jewels import pendants
-from scalp_fit import scalp_radius
+from scalp_fit import fit_hair_margin, scalp_radius
 
 
 def dress(out, bones, rest, art):
@@ -209,11 +209,18 @@ def dress(out, bones, rest, art):
         azimuth = abs(atan2(sin(a), cos(a)))
         return smooth((azimuth - 1.25) / 0.15) * (1 - smooth((azimuth - 1.80) / 0.16))
 
+    def edge_row(a):
+        return hair_edge(a) + 0.046 * above_helix(a)
+
+    combed = fit_hair_margin(
+        lambda a, row: hair_shell(hair_flow(a, row), row), edge_row
+    )
+
     def swept_hair(u, v):
         a = tau * u
-        edge = hair_edge(a) + 0.046 * above_helix(a)
+        edge = edge_row(a)
         row = edge + (1 - edge) * v
-        p = hair_shell(hair_flow(a, row), row)
+        p = combed(a, row)
         return p, (u * 5, 0.96 - 0.92 * row), head
 
     def roots(u, v):
@@ -228,7 +235,7 @@ def dress(out, bones, rest, art):
         row -= 0.062 * nape * v
         row += 0.046 * above_helix(a) * (1 - v)
         angle = hair_flow(a, row)
-        x, y, z = hair_shell(angle, row)
+        x, y, z = combed(a, row)
         return (x + 0.00018 * sin(angle), y, z + 0.00018 * cos(angle)), (u * 8, v), head
 
     patch(hair, 144, 38, swept_hair)
@@ -263,13 +270,15 @@ def dress(out, bones, rest, art):
         for tuft in range(19):
             phase = tuft * 2.399 + side
             root = 1.31 + 0.029 * tuft + 0.007 * sin(phase)
-            length = 0.039 + 0.008 * sin(phase + 0.5)
+            length = (0.039 + 0.008 * sin(phase + 0.5)) * (
+                1 - 0.28 * smooth((root - 1.60) / 0.24)
+            )
 
             def helix_wisp(u, v):
                 a = side * (root + 0.035 * v + (u - 0.5) * (0.055 - 0.032 * v))
                 level = hair_edge(a) + 0.045 * above_helix(a) + 0.006 - length * v
                 angle = hair_flow(a, level)
-                x, y, z = hair_shell(angle, level)
+                x, y, z = combed(a, level)
                 lift = 0.00055
                 return (
                     (x + lift * sin(angle), y, z + lift * cos(angle)),
@@ -286,14 +295,22 @@ def dress(out, bones, rest, art):
             for tuft in range(17):
                 phase = 2.399 * tuft + 0.7 * side + 1.4 * row
                 root = 1.83 + 0.046 * tuft + 0.018 * sin(phase)
-                reach = 0.052 + 0.015 * sin(phase + 1.3) + 0.009 * row
+                reach = (0.050 + 0.014 * sin(phase + 1.3) + 0.008 * row) * (
+                    1 - 0.26 * smooth((root - 1.98) / 0.61)
+                )
 
                 def ear_down(u, v):
-                    sweep = root + (0.085 + 0.035 * sin(phase)) * v
-                    angle = side * (sweep + (u - 0.5) * (0.071 - 0.043 * v))
-                    level = hair_edge(angle) + 0.018 - 0.009 * row - reach * v
+                    sweep = root + (0.074 + 0.030 * sin(phase)) * v
+                    angle = side * (sweep + (u - 0.5) * (0.049 - 0.043 * v))
+                    level = (
+                        hair_edge(angle)
+                        + 0.046 * above_helix(angle)
+                        + 0.021
+                        - 0.005 * row
+                        - reach * v
+                    )
+                    x, y, z = combed(angle, level)
                     angle = hair_flow(angle, level)
-                    x, y, z = hair_shell(angle, level)
                     lift = 0.00048 + 0.00030 * row + 0.00022 * sin(pi * v)
                     return (
                         (x + lift * sin(angle), y, z + lift * cos(angle)),

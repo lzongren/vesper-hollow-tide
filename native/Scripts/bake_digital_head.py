@@ -181,6 +181,15 @@ def cheek_volume(rest):
     # registered frontal outline and the lip seam keep their positions.
     oral_pad = np.exp(-(((side - 0.043) / 0.016) ** 2) - ((y - 1.590) / 0.022) ** 2)
     change[:, 2] = front * (0.0010 * malar + 0.0024 * buccal + 0.0009 * oral_pad)
+    # Give the side of the cheek a soft roll from the malar pad towards
+    # the mouth. The depth window excludes the ear and anterior lip.
+    roll = np.exp(
+        -(((side - 0.064) / 0.019) ** 2)
+        - ((y - 1.622) / 0.030) ** 2
+        - ((z - 0.079) / 0.026) ** 2
+    )
+    change[:, 0] += np.sign(x) * 0.00125 * roll
+    change[:, 2] += 0.00065 * roll
     return change
 
 
@@ -354,7 +363,7 @@ def cosmetics(diffuse, head, art):
     xyz = unpack("p", "<f4", 3)
     uv = unpack("uv", "<f4", 2) * 2047
     tris = unpack("tri", "<u4", 3)
-    front = (xyz[:, 2] > 0.042) & (xyz[:, 1] > 1.544) & (xyz[:, 1] < 1.74)
+    front = (xyz[:, 2] > 0.021) & (xyz[:, 1] > 1.544) & (xyz[:, 1] < 1.74)
     calibration = json.loads((art / "digital-pigment.json").read_text())
     grid = np.array(calibration["grid"])
     x0, y0, x1, y1 = calibration["bounds"]
@@ -494,8 +503,26 @@ def cosmetics(diffuse, head, art):
             -(((abs(x) - 0.043) / 0.025) ** 2) - ((y - 1.577) / 0.024) ** 2
         )
         gain += lower_pad[:, :, None] * [-0.014, -0.036, -0.080]
+
+        # Patches follow the strict profile guide: a warm malar high point,
+        # a quieter masseter and a more gradual falloff outside the lip.
+        # Side-facing scan texels extend beyond the frontal makeup mask.
+        def pad(y0, z0, ry, rz):
+            return np.exp(-(((y - y0) / ry) ** 2) - ((z - z0) / rz) ** 2)
+
+        # Include the back of the cheek as the skin turns away from the
+        # camera. Fade its pigment into the unpainted scalp across 18 mm.
+        fade = np.clip((z - 0.021) / 0.018, 0, 1)
+        side = np.exp(-(((abs(x) - 0.061) / 0.020) ** 4)) * fade**2 * (3 - 2 * fade)
+        side_gain = (
+            pad(1.630, 0.084, 0.012, 0.016)[:, :, None] * [0.070, 0.058, 0.064]
+            + pad(1.615, 0.079, 0.014, 0.018)[:, :, None] * [0.018, -0.012, -0.014]
+            + pad(1.606, 0.049, 0.020, 0.018)[:, :, None] * [-0.012, 0.066, 0.049]
+            + pad(1.581, 0.067, 0.016, 0.019)[:, :, None] * [0.050, 0.020, -0.016]
+            + pad(1.590, 0.095, 0.013, 0.012)[:, :, None] * [-0.043, -0.053, -0.043]
+        )
         patch = undertone[lo[1] : hi[1] + 1, lo[0] : hi[0] + 1]
-        patch[mask] = (1 + gain * gate[:, :, None])[mask]
+        patch[mask] = (1 + gain * gate[:, :, None] + side_gain * side[:, :, None])[mask]
     return target, undertone
 
 

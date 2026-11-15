@@ -1,5 +1,7 @@
 # Native Unreal project
 
+[海棠 · 侧面原画、颊部灰模与烬殿实机转面](../docs/runtime/nape-profile/)
+
 [海棠 · 烬殿侧光与耳后发际的同机位转面](../docs/runtime/shrine-portrait/)
 
 [海棠 · 下颌、颊色与鬓角的实机转面对比](../docs/runtime/temple-portrait/)

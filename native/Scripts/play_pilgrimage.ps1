@@ -96,7 +96,7 @@ if ($rebuildHeron -or $fanReport.revision -ne 3) {
 $outfitReport = if (Test-Path "$project\Saved\WayfarerOutfit.json") {
     Get-Content -Raw "$project\Saved\WayfarerOutfit.json" | ConvertFrom-Json
 }
-$rebuildOutfit = $rebuildDuel -or $outfitReport.revision -ne 46 -or $outfitReport.surface_revision -ne 1 -or !(Test-Path "$project\Content\Vesper\Duel\HaitangPortrait46\HaitangPortrait46\SkeletalMeshes\HaitangPortrait46.uasset")
+$rebuildOutfit = $rebuildDuel -or $outfitReport.revision -ne 49 -or $outfitReport.surface_revision -ne 1 -or !(Test-Path "$project\Content\Vesper\Duel\HaitangPortrait49\HaitangPortrait49\SkeletalMeshes\HaitangPortrait49.uasset")
 if ($rebuildOutfit) {
     $python = Join-Path $EngineRoot 'Engine\Binaries\ThirdParty\Python3\Win64\python.exe'
     & $python "$PSScriptRoot\prepare_digital_head.py" $project
