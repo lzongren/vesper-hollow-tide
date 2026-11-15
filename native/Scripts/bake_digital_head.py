@@ -190,6 +190,28 @@ def cheek_volume(rest):
     )
     change[:, 0] += np.sign(x) * 0.00125 * roll
     change[:, 2] += 0.00065 * roll
+
+    # Fit the footprint in the previously shaped head. The lower outline
+    # seen from the front and the forward cheek seen at 38 degrees are
+    # different points on the same cheek cross-section.
+    cheek_x, cheek_y, cheek_z = (rest + change).T
+    width = np.abs(cheek_x)
+    outline = np.exp(
+        -(((cheek_y - 1.594) / 0.017) ** 4)
+        - ((cheek_z - (0.064 + 0.26 * (cheek_y - 1.594))) / 0.018) ** 2
+        - ((width - 0.061) / 0.017) ** 4
+    )
+    change[:, 0] -= np.sign(x) * 0.00150 * outline
+    # An oblique pad rolls forward under the outer eye and blends back
+    # towards the mouth. Its high point stays lateral to the nose and lips.
+    ridge_x = 0.050 + 0.28 * (cheek_y - 1.616)
+    pad = np.exp(
+        -(((width - ridge_x) / 0.017) ** 2)
+        - ((cheek_y - 1.619) / 0.029) ** 2
+        - ((cheek_z - 0.095) / 0.017) ** 2
+    )
+    change[:, 2] += 0.0020 * pad
+    change[:, 1] += 0.00042 * pad
     return change
 
 
@@ -520,6 +542,17 @@ def cosmetics(diffuse, head, art):
             + pad(1.606, 0.049, 0.020, 0.018)[:, :, None] * [-0.012, 0.066, 0.049]
             + pad(1.581, 0.067, 0.016, 0.019)[:, :, None] * [0.050, 0.020, -0.016]
             + pad(1.590, 0.095, 0.013, 0.012)[:, :, None] * [-0.043, -0.053, -0.043]
+        )
+        # Registered skin samples behind the brow tail are progressively
+        # warmer towards the hairline. Keep the correction above the
+        # cheekbone and behind the painted outer eyelid.
+        side_gain += (
+            pad(1.665, 0.079, 0.015, 0.013)[:, :, None] * [-0.028, 0.024, 0.023]
+            + pad(1.670, 0.081, 0.007, 0.011)[:, :, None] * [0.020, 0.044, 0.059]
+            # The frontal view exposes skin farther forward than the
+            # profile sample. Keep a shaded midtone behind the brow tail.
+            + pad(1.662, 0.079, 0.006, 0.010)[:, :, None] * [-0.012, -0.032, -0.026]
+            + pad(1.663, 0.094, 0.009, 0.009)[:, :, None] * [-0.027, 0.009, 0.030]
         )
         patch = undertone[lo[1] : hi[1] + 1, lo[0] : hi[0] + 1]
         patch[mask] = (1 + gain * gate[:, :, None] + side_gain * side[:, :, None])[mask]

@@ -20,6 +20,9 @@ views = [
 shrine = "-ShrinePortrait" in unreal.SystemLibrary.get_command_line()
 if shrine:
     views = [("open", 0, 0), ("turn", 38, 0), ("profile", 88, 0), ("behind", 116, 0)]
+    if "-CheekStudy" in unreal.SystemLibrary.get_command_line():
+        views.extend([("oblique", 20, 0), ("threequarter", 60, 0)])
+        views.sort(key=lambda pose: pose[1])
 jaw = None
 recording = "-DigitalTurntable" in unreal.SystemLibrary.get_command_line()
 turntable = recording or "-PortraitOrbit" in unreal.SystemLibrary.get_command_line()
