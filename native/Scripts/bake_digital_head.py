@@ -167,6 +167,20 @@ def portrait_contour(rest):
     return offset
 
 
+def cheek_volume(rest):
+    """Displace the buccal fat pad and front of the cheek in neutral metres."""
+    x, y, z = rest.T
+    side = np.abs(x)
+    front = np.clip((z - 0.021) / 0.046, 0, 1)
+    front *= front * (3 - 2 * front)
+    malar = np.exp(-(((side - 0.057) / 0.023) ** 2) - ((y - 1.636) / 0.022) ** 2)
+    buccal = np.exp(-(((side - 0.048) / 0.023) ** 2) - ((y - 1.597) / 0.027) ** 2)
+    change = np.zeros_like(rest)
+    change[:, 0] = np.sign(x) * front * (0.0028 * malar + 0.0029 * buccal)
+    change[:, 2] = front * (0.0010 * malar + 0.0024 * buccal)
+    return change
+
+
 def profile_section(p, guide):
     # Profile eye centre and scale registered to the frontal interocular scale.
     im = np.array(Image.open(guide).convert("RGB").resize((1254, 1254)), dtype=float)
@@ -276,6 +290,8 @@ def bake(cache, art):
         relaxed = p + 0.12 * (targets["Blink"] - p)
         registered = sculpt(relaxed, section, frontal)
         rest = registered + portrait_contour(registered)
+        if name == "head":
+            rest += cheek_volume(registered)
         layout = np.array(
             [d.getVertexLayout(mi, i) for i in range(d.getVertexLayoutCount(mi))]
         )
@@ -346,6 +362,9 @@ def cosmetics(diffuse, head, art):
         Image.open(art / "portrait-open.jpg").convert("RGB").resize((1254, 1254)),
         dtype=float,
     )
+    # Record the spatial pigment correction separately. Adjacent UV triangles
+    # share edge texels; applying a gain within the raster loop would double it.
+    undertone = np.ones((2048, 2048, 3), dtype=np.float32)
     for ids in tris[front[tris].any(axis=1)]:
         tri = uv[ids]
         lo = np.maximum(np.floor(tri.min(0)).astype(int), 0)
@@ -426,7 +445,27 @@ def cosmetics(diffuse, head, art):
         lit = pigment * np.array([0.93, 0.945, 0.975])
         result = skin * (1 - weight[:, :, None]) + lit * weight[:, :, None]
         skin[mask] = np.uint8(result[mask].clip(0, 255))
-    return Image.fromarray(target)
+        # Reference-space positions are expressed in interpupillary distances.
+        # Keep a trace of blush across the upper cheeks while easing the donor
+        # scan's orange pigment below the malar pad and around the mandible.
+        lateral = abs(sx - 629) / 282
+        height = (sy - 547) / 282
+        high = np.exp(-(((lateral - 0.60) / 0.42) ** 4) - ((height - 0.30) / 0.26) ** 2)
+        brow = np.exp(-((lateral / 0.75) ** 4) - ((height + 0.60) / 0.46) ** 2)
+        flank = np.exp(
+            -(((lateral - 0.72) / 0.37) ** 4) - ((height - 1.12) / 0.57) ** 4
+        )
+        # Restrict to the facial shell and fade to the surrounding scanned skin.
+        gate = np.clip((point[:, :, 2] - 0.035) / 0.032, 0, 1)
+        gate *= np.clip((facing + 0.30) / 0.45, 0, 1)
+        gain = (
+            high[:, :, None] * [-0.026, -0.068, -0.048]
+            + brow[:, :, None] * [-0.009, -0.035, -0.029]
+            + flank[:, :, None] * [0.026, 0.098, 0.135]
+        )
+        patch = undertone[lo[1] : hi[1] + 1, lo[0] : hi[0] + 1]
+        patch[mask] = (1 + gain * gate[:, :, None])[mask]
+    return target, undertone
 
 
 def textures(cache, art, head):
@@ -458,7 +497,23 @@ def textures(cache, art, head):
     lip_tone = np.array([153.0, 80.0, 82.0]) + (base - low) * 0.65
     rgb = rgb * (1 - lip[:, :, None]) + lip_tone * lip[:, :, None]
     diffuse = Image.fromarray(np.uint8(rgb.clip(0, 255)))
-    cosmetics(diffuse, head, art).save(cache / "HaitangDiffuse.jpg", quality=96)
+    base_pigment, undertone = cosmetics(diffuse, head, art)
+    # Retain a warm blush in the lit cheeks and neutralize the yellow scan
+    # undertone in shadow. The vermilion and lash line keep their own pigment.
+    # The torso UVs sample a small cheek swatch. Give them the same base
+    # pigment but leave facial blush out of the neck, shoulders and arms.
+    for filename, pigment in (
+        ("HaitangDiffuse.jpg", np.uint8((base_pigment * undertone).clip(0, 255))),
+        ("HaitangCollar.jpg", base_pigment),
+    ):
+        painted = pigment.astype(float)
+        skin_mask = np.clip((painted[:, :, 1] - 42) / 76, 0, 1)
+        skin_mask *= np.clip((133 - (painted[:, :, 0] - painted[:, :, 1])) / 47, 0, 1)
+        balance = np.array([1.047, 0.954, 1.006])
+        painted *= 1 + skin_mask[:, :, None] * (balance - 1)
+        Image.fromarray(np.uint8(painted.clip(0, 255))).save(
+            cache / filename, quality=96
+        )
     for name, src in (
         ("HaitangEye", "eyes_color_map"),
         ("HaitangTeeth", "teeth_color_map"),

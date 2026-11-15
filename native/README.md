@@ -1,5 +1,7 @@
 # Native Unreal project
 
+[海棠面颊与肤色 · 原画、转面与两处实机光照](../docs/runtime/cheek-skin/)
+
 [海棠脸型精修 · 原画与 Unreal 实机对照](../docs/runtime/mandible/)
 
 [海棠数字人头部 · Unreal 转面、表情与三庭实战](../docs/runtime/digital-human/)

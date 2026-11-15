@@ -13,7 +13,7 @@ from sash_material import silk_motion
 from digital_skin import digital_finish
 from camellia_materials import hair_roots
 
-mesh = mesh_for("HaitangPortrait32", "pilgrim.glb", armed=True, wayfarer=True)
+mesh = mesh_for("HaitangPortrait36", "pilgrim.glb", armed=True, wayfarer=True)
 if not any(
     str(name).lower().endswith("blink") for name in mesh.get_all_morph_target_names()
 ):
@@ -71,11 +71,27 @@ for slot in slots:
             root, name, project / "Saved/DigitalHuman"
         )
     elif name == "TearDuct":
-        material = slot.material_interface
-        base = material.get_base_material()
-        base.set_editor_property("used_with_morph_targets", True)
-        unreal.MaterialEditingLibrary.recompile_material(base)
-        lib.save_loaded_asset(base, only_if_is_dirty=False)
+        # The glTF importer shares its parent across projects. Keep the dye
+        # parameters on our imported instance and enable morphs on a local copy.
+        instance = slot.material_interface
+        local_path = root + "/Finish/TearDuctParent"
+        parent = (
+            lib.load_asset(local_path)
+            if lib.does_asset_exist(local_path)
+            else lib.duplicate_asset(
+                instance.get_base_material().get_path_name(), local_path
+            )
+        )
+        if not parent or not instance.get_path_name().startswith(root + "/"):
+            raise RuntimeError("Expected the character's imported tear duct instance")
+        parent.set_editor_property("used_with_morph_targets", True)
+        unreal.MaterialEditingLibrary.recompile_material(parent)
+        unreal.MaterialEditingLibrary.set_material_instance_parent(instance, parent)
+        if not all(
+            lib.save_loaded_asset(asset, only_if_is_dirty=False)
+            for asset in (parent, instance)
+        ):
+            raise RuntimeError("Cannot save the character's tear duct material")
     elif name in finishes:
         metal, rough = finishes[name]
         slot.material_interface = surface(root, name + "Surface", name, metal, rough)
@@ -145,7 +161,8 @@ fit("BP_CombatCharacter", "BP_BelfryPilgrim", mesh, {})
     json.dumps(
         {
             "mesh": mesh.get_path_name(),
-            "revision": 32,
+            "revision": 36,
+            "surface_revision": 1,
             "lod_vertices": lod_vertices,
             "morphs": [str(n) for n in mesh.get_all_morph_target_names()],
         }

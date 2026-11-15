@@ -7,7 +7,7 @@ import time
 import unreal
 
 runtime = runpy.run_path(str(Path(__file__).with_name("belfry_combat.py")))
-from wayfarer_gaze import head_axes
+from wayfarer_gaze import head_axes  # noqa: E402 - combat installs the game script path
 
 step = runtime["step"]
 views = [
@@ -17,6 +17,9 @@ views = [
     ("profile", 88, 0),
     ("jaw", 10, 0),
 ]
+shrine = "-ShrinePortrait" in unreal.SystemLibrary.get_command_line()
+if shrine:
+    views = [("open", 0, 0), ("turn", 38, 0)]
 jaw = None
 turntable = "DigitalTurntable" in unreal.SystemLibrary.get_command_line()
 orbit_start = None
@@ -36,10 +39,12 @@ def tick(dt):
     if not runtime["live"](pawn) or not runtime["blink"].target:
         return
     if axes is None:
-        pawn.set_actor_location_and_rotation(
-            unreal.Vector(1670, 30, 110), unreal.Rotator(yaw=222), False, True
+        location = (
+            unreal.Vector(17600, -800, 110) if shrine else unreal.Vector(1670, 30, 110)
         )
-        step.pc.set_control_rotation(unreal.Rotator(yaw=222))
+        rotation = unreal.Rotator(yaw=142 if shrine else 222)
+        pawn.set_actor_location_and_rotation(location, rotation, False, True)
+        step.pc.set_control_rotation(rotation)
         axes = head_axes(pawn)
         jaw = next(
             (

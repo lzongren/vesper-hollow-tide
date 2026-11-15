@@ -75,7 +75,11 @@ for actor in scene:
 
 
 def one(cls):
-    matches = [a for a in actors.get_all_level_actors() if isinstance(a, cls)]
+    matches = [
+        a
+        for a in actors.get_all_level_actors()
+        if isinstance(a, cls) and "VesperStoneBounce" not in a.tags
+    ]
     if len(matches) != 1:
         raise RuntimeError(f"Expected one {cls}: {len(matches)}")
     return matches[0]

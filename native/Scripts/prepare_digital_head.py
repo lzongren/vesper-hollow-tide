@@ -105,6 +105,7 @@ def prepare(project):
         outputs = (
             "face.json",
             "HaitangDiffuse.jpg",
+            "HaitangCollar.jpg",
             "HaitangEye.jpg",
             "HaitangTeeth.jpg",
             "HaitangLashes.png",

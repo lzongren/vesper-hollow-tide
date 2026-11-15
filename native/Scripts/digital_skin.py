@@ -55,6 +55,19 @@ def digital_finish(root, slot, cache):
             "shading_model", unreal.MaterialShadingModel.MSM_SUBSURFACE_PROFILE
         )
         mat.set_editor_property("subsurface_profile", profile)
+        if slot == "NecklineSkin":
+            tint = dest + "/HaitangCollar"
+            if not lib.does_asset_exist(tint):
+                task = unreal.AssetImportTask()
+                task.filename = str(cache / "HaitangCollar.jpg")
+                task.destination_path = dest
+                task.automated = task.save = True
+                unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks([task])
+            collar = lib.load_asset(tint)
+            if not collar:
+                raise RuntimeError("Cannot load the collar's skin pigment")
+            sample = edit.get_material_property_input_node(mat, prop.MP_BASE_COLOR)
+            sample.set_editor_property("texture", collar)
         if slot == "WayfarerSkin" and not edit.get_material_property_input_node(
             mat, prop.MP_NORMAL
         ):
