@@ -150,8 +150,8 @@ def hair_roots(root):
     return mat
 
 
-def temple_fibers(root):
-    mat = surface(root, "TempleFibers", "TempleSilkHair", 0, 0.74, specular=0.16)
+def temple_fibers(root, slot):
+    mat = surface(root, slot + "Fibers", slot, 0, 0.74, specular=0.16)
     edit = unreal.MaterialEditingLibrary
     prop = unreal.MaterialProperty
     mat.set_editor_property("blend_mode", unreal.BlendMode.BLEND_TRANSLUCENT)

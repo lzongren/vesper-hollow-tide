@@ -1,4 +1,4 @@
-param([string]$EngineRoot = 'C:\Program Files\Epic Games\UE_5.8', [switch]$PortraitReview, [switch]$ShrinePortrait, [switch]$Turntable, [switch]$CheekStudy)
+param([string]$EngineRoot = 'C:\Program Files\Epic Games\UE_5.8', [switch]$PortraitReview, [switch]$ShrinePortrait, [switch]$Turntable, [switch]$CheekStudy, [switch]$HeadStudy)
 $ErrorActionPreference = 'Stop'
 $project = Split-Path $PSScriptRoot -Parent
 $descriptor = Join-Path $project 'Vesper.uproject'
@@ -96,7 +96,7 @@ if ($rebuildHeron -or $fanReport.revision -ne 3) {
 $outfitReport = if (Test-Path "$project\Saved\WayfarerOutfit.json") {
     Get-Content -Raw "$project\Saved\WayfarerOutfit.json" | ConvertFrom-Json
 }
-$rebuildOutfit = $rebuildDuel -or $outfitReport.revision -ne 52 -or $outfitReport.surface_revision -ne 1 -or !(Test-Path "$project\Content\Vesper\Duel\HaitangPortrait52\HaitangPortrait52\SkeletalMeshes\HaitangPortrait52.uasset")
+$rebuildOutfit = $rebuildDuel -or $outfitReport.revision -ne 55 -or $outfitReport.surface_revision -ne 1 -or !(Test-Path "$project\Content\Vesper\Duel\HaitangPortrait55\HaitangPortrait55\SkeletalMeshes\HaitangPortrait55.uasset")
 if ($rebuildOutfit) {
     $python = Join-Path $EngineRoot 'Engine\Binaries\ThirdParty\Python3\Win64\python.exe'
     & $python "$PSScriptRoot\prepare_digital_head.py" $project
@@ -148,12 +148,13 @@ $pondReport = if (Test-Path "$project\Saved\MoonWater.json") {
 if ($rebuildDuel -or $cinderReport.revision -ne 2 -or $ridgeReport.revision -ne 3 -or $screeReport.revision -ne 5 -or $pondReport.revision -ne 7) {
     Invoke-MapPass 'fit_moon_water' 'VESPER_MOON_WATER_READY'
 }
-$entry = if ($PortraitReview -or $ShrinePortrait -or $Turntable -or $CheekStudy) { 'probe_portrait_match.py' } else { 'belfry_combat.py' }
+$entry = if ($PortraitReview -or $ShrinePortrait -or $Turntable -or $CheekStudy -or $HeadStudy) { 'probe_portrait_match.py' } else { 'belfry_combat.py' }
 $gameArgs = @(
     "`"$descriptor`"", "$map`?game=$gameMode", '-game', '-windowed', '-ResX=1600', '-ResY=900', '-NoP4',
     '-ForceEnablePython', ('-ExecCmds="t.MaxFPS 60,py __import__(''runpy'').run_path(__import__(''unreal'').Paths.convert_relative_path_to_full(__import__(''unreal'').Paths.project_dir())+''Scripts/{0}'')"' -f $entry)
 )
-if ($ShrinePortrait -or $CheekStudy) { $gameArgs += '-ShrinePortrait' }
+if ($ShrinePortrait -or $CheekStudy -or $HeadStudy) { $gameArgs += '-ShrinePortrait' }
 if ($CheekStudy) { $gameArgs += '-CheekStudy' }
+if ($HeadStudy) { $gameArgs += '-HeadStudy' }
 if ($Turntable) { $gameArgs += '-PortraitOrbit' }
 Start-Process "$bin\UnrealEditor.exe" -WorkingDirectory $project -ArgumentList $gameArgs

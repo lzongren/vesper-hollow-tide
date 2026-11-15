@@ -11,6 +11,7 @@ from jade_coiffure import coiffure
 from begonia_ribbons import knot
 from wayfarer_legs import riding_legs
 from camellia_jewels import pendants
+from temple_down import dress_temples
 from scalp_fit import fit_hair_margin, scalp_radius
 
 
@@ -53,6 +54,8 @@ def dress(out, bones, rest, art):
         "TempleSilkHair", (1, 1, 1), 0.74, texture="temple-fibers.png"
     )
     out.doc["materials"][temple_hair].update(alphaMode="BLEND")
+    down_hair = material("TempleDown", (1, 1, 1), 0.74, texture="temple-down.png")
+    out.doc["materials"][down_hair].update(alphaMode="BLEND")
     fringe = material("TempleStrands", (1, 1, 1), 0.64, texture="camellia-hairline.png")
     out.doc["materials"][fringe].update(alphaMode="MASK", alphaCutoff=0.38)
     river = material("RiverBrocade", (1, 1, 1), 0.65, texture="river-sash.jpg")
@@ -158,6 +161,25 @@ def dress(out, bones, rest, art):
         # The part sits above the left brow. The opposite wave hangs lower.
         edge += 0.075 * sin(a + 0.16) * max(0, cos(a)) - 0.062 * cos(2 * a + 0.32)
         edge -= 0.080 * exp(-(((temple - 0.59) / 0.36) ** 2))
+        # Height of the opaque margin, fitted to the frontal and profile
+        # guides. Ease from a shallow central part into the long temple arc.
+        anterior = 1 - smooth((temple - 1.09) / 0.23)
+        if anterior:
+            crest = 1.7272 + 0.0016 * exp(-(((temple - 0.31) / 0.24) ** 2))
+            crest += 0.0010 * sin(a)
+            crest -= 0.065 * smooth((temple - 0.35) / 1.06) ** 1.60
+            # Side-guide offsets at the brow tail, mid-temple and sideburn.
+            # Keep both ends of the arc tangent to their neighbouring roots.
+            for offset, angle, spread in (
+                (0.0023, 0.70, 0.19),
+                (0.0057, 0.91, 0.15),
+                (0.0067, 1.06, 0.12),
+                (0.0059, 1.17, 0.10),
+            ):
+                crest += offset * exp(-(((temple - angle) / spread) ** 2))
+            margin = sin(edge_row(a) * pi / 2)
+            border = (7 + (crest - 1.625) / 0.103 - 8.48 * margin) / (1 - margin)
+            edge += anterior * (border - edge)
         h = edge + (8.48 - edge) * sin(v * pi / 2)
         t = (h - 7.42) / (1.06 if h >= 7.42 else 1.32)
         radius = max(0, 1 - t * t) ** 0.5
@@ -176,15 +198,35 @@ def dress(out, bones, rest, art):
         if weight > 0 and length > 0:
             surface = scalp(atan2(x, z), h, length)
             sidewall = exp(-(((temple - 1.56) / 0.50) ** 4))
+            contact = (1 - smooth((temple - 1.03) / 0.31)) * (
+                1 - smooth((v - 0.075) / 0.19)
+            )
             fitted = (
                 surface
                 + 0.033
                 - 0.029 * max(sidewall, occipital)
+                - 0.024 * contact * (1 - max(sidewall, occipital))
                 + 0.045 * smooth((v - 0.02) / 0.38)
             )
             scale = 1 + weight * (fitted / length - 1)
             x, z = x * scale, z * scale
-        return pos(x, h, 0.56 + z)
+        x, y, z = pos(x, h, 0.56 + z)
+        # Dress the visible frontal vault above the hairline. The reference
+        # crops the apex; converge back to the same pole beneath the crown.
+        forward = max(0, cos(a)) ** 3
+        z += (
+            forward
+            * 0.0055
+            * exp(-(((y - 1.741) / 0.014) ** 2))
+            * smooth((v - 0.045) / 0.10)
+        )
+        y += (
+            forward
+            * 0.0048
+            * smooth((y - 1.752) / 0.019)
+            * (1 - smooth((v - 0.77) / 0.23))
+        )
+        return x, y, z
 
     def hair_flow(a, v):
         # Strands sweep away from the curved part towards the knot.
@@ -253,8 +295,13 @@ def dress(out, bones, rest, art):
                     angle = side * (
                         start_angle + 0.085 * v + (u - 0.5) * (0.080 - 0.055 * v)
                     )
-                    level = hair_edge(angle) * (1.1 - 0.31 * row) - reach * v
-                    x, y, z = hair_shell(angle, level)
+                    helix = smooth((start_angle - 1.38) / 0.20)
+                    # Keep the outermost down in the combed margin above
+                    # the helix; raw radial samples here can hit the ear.
+                    level = edge_row(angle) + 0.014 - 0.012 * row
+                    level -= reach * (1 - 0.75 * helix) * v
+                    x, y, z = combed(angle, level)
+                    angle = hair_flow(angle, level)
                     lift = 0.00042 + 0.00027 * row
                     return (
                         (x + lift * sin(angle), y, z + lift * cos(angle)),
@@ -320,58 +367,8 @@ def dress(out, bones, rest, art):
 
                 patch(temple_hair, 5, 15, ear_down)
 
-    # The front sections are combed sideways from an off-centre part. Each
-    # overlapping card has its own arched root and hair-thread alpha fringe.
-    for side, count in ((-1, 7), (1, 5)):
-        for j in range(count):
+    dress_temples(patch, down_hair, combed, edge_row, scalp, smooth)
 
-            def temple_lock(u, v, j=j, side=side):
-                angle = 0.17 + side * (0.08 + 0.065 * j + (0.75 + 0.05 * j) * v)
-                row = 0.17 + 0.020 * j - (0.23 + 0.016 * j) * v + 0.032 * sin(pi * v)
-                # Taper the card as its tip crosses the roots on the temple.
-                width = (0.008 + 0.012 * sin(pi * v)) * (1 - 0.80 * v**3)
-                row += (2 * u - 1) * width
-                x, y, z = hair_shell(angle, row)
-                lift = 0.0003 + 0.0007 * sin(pi * v) + 0.00008 * j
-                return (
-                    (x + lift * sin(angle), y, z + lift * cos(angle)),
-                    ((j % 4 + 0.001 + u * 0.998) / 4, v),
-                    head,
-                )
-
-            patch(temple_hair, 6, 32, temple_lock)
-    # Wispy S-shaped locks break the straight hairline and frame the cheek.
-    for side in (-1, 1):
-        for j in range(4):
-
-            def face_lock(u, v):
-                a = side * (0.47 + 0.055 * j + 0.45 * v + 0.13 * sin(pi * v))
-                x, y, z = hair_shell(a, 0.095 - 0.14 * v)
-                taper = (1 - v**2) * (0.0033 + 0.0016 * sin(pi * v))
-                across = (u - 0.5) * 2 * taper
-                return (
-                    (
-                        x + side * (0.003 + across),
-                        y - (0.028 + 0.009 * j) * v * v,
-                        z + 0.006 + 0.006 * sin(pi * v) - side * across,
-                    ),
-                    ((j + u) / 4, v),
-                    head,
-                )
-
-            patch(temple_hair, 5, 36, face_lock)
-    for side in (-1, 1):
-        for j in range(9):
-            root = hair_shell(side * (1.09 + 0.023 * j), 0.08)
-
-            def wisp(t):
-                return (
-                    root[0] + side * (0.004 * sin(pi * t + 0.24 * j) - 0.001 * t),
-                    root[1] - (0.022 + 0.005 * ((j * 5) % 9)) * t,
-                    root[2] - (0.014 + 0.0013 * j) * t + 0.003 * sin(pi * t),
-                )
-
-            strand(hair, wisp, lambda t: 0.00020 * (1 - 0.96 * t), head)
     # Coiled lengths traverse the back of the knot in opposite directions.
     for k in range(4):
 
@@ -385,7 +382,7 @@ def dress(out, bones, rest, art):
 
         strand(hair, coil, lambda t: 0.013 + 0.003 * sin(pi * t), head, 64)
 
-    coiffure(patch, strand, globe, hair_shell, locks, temple_hair, flower, pearl, brass)
+    coiffure(patch, strand, globe, locks, flower, pearl, brass)
     knot(patch, globe, strand, ribbon, brass, pearl)
     pendants(strand, globe, jade, pearl, brass)
 

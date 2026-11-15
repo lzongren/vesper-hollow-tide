@@ -23,6 +23,8 @@ if shrine:
     if "-CheekStudy" in unreal.SystemLibrary.get_command_line():
         views.extend([("oblique", 20, 0), ("threequarter", 60, 0)])
         views.sort(key=lambda pose: pose[1])
+    if "-HeadStudy" in unreal.SystemLibrary.get_command_line():
+        views.extend([("frontskull", 0, 0), ("sideskull", 90, 0)])
 jaw = None
 recording = "-DigitalTurntable" in unreal.SystemLibrary.get_command_line()
 turntable = recording or "-PortraitOrbit" in unreal.SystemLibrary.get_command_line()
@@ -86,7 +88,8 @@ def tick(dt):
     fwd, right, up = (unreal.MathLibrary.transform_direction(head, x) for x in axes)
     angle = math.radians(turn)
     towards = fwd * math.cos(angle) + right * math.sin(angle)
-    center = head.translation + up * 3 + fwd * 8.5
+    full_head = mode in ("frontskull", "sideskull") and not turntable
+    center = head.translation + up * (6 if full_head else 3) + fwd * 8.5
     cam = pawn.get_component_by_class(unreal.CameraComponent)
     cam.set_absolute(True, True, False)
     cam.set_editor_property("use_pawn_control_rotation", False)
@@ -96,7 +99,7 @@ def tick(dt):
         False,
         True,
     )
-    cam.set_field_of_view(14.0)
+    cam.set_field_of_view(23.0 if full_head else 14.0)
     blink_driver.pose(blink)
     if jaw:
         pawn.mesh.set_morph_target(jaw, jaw_weight)

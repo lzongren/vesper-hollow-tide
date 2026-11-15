@@ -1,5 +1,7 @@
 # Native Unreal project
 
+[海棠 · 烬殿侧面额顶、去发灰模与鬓丝实录](../docs/runtime/temple-and-forehead/)
+
 [海棠 · 五个机位的颊型与鬓角实机转面](../docs/runtime/cheek-turn/)
 
 [海棠 · 侧面原画、颊部灰模与烬殿实机转面](../docs/runtime/nape-profile/)

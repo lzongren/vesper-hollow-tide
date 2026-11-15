@@ -10,7 +10,6 @@ from pathlib import Path
 import sys
 import zlib
 
-import dna
 import numpy as np
 from PIL import Image, ImageFilter
 
@@ -215,6 +214,35 @@ def cheek_volume(rest):
     return change
 
 
+def forehead_profile(rest):
+    """Depth correction in metres for the exposed forehead in the profile guide."""
+    x, height, depth = rest.T
+
+    def ramp(t):
+        t = np.clip(t, 0, 1)
+        return t * t * (3 - 2 * t)
+
+    # The central forehead gains convexity immediately above the brow.
+    # Its upper plane slopes back into the anterior hairline.
+    lower = 0.00150 * np.exp(-(((height - 1.680) / 0.0125) ** 2))
+    upper = 0.00160 * np.exp(-(((height - 1.711) / 0.0135) ** 2))
+    # The arches sit higher laterally. Keep the eye sockets and eyebrow
+    # ridges out of the displacement and fade across the side of the skull.
+    arch = 1.668 + 0.021 * ramp((np.abs(x) - 0.006) / 0.019)
+    above_brow = ramp((height - arch) / 0.008)
+    anterior = ramp((depth - 0.072) / 0.029)
+    width = np.exp(-((x / 0.037) ** 4))
+    return (lower - upper) * above_brow * anterior * width
+
+
+def fit_rest_pose(registered, part):
+    rest = registered + portrait_contour(registered)
+    if part == "head":
+        rest += cheek_volume(registered)
+        rest[:, 2] += forehead_profile(registered)
+    return rest
+
+
 def profile_section(p, guide):
     # Profile eye centre and scale registered to the frontal interocular scale.
     im = np.array(Image.open(guide).convert("RGB").resize((1254, 1254)), dtype=float)
@@ -290,6 +318,8 @@ def triangles(d, i):
 
 
 def bake(cache, art):
+    import dna
+
     stream = dna.FileStream(
         str(cache / "Ada.dna"),
         dna.FileStream.AccessMode_Read,
@@ -323,9 +353,7 @@ def bake(cache, art):
         # Relax the neutral orbital muscles and keep the lips in light contact.
         relaxed = p + 0.12 * (targets["Blink"] - p)
         registered = sculpt(relaxed, section, frontal)
-        rest = registered + portrait_contour(registered)
-        if name == "head":
-            rest += cheek_volume(registered)
+        rest = fit_rest_pose(registered, name)
         layout = np.array(
             [d.getVertexLayout(mi, i) for i in range(d.getVertexLayoutCount(mi))]
         )
@@ -374,6 +402,27 @@ def bake(cache, art):
         json.dumps({"parts": parts, "poses": list(POSES)}, separators=(",", ":"))
     )
     tmp.replace(cache / "face.json")
+
+
+def portrait_skin_coverage(x, y):
+    """Exclude the guide's dressed hair from the projected forehead pigment."""
+    # Trace the visible skin on each side of the 1254px portrait. Below the
+    # outer brow the temple curls turn inward differently on the two sides.
+    heights = [215, 235, 260, 290, 320, 350, 380, 410, 440, 480, 520, 575, 635]
+    left = np.interp(
+        y, heights, [600, 544, 490, 455, 429, 402, 384, 371, 355, 348, 342, 334, 320]
+    )
+    right = np.interp(
+        y, heights, [654, 722, 764, 796, 826, 849, 865, 880, 898, 905, 910, 917, 928]
+    )
+    # Sampled skin can carry the existing makeup while shaded edge texels fade
+    # into the scan's own pigment and pore detail. The outer brow stays inside.
+    distance = np.minimum(x - left, right - x)
+    keep = np.clip((distance + 4) / 16, 0, 1)
+    keep *= keep * (3 - 2 * keep)
+    release = np.clip((y - 610) / 70, 0, 1)
+    release *= release * (3 - 2 * release)
+    return keep + release * (1 - keep)
 
 
 def cosmetics(diffuse, head, art):
@@ -477,6 +526,7 @@ def cosmetics(diffuse, head, art):
             0,
             0.96,
         )
+        weight *= portrait_skin_coverage(sx, sy)
         # Prevent the dark center of an actual nostril from being printed twice.
         nostril = (
             (abs(sx - 630) < 69) & (sy > 727) & (sy < 789) & (pigment[:, :, 0] < 131)
