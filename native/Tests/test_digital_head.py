@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "Scripts"))
 from court_face import CourtFace
-from digital_head import head_weight, neck_section
+from digital_head import head_weight, neck_section, skin_reflectance
 
 
 class DigitalHeadTest(unittest.TestCase):
@@ -13,6 +13,22 @@ class DigitalHeadTest(unittest.TestCase):
         self.assertEqual(head_weight((0, 1.541, 0.11)), 1)
         self.assertAlmostEqual(head_weight((0, 1.541, 0.052)), (1.541 - 1.512) / 0.045)
         self.assertAlmostEqual(head_weight((0.024, 1.52, 0.09)), (1.52 - 1.512) / 0.045)
+
+    def test_throat_pigment_crosses_neck_join_and_spares_the_lips(self):
+        forward = (0, 0, 1)
+        across = [skin_reflectance((0, y, 0.056), forward) for y in (1.519, 1.521)]
+        for left, right in zip(*across):
+            self.assertAlmostEqual(left, right, places=3)
+        self.assertLess(across[0][0], across[0][1])
+        for channel in skin_reflectance((0, 1.588, 0.112), forward):
+            self.assertAlmostEqual(channel, 1, places=3)
+
+    def test_chin_underside_keeps_more_warmth_than_the_forward_facing_skin(self):
+        tip = (0, 1.55, 0.113)
+        face = skin_reflectance(tip, (0, 0, 1))
+        underside = skin_reflectance(tip, (0, -1, 0))
+        self.assertLess(underside[2], underside[0])
+        self.assertLess(underside[0], face[0])
 
     def test_neckline_has_a_continuous_front_and_back(self):
         import math

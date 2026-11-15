@@ -177,7 +177,10 @@ def cheek_volume(rest):
     buccal = np.exp(-(((side - 0.048) / 0.023) ** 2) - ((y - 1.597) / 0.027) ** 2)
     change = np.zeros_like(rest)
     change[:, 0] = np.sign(x) * front * (0.0028 * malar + 0.0029 * buccal)
-    change[:, 2] = front * (0.0010 * malar + 0.0024 * buccal)
+    # Fill the soft transition lateral to the mouth in depth. The
+    # registered frontal outline and the lip seam keep their positions.
+    oral_pad = np.exp(-(((side - 0.043) / 0.016) ** 2) - ((y - 1.590) / 0.022) ** 2)
+    change[:, 2] = front * (0.0010 * malar + 0.0024 * buccal + 0.0009 * oral_pad)
     return change
 
 
@@ -481,9 +484,16 @@ def cosmetics(diffuse, head, art):
         pigment_delta = (1 - v) * (
             (1 - u) * chroma[j, i] + u * chroma[j, i + 1]
         ) + v * ((1 - u) * chroma[j + 1, i] + u * chroma[j + 1, i + 1])
-        gain += malar[:, :, None] * [0.020, -0.014, -0.010]
+        gain += malar[:, :, None] * [0.006, -0.006, -0.008]
         gain += cheek[:, :, None] * np.clip(pigment_delta / 90, -0.055, 0.055)
-        gain += jaw[:, :, None] * [0.026, 0.078, 0.060]
+        gain += jaw[:, :, None] * [0.012, 0.026, -0.030]
+        # Keep warm ochre in the lower cheek. The ivory collar catches the
+        # convex jaw, while the recessed neck retains more subsurface red.
+        x, y, z = np.moveaxis(point, 2, 0)
+        lower_pad = np.exp(
+            -(((abs(x) - 0.043) / 0.025) ** 2) - ((y - 1.577) / 0.024) ** 2
+        )
+        gain += lower_pad[:, :, None] * [-0.014, -0.036, -0.080]
         patch = undertone[lo[1] : hi[1] + 1, lo[0] : hi[0] + 1]
         patch[mask] = (1 + gain * gate[:, :, None])[mask]
     return target, undertone

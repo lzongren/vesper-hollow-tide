@@ -59,7 +59,7 @@ lamp.set_editor_property("cast_shadows", False)
 lamp.set_editor_property("attenuation_radius", 32.0)
 lamp.set_editor_property("source_radius", 3.0)
 lamp.set_specular_scale(0.0)
-lamp.set_light_color(unreal.LinearColor(0.90, 0.98, 1.0, 1))
+lamp.set_light_color(unreal.LinearColor(0.965, 0.99, 0.93, 1))
 lamp.set_intensity(0)
 
 lib = unreal.EditorAssetLibrary
@@ -79,5 +79,5 @@ if (
     or not levels.save_current_level()
 ):
     raise RuntimeError("Could not save character lighting")
-(project / "Saved/StoneBounce.json").write_text(json.dumps({"revision": 7}))
+(project / "Saved/StoneBounce.json").write_text(json.dumps({"revision": 9}))
 unreal.log("VESPER_STONE_BOUNCE_READY")

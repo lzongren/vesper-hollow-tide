@@ -1,6 +1,6 @@
 """Fit the magnolia coat, crisscross sash, coiled hair and mapped portrait to the combat rig."""
 
-from digital_head import add_head
+from digital_head import add_head, skin_reflectance
 from bisect import bisect_right
 from math import atan2, cos, exp, pi, sin, tau
 
@@ -168,11 +168,19 @@ def dress(out, bones, rest, art):
         length = (x * x + z * z) ** 0.5
         # Touch the forehead at the roots; let the bun retain its dressed volume.
         weight = (1 - smooth((v - 0.04) / 0.40)) * (1 - smooth((temple - 1.76) / 0.44))
+        # At the back of the ear seat only the root of the cap on the skull.
+        occipital = smooth((temple - 1.80) / 0.26) * (
+            1 - smooth((temple - 2.80) / 0.30)
+        )
+        weight = max(weight, occipital * (1 - smooth((v - 0.025) / 0.20)))
         if weight > 0 and length > 0:
             surface = scalp(atan2(x, z), h, length)
             sidewall = exp(-(((temple - 1.56) / 0.50) ** 4))
             fitted = (
-                surface + 0.033 - 0.029 * sidewall + 0.045 * smooth((v - 0.02) / 0.38)
+                surface
+                + 0.033
+                - 0.029 * max(sidewall, occipital)
+                + 0.045 * smooth((v - 0.02) / 0.38)
             )
             scale = 1 + weight * (fitted / length - 1)
             x, z = x * scale, z * scale
@@ -189,13 +197,22 @@ def dress(out, bones, rest, art):
         temple = abs(atan2(sin(a), cos(a)))
         return (
             0.034
+            # Recede behind the helix in shallow, unequal sweeps.
+            + exp(-(((temple - 2.18) / 0.37) ** 4)) * (0.018 + 0.004 * sin(9 * a + 0.5))
             + 0.041 * max(0, cos(a))
             + 0.11 * exp(-(((temple - 1.57) / 0.44) ** 4))
         )
 
+    def above_helix(a):
+        # Reserve a narrow band on the scalp above the projecting ear.
+        # At the lower edge only the wisps extend past the old silhouette.
+        azimuth = abs(atan2(sin(a), cos(a)))
+        return smooth((azimuth - 1.25) / 0.15) * (1 - smooth((azimuth - 1.80) / 0.16))
+
     def swept_hair(u, v):
         a = tau * u
-        row = hair_edge(a) + (1 - hair_edge(a)) * v
+        edge = hair_edge(a) + 0.046 * above_helix(a)
+        row = edge + (1 - edge) * v
         p = hair_shell(hair_flow(a, row), row)
         return p, (u * 5, 0.96 - 0.92 * row), head
 
@@ -206,6 +223,10 @@ def dress(out, bones, rest, art):
         azimuth = abs(atan2(sin(a), cos(a)))
         pinna = smooth((azimuth - 1.12) / 0.24) * (1 - smooth((azimuth - 2.27) / 0.32))
         row = hair_edge(a) * (1.05 - (1.47 - 1.39 * pinna) * v)
+        # Extend the dense-to-sparse root veil behind the projecting ear.
+        nape = smooth((azimuth - 1.76) / 0.18) * (1 - smooth((azimuth - 2.85) / 0.21))
+        row -= 0.062 * nape * v
+        row += 0.046 * above_helix(a) * (1 - v)
         angle = hair_flow(a, row)
         x, y, z = hair_shell(angle, row)
         return (x + 0.00018 * sin(angle), y, z + 0.00018 * cos(angle)), (u * 8, v), head
@@ -235,6 +256,52 @@ def dress(out, bones, rest, art):
                     )
 
                 patch(temple_hair, 4, 13, down)
+
+    # Fine upper roots bridge to the denser growth behind the ear. Seat
+    # each root in the same combed coordinates as the opaque shell.
+    for side in (-1, 1):
+        for tuft in range(19):
+            phase = tuft * 2.399 + side
+            root = 1.31 + 0.029 * tuft + 0.007 * sin(phase)
+            length = 0.039 + 0.008 * sin(phase + 0.5)
+
+            def helix_wisp(u, v):
+                a = side * (root + 0.035 * v + (u - 0.5) * (0.055 - 0.032 * v))
+                level = hair_edge(a) + 0.045 * above_helix(a) + 0.006 - length * v
+                angle = hair_flow(a, level)
+                x, y, z = hair_shell(angle, level)
+                lift = 0.00055
+                return (
+                    (x + lift * sin(angle), y, z + lift * cos(angle)),
+                    ((tuft % 4 + u) / 4, v),
+                    head,
+                )
+
+            patch(temple_hair, 4, 12, helix_wisp)
+
+    # Down behind the helix runs back toward the nape. Overlap two
+    # uneven rows of tapered roots, leaving the projecting ear exposed.
+    for side in (-1, 1):
+        for row in range(2):
+            for tuft in range(17):
+                phase = 2.399 * tuft + 0.7 * side + 1.4 * row
+                root = 1.83 + 0.046 * tuft + 0.018 * sin(phase)
+                reach = 0.052 + 0.015 * sin(phase + 1.3) + 0.009 * row
+
+                def ear_down(u, v):
+                    sweep = root + (0.085 + 0.035 * sin(phase)) * v
+                    angle = side * (sweep + (u - 0.5) * (0.071 - 0.043 * v))
+                    level = hair_edge(angle) + 0.018 - 0.009 * row - reach * v
+                    angle = hair_flow(angle, level)
+                    x, y, z = hair_shell(angle, level)
+                    lift = 0.00048 + 0.00030 * row + 0.00022 * sin(pi * v)
+                    return (
+                        (x + lift * sin(angle), y, z + lift * cos(angle)),
+                        ((tuft % 4 + u) / 4, v),
+                        head,
+                    )
+
+                patch(temple_hair, 5, 15, ear_down)
 
     # The front sections are combed sideways from an off-centre part. Each
     # overlapping card has its own arched root and hair-thread alpha fringe.
@@ -637,5 +704,5 @@ def dress(out, bones, rest, art):
     globe(jade, rear, (0.018, 0.016, 0.010), rear_skin)
     riding_legs(patch, rest, trousers, boots, sole, lining, silver)
     regalia(patch, strand, globe, lapel_surface, silk, lining, silver, jade)
-    finish()
+    finish({bare: skin_reflectance})
     finish_shapes()

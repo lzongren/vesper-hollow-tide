@@ -34,7 +34,7 @@ def garment_surfaces(out, bones):
                     k = first + r * (cols + 1) + c
                     idx.extend([k - cols - 2, k - cols - 1, k, k - cols - 2, k, k - 1])
 
-    def finish():
+    def finish(vertex_tints=None):
         for slot, (p, n, uv, j, w, idx) in batches.items():
             attrs = dict(
                 POSITION=out.data(p, "VEC3", bounds=True),
@@ -43,6 +43,11 @@ def garment_surfaces(out, bones):
                 JOINTS_0=out.data(j, "VEC4", 5123),
                 WEIGHTS_0=out.data(w, "VEC4"),
             )
+            if vertex_tints and slot in vertex_tints:
+                tint = vertex_tints[slot]
+                attrs["COLOR_0"] = out.data(
+                    [tint(point, normal) for point, normal in zip(p, n)], "VEC4"
+                )
             out.doc["meshes"][0]["primitives"].append(
                 dict(
                     attributes=attrs,

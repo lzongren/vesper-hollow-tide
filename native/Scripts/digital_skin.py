@@ -55,7 +55,11 @@ def digital_finish(root, slot, cache):
             "shading_model", unreal.MaterialShadingModel.MSM_SUBSURFACE_PROFILE
         )
         mat.set_editor_property("subsurface_profile", profile)
-        if slot == "NecklineSkin":
+        base = edit.get_material_property_input_node(mat, prop.MP_BASE_COLOR)
+        if (
+            isinstance(base, unreal.MaterialExpressionTextureSample)
+            and slot == "NecklineSkin"
+        ):
             tint = dest + "/HaitangCollar"
             if not lib.does_asset_exist(tint):
                 task = unreal.AssetImportTask()
@@ -66,8 +70,20 @@ def digital_finish(root, slot, cache):
             collar = lib.load_asset(tint)
             if not collar:
                 raise RuntimeError("Cannot load the collar's skin pigment")
-            sample = edit.get_material_property_input_node(mat, prop.MP_BASE_COLOR)
-            sample.set_editor_property("texture", collar)
+            base.set_editor_property("texture", collar)
+        if isinstance(base, unreal.MaterialExpressionTextureSample):
+            tint = edit.create_material_expression(
+                mat, unreal.MaterialExpressionVertexColor, -360, -180
+            )
+            mix = edit.create_material_expression(
+                mat, unreal.MaterialExpressionMultiply, -90, -90
+            )
+            if not (
+                edit.connect_material_expressions(base, "RGB", mix, "A")
+                and edit.connect_material_expressions(tint, "", mix, "B")
+                and edit.connect_material_property(mix, "", prop.MP_BASE_COLOR)
+            ):
+                raise RuntimeError("Cannot connect anatomical skin pigment")
         if slot == "WayfarerSkin" and not edit.get_material_property_input_node(
             mat, prop.MP_NORMAL
         ):

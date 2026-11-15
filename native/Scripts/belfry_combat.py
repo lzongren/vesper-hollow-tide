@@ -114,7 +114,7 @@ def seat_reflection(pawn):
         lamp = light.root_component
         lamp.attach_to_component(mesh, "head", keep, keep, keep, False)
         lamp.set_relative_location(forward * 12.0 - up * 23.0, False, True)
-        lamp.set_intensity(0.112)
+        lamp.set_intensity(0.107)
         break
 
 

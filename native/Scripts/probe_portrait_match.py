@@ -19,9 +19,10 @@ views = [
 ]
 shrine = "-ShrinePortrait" in unreal.SystemLibrary.get_command_line()
 if shrine:
-    views = [("open", 0, 0), ("turn", 38, 0)]
+    views = [("open", 0, 0), ("turn", 38, 0), ("profile", 88, 0), ("behind", 116, 0)]
 jaw = None
-turntable = "DigitalTurntable" in unreal.SystemLibrary.get_command_line()
+recording = "-DigitalTurntable" in unreal.SystemLibrary.get_command_line()
+turntable = recording or "-PortraitOrbit" in unreal.SystemLibrary.get_command_line()
 orbit_start = None
 index = 0
 blink_driver = runtime["blink"]
@@ -66,11 +67,12 @@ def tick(dt):
             ready = captures.parent.parent / "DigitalHeadRecorder.ready"
             if (
                 ready.exists() and abs(time.time() - ready.stat().st_mtime) < 12
-            ) or now - start > 20:
+            ) or now - start > (20.0 if recording else 1.5):
                 orbit_start = now
                 unreal.log("DIGITAL_HEAD_ORBIT_START")
         t = 0 if orbit_start is None else now - orbit_start
-        turn = -12 + 98 * (0.5 - 0.5 * math.cos(math.tau * min(1, t / 12)))
+        arc = 128 if shrine else 98
+        turn = -12 + arc * (0.5 - 0.5 * math.cos(math.tau * min(1, t / 12)))
         blink = max(0, 1 - abs(t - 2.8) / 0.14)
         jaw_weight = 0.20 * math.exp(-(((t - 8.0) / 0.9) ** 2))
         if t >= 12:

@@ -53,6 +53,29 @@ def head_weight(position):
     return neck_blend + (1 - neck_blend) * jaw
 
 
+def skin_reflectance(point, normal):
+    """Anatomical pigment weights shared by the scan and the joined neckline."""
+    x, y, z = point
+
+    def smooth(t):
+        t = max(0.0, min(1.0, t))
+        return t * t * (3.0 - 2.0 * t)
+
+    throat = math.exp(
+        -((x / 0.052) ** 4) - ((y - 1.522) / 0.036) ** 4 - ((z - 0.056) / 0.032) ** 4
+    )
+    # The mental pad turns down towards the collar. Reduce its pale underside
+    # without tinting the projecting lip or the forward-facing chin surface.
+    chin = math.exp(-((x / 0.042) ** 4) - ((y - 1.550) / 0.017) ** 4)
+    chin *= smooth((z - 0.070) / 0.028) * smooth((-0.10 - normal[1]) / 0.82)
+    return (
+        1 - 0.18 * throat - 0.24 * chin,
+        1 - 0.005 * throat - 0.30 * chin,
+        1 - 0.038 * throat - 0.36 * chin,
+        1.0,
+    )
+
+
 def add_head(out, bones, cache, slots):
     data = json.loads((cache / "face.json").read_text())
     faceshape = {}
@@ -60,15 +83,20 @@ def add_head(out, bones, cache, slots):
         pos = unpack(part["p"], "fff")
         tri = unpack(part["tri"], "III")
         amount = [head_weight(p) for p in pos]
+        normals = unpack(part["n"], "fff")
         attrs = dict(
             POSITION=out.data(pos, "VEC3", bounds=True),
-            NORMAL=out.data(unpack(part["n"], "fff"), "VEC3"),
+            NORMAL=out.data(normals, "VEC3"),
             TEXCOORD_0=out.data(unpack(part["uv"], "ff"), "VEC2"),
             JOINTS_0=out.data(
                 [(bones["head"], bones["neck_01"], 0, 0)] * len(pos), "VEC4", 5123
             ),
             WEIGHTS_0=out.data([(t, 1 - t, 0, 0) for t in amount], "VEC4"),
         )
+        if name == "head":
+            attrs["COLOR_0"] = out.data(
+                [skin_reflectance(p, n) for p, n in zip(pos, normals)], "VEC4"
+            )
         primitive = dict(
             attributes=attrs,
             material=slots[name],
