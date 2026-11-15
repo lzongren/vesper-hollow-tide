@@ -110,6 +110,7 @@ def update_encounters(dt):
         now = unreal.GameplayStatics.get_time_seconds(pawn)
         if fallen_pawn != pawn:
             fallen_pawn, fallen_at = pawn, now + 1.4
+            heron.clear_cast()
             for duel in (boss, heron, saint):
                 if (
                     live(duel.actor)
@@ -124,8 +125,6 @@ def update_encounters(dt):
                 duel.state = "waiting"
                 duel.turn = duel.deadline = duel.request_at = 0
             saint.clear()
-            heron.active = []
-            heron.feathers = []
             hud.clear()
             gaze.clear()
             sash.pawn = sash.material = None

@@ -77,7 +77,8 @@ if (!(Test-Path "$project\Saved\Forecourt.json")) {
 $heronReport = if (Test-Path "$project\Saved\HeronDuel.json") {
     Get-Content -Raw "$project\Saved\HeronDuel.json" | ConvertFrom-Json
 }
-if ($heronReport.revision -ne 2) {
+$rebuildHeron = $heronReport.revision -ne 2
+if ($rebuildHeron) {
     Invoke-MapPass 'build_heron' 'VESPER_HERON_READY'
 }
 $cinderReport = if (Test-Path "$project\Saved\CinderDuel.json") {
@@ -85,6 +86,12 @@ $cinderReport = if (Test-Path "$project\Saved\CinderDuel.json") {
 }
 if ($cinderReport.revision -ne 2) {
     Invoke-MapPass 'build_cinder' 'VESPER_CINDER_READY'
+}
+$fanReport = if (Test-Path "$project\Saved\HeronFan.json") {
+    Get-Content -Raw "$project\Saved\HeronFan.json" | ConvertFrom-Json
+}
+if ($rebuildHeron -or $fanReport.revision -ne 3) {
+    Invoke-MapPass 'fit_heron_fan' 'VESPER_HERON_FAN_READY'
 }
 $outfitReport = if (Test-Path "$project\Saved\WayfarerOutfit.json") {
     Get-Content -Raw "$project\Saved\WayfarerOutfit.json" | ConvertFrom-Json
