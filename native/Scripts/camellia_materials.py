@@ -66,7 +66,7 @@ def cornea(root):
         float localX = c.x * xy.x - Direction.x * z;
         float yawZ = Direction.x * xy.x + c.x * z;
         float localY = c.y * xy.y - Direction.y * yawZ;
-        return 0.5 + float2(localX * r.x, -localY * r.y) / 1.065;
+        return 0.5 + float2(localX * r.x, -localY * r.y) / 1.13;
     """,
     )
     pigment = edit.get_material_property_input_node(mat, prop.MP_BASE_COLOR)
@@ -87,7 +87,7 @@ def cornea(root):
         "output_type", unreal.CustomMaterialOutputType.CMOT_FLOAT3
     )
     pins = []
-    for key in ("Reflection", "View"):
+    for key in ("Reflection", "View", "EyeUV"):
         pin = unreal.CustomInput()
         pin.set_editor_property("input_name", key)
         pins.append(pin)
@@ -104,10 +104,16 @@ def cornea(root):
         float2 main = (uv-float2(-.22,.18))/float2(.108,.069);
         float2 edge = (uv-float2(.175,-.085))/float2(.042,.032);
         float lit = .86*exp(-1.7*dot(main,main)) + .25*exp(-1.5*dot(edge,edge));
-        return float3(.92,.97,1.0)*lit*smoothstep(.62,.94,dot(r,v));
+        // The small softbox reflection sits on the cornea, independent
+        // of the iris texture as the gaze tracks an opponent.
+        float2 bead=(EyeUV-float2(.457,.440))/float2(.013,.017);
+        float2 spill=(EyeUV-float2(.485,.425))/float2(.006,.008);
+        float front=smoothstep(.62,.94,dot(r,v));
+        float catchlight=.85*exp(-dot(bead,bead)) + .27*exp(-dot(spill,spill));
+        return float3(.96,.97,1.0)*(lit*front+catchlight);
     """,
     )
-    for source, pin in ((reflection, "Reflection"), (view, "View")):
+    for source, pin in ((reflection, "Reflection"), (view, "View"), (uv, "EyeUV")):
         if not edit.connect_material_expressions(source, "", glint, pin):
             raise RuntimeError("Could not connect corneal reflection input " + pin)
     if not edit.connect_material_property(glint, "", prop.MP_EMISSIVE_COLOR):

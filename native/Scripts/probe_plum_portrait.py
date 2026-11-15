@@ -31,6 +31,13 @@ if unreal.SystemLibrary.parse_param(
         ("side", 222, 83, 478, 2, 39),
         ("back", 222, 161, 478, 2, 39),
     ]
+if unreal.SystemLibrary.parse_param(
+    unreal.SystemLibrary.get_command_line(), "SpectrePortrait"
+):
+    views += [
+        ("crown", 222, 12, 272, 82, 25),
+        ("silhouette", 222, 15, 540, 16, 42),
+    ]
 idx = 0
 start = None
 

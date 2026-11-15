@@ -1,13 +1,15 @@
 """Fit the magnolia coat, crisscross sash, coiled hair and mapped portrait to the combat rig."""
 
 import json
+from collections import Counter
+from bisect import bisect_right
 from math import atan2, cos, exp, pi, sin, tau
 
 from bind_pilgrim import cross, unit
 from garment_surfaces import garment_surfaces
-from cloud_collar import cloud_collar
+from portrait_subdivision import refine
+from spectre_regalia import regalia, shoulder_silks
 from jade_coiffure import coiffure
-from jade_swallow import swallow
 from begonia_ribbons import knot
 from wayfarer_legs import riding_legs
 from camellia_face import projection
@@ -35,14 +37,15 @@ def dress(out, bones, rest, art):
         )
         return len(out.doc["materials"]) - 1
 
-    face = material("WayfarerSkin", (1, 1, 1), 0.60, texture="begonia-face.jpg")
-    silk = material("MagnoliaSilk", (1, 1, 1), 0.66, texture="magnolia-silk.jpg")
-    lining = material("CeladonSilk", (1, 1, 1), 0.76, texture="celadon.jpg")
+    face = material("WayfarerSkin", (1, 1, 1), 0.60, texture="spectre-face.jpg")
+    silk = material("SpectreIvory", (1, 1, 1), 0.58, texture="spectre-silk.jpg")
+    lining = material(
+        "MourningSage", (0.48, 0.62, 0.52), 0.7, texture="spectre-silk.jpg"
+    )
     crimson = material("RoseBinding", (1, 1, 1), 0.71, texture="rosewood.jpg")
     brass = material("ChasedBrass", (1, 1, 1), 0.38, 0.64, "brass.jpg")
     hair = material("InkHair", (1, 1, 1), 0.63, texture="hair.jpg")
     jade = material("CloudJade", (0.16, 0.40, 0.32), 0.27, 0.12)
-    enamel = material("PeacockEnamel", (0.012, 0.21, 0.30), 0.23, 0.18)
     pearl = material("SeedPearl", (0.84, 0.75, 0.62), 0.28, 0.09)
     flower = material("WhiteJadePetal", (0.80, 0.85, 0.69), 0.30, 0.04)
     locks = material("WillowLocks", (1, 1, 1), 0.49, texture="willow-locks.png")
@@ -50,12 +53,15 @@ def dress(out, bones, rest, art):
     fringe = material("TempleStrands", (1, 1, 1), 0.64, texture="camellia-hairline.png")
     out.doc["materials"][fringe].update(alphaMode="MASK", alphaCutoff=0.38)
     river = material("RiverBrocade", (1, 1, 1), 0.65, texture="river-sash.jpg")
-    brocade = material("RuyiBrocade", (1, 1, 1), 0.58, texture="camellia-silk.jpg")
+    silver = material("AntiqueSilver", (0.61, 0.58, 0.46), 0.37, 0.80)
+    bare = material("NecklineSkin", (1, 1, 1), 0.60, texture="spectre-face.jpg")
     ribbon = material("BegoniaRibbon", (1, 1, 1), 0.46, texture="begonia-ribbon.jpg")
     eye = material("WetIris", (1, 1, 1), 0.23, texture="camellia-eye.jpg")
     lash = material("LashFringe", (0.029, 0.014, 0.012), 0.57)
     trousers = material("IndigoTwill", (0.14, 0.20, 0.24), 0.81, texture="celadon.jpg")
-    boots = material("CordovanBoots", (0.58, 0.43, 0.41), 0.50, texture="leather.jpg")
+    boots = material(
+        "LinenGaiters", (0.64, 0.67, 0.61), 0.70, texture="spectre-silk.jpg"
+    )
     damask = material("LakeSilk", (0.31, 0.41, 0.42), 0.67, texture="celadon.jpg")
     sole = material("BootSole", (0.024, 0.018, 0.019), 0.76)
     patch, finish = garment_surfaces(out, bones)
@@ -95,27 +101,31 @@ def dress(out, bones, rest, art):
         lip_seal = (6.606 - y) * 0.34 * lips
         return (
             x
-            * (1 + 0.059 * cheek * front - 0.050 * jaw + 0.055 * lips - 0.042 * nose)
+            * (1 + 0.025 * cheek * front - 0.093 * jaw + 0.105 * lips - 0.055 * nose)
             * (0.78 + 0.22 * smooth((y - 5.76) / 0.30)),
             y
             + 0.064 * cheek * front
-            + 0.044 * corner
+            + 0.014 * corner
             + lip_seal
-            + 0.055 * chin * front
+            + 0.093 * chin * front
             - 0.012 * brow
             + (point[1] - 7.274) * aperture(*point),
             z
-            + 0.073 * cheek * front
-            - 0.032 * chin * front
-            + 0.017 * lips
+            + 0.041 * cheek * front
+            + 0.015 * chin * front
+            + 0.042 * lips
             - 0.027 * nose
             - 0.022 * jaw * max(0, z - 0.5),
         )
 
     shaped = [sculpt(point, offset) for point, offset in zip(verts, offsets)]
+    # Refine both spaces so the UV projection, lash landmarks and blink retain
+    # their registration after smoothing the silhouette.
+    shaped, faces = refine(shaped, source["faces"])
+    verts, _ = refine(verts, source["faces"])
     normals = [[0.0, 0.0, 0.0] for _ in verts]
     batches = {face: [], hair: []}
-    for f in source["faces"]:
+    for f in faces:
         a, b, c = (shaped[i] for i in f[:3])
         normal = cross([j - i for i, j in zip(a, b)], [j - i for i, j in zip(a, c)])
         for i in f:
@@ -226,7 +236,7 @@ def dress(out, bones, rest, art):
 
     # An asymmetric oval follows the cranial vault from the nape to a
     # displaced crown. Both radii vary continuously across the temple.
-    scalp = scalp_radius(shaped, source["faces"])
+    scalp = scalp_radius(shaped, faces)
 
     def hair_shell(a, v):
         temple = abs(atan2(sin(a), cos(a)))
@@ -299,6 +309,26 @@ def dress(out, bones, rest, art):
                 )
 
             patch(locks, 6, 32, temple_lock)
+    # Wispy S-shaped locks break the straight hairline and frame the cheek.
+    for side in (-1, 1):
+        for j in range(4):
+
+            def face_lock(u, v):
+                a = side * (0.47 + 0.055 * j + 0.45 * v + 0.13 * sin(pi * v))
+                x, y, z = hair_shell(a, 0.095 - 0.14 * v)
+                taper = (1 - v**2) * (0.0033 + 0.0016 * sin(pi * v))
+                across = (u - 0.5) * 2 * taper
+                return (
+                    (
+                        x + side * (0.003 + across),
+                        y - (0.028 + 0.009 * j) * v * v,
+                        z + 0.006 + 0.006 * sin(pi * v) - side * across,
+                    ),
+                    ((j + u) / 4, v),
+                    head,
+                )
+
+            patch(locks, 5, 36, face_lock)
     for side in (-1, 1):
         for j in range(4):
             root = hair_shell(side * (1.03 + 0.055 * j), 0.08)
@@ -325,7 +355,6 @@ def dress(out, bones, rest, art):
         strand(hair, coil, lambda t: 0.013 + 0.003 * sin(pi * t), head, 64)
 
     coiffure(patch, strand, globe, hair_shell, locks, flower, pearl, brass)
-    swallow(patch, strand, globe, brass, jade, enamel, pearl)
     knot(patch, globe, strand, ribbon, brass, pearl)
     pendants(strand, globe, jade, pearl, brass)
 
@@ -403,23 +432,72 @@ def dress(out, bones, rest, art):
         ]
         return (x, y - depth - 0.011 * flare * cos(6 * a), z), skin
 
+    def opening(a):
+        return 1.466 - 0.129 * max(0, cos(a)) ** 2.5 - 0.024 * max(0, -cos(a)) ** 2
+
     def bodice(u, v):
         a = tau * (u - 0.5)
-        p, skin = cloth(a, 0.982 + 0.526 * v)
+        p, skin = cloth(a, 0.982 + (opening(a) - 0.982) * v)
         return p, (u, 0.94 - 0.87 * v), skin
 
-    def neckband(u, v):
-        a = tau * u
-        bottom, _ = cloth(a, 1.503)
-        # A shallow standing collar covers the open neck boundary while
-        # flexing with the first neck joint during turns.
-        x = bottom[0] * (1 - v) + 0.057 * sin(a) * v
-        z = bottom[2] * (1 - v) + (0.016 + 0.063 * cos(a)) * v
-        y = bottom[1] + (1.521 - 0.012 * max(0, cos(a)) - bottom[1]) * v
-        w = 0.52 * v
-        return (x, y, z), (u, 0.40 + 0.12 * v), [("spine_05", 1 - w), ("neck_01", w)]
+    # The head is an open scan. Sew its actual cut edge into the jacket
+    # opening, using identical positions and neck weights at every vertex.
+    counts = Counter(
+        tuple(sorted((i, j))) for f in faces for i, j in zip(f, f[1:] + f[:1])
+    )
+    edge = {
+        i for pair, n in counts.items() if n == 1 for i in pair if verts[i][1] < 6.05
+    }
 
-    patch(lining, 72, 10, neckband)
+    def angle(i):
+        return atan2(coords[i][0], coords[i][2] + 0.012) % tau
+
+    ring = sorted(edge, key=angle)
+
+    def decolletage(u, v):
+        at = u * len(ring)
+        k = int(at)
+        left, right = ring[k % len(ring)], ring[(k + 1) % len(ring)]
+        t = at - k
+        a = angle(left) + ((angle(right) - angle(left)) % tau) * t
+        neck = tuple(x + (y - x) * t for x, y in zip(coords[left], coords[right]))
+        outside, body_weights = cloth(a, opening(a))
+        # The upper third follows the throat before broadening over the
+        # collarbones. A slight ridge follows each clavicle across the chest.
+        expand = v**1.50
+        x = neck[0] + (outside[0] - neck[0]) * expand
+        z = neck[2] + (outside[2] - neck[2]) * expand
+        y = neck[1] + (outside[1] - neck[1]) * v
+        ridge = 0.0045 * sin(pi * v) ** 2 * max(0, cos(a)) * sin(a) ** 2
+        z += ridge
+        h = neck_weights[left][0] * (1 - t) + neck_weights[right][0] * t
+        blend = smooth(v)
+        w = [("head", h * (1 - blend)), ("neck_01", (1 - h) * (1 - blend))]
+        w += [(bone, value * blend) for bone, value in body_weights if value > 0]
+        return (x, y, z), (0.65 + 0.008 * sin(a) * v, 0.64 + 0.008 * v), w
+
+    # Wind the torso skin outward like the head. Both lip and face then
+    # receive lighting with the same front-face orientation.
+    patch(bare, len(ring), 30, lambda u, v: decolletage(1 - u, v))
+    ring_angles = [angle(i) for i in ring]
+
+    def lapel_surface(a, y, lift):
+        if y <= opening(a):
+            return cloth(a, y, lift)
+        # Trace the same neck panel used by the skin instead of extending
+        # the old jacket's smaller top rings across the open neckline.
+        az = a % tau
+        k = (bisect_right(ring_angles, az) - 1) % len(ring)
+        fraction = ((az - ring_angles[k]) % tau) / (
+            (ring_angles[(k + 1) % len(ring)] - ring_angles[k]) % tau
+        )
+        u = (k + fraction) / len(ring)
+        top = decolletage(u, 0)[0][1]
+        bottom = decolletage(u, 1)[0][1]
+        v = max(0, min(1, (top - y) / (top - bottom)))
+        (x, h, z), _, weights = decolletage(u, v)
+        return (x + lift * sin(a), h + lift * 0.36, z + lift * cos(a)), weights
+
     patch(silk, 96, 52, bodice)
 
     # Trousers join inside the waistband, beneath the flared riding panels.
@@ -520,7 +598,22 @@ def dress(out, bones, rest, art):
             p = (p[0] - side * 0.014 * (1 - v) ** 1.3, p[1], p[2])
             return p, (u, 1 - v), [(chain[seg], 1 - t), (chain[seg + 1], t)]
 
-        patch(silk, 36, 32, arm)
+        # Bare shoulder and upper arm between the two folds of the stole.
+        def upper_skin(u, v):
+            p, _, w = arm(u, 0.60 * v)
+            return p, (0.64 + 0.016 * u, 0.64 + 0.016 * v), w
+
+        patch(bare, 36, 24, upper_skin)
+        patch(silk, 36, 20, lambda u, v: arm(u, 0.55 + 0.45 * v, 0.002))
+        for i in range(6):
+            patch(
+                lining,
+                40,
+                4,
+                lambda u, v: arm(
+                    u, 0.55 + 0.065 * i + 0.041 * v + 0.017 * sin(tau * u), 0.0035
+                ),
+            )
 
         def sleeve_cap(u, v):
             ring, _, _ = arm(u, 0)
@@ -543,7 +636,12 @@ def dress(out, bones, rest, art):
                 [(chain[0], 1 - blend), ("clavicle_" + suffix, blend)],
             )
 
-        patch(silk, 36, 16, sleeve_cap)
+        def shoulder_skin(u, v):
+            p, _, w = sleeve_cap(u, v)
+            return p, (0.64 + 0.016 * u, 0.64 + 0.016 * v), w
+
+        patch(bare, 36, 16, shoulder_skin)
+        shoulder_silks(patch, arm, sleeve_cap, side, silk, lining, silver)
 
         # A dark, tapered bracer leaves the elbow free and tapers into the glove.
         patch(boots, 36, 22, lambda u, v: arm(u, 0.635 + 0.353 * v, ease=0.0022))
@@ -555,32 +653,13 @@ def dress(out, bones, rest, art):
         ):
             patch(slot, 36, 4, lambda u, v: arm(u, band + width * v, ease=0.0038))
 
-        def collar(u, v):
-            end = 1.34 if side < 0 else 1.045
-            y = 1.508 + (end - 1.508) * v
-            drop = (1.508 - y) / 0.463
-            a = side * (0.93 - 2.02 * drop**0.73)
-            span = 0.39 - 0.15 * smooth(drop * 2)
-            a += (u - 0.5) * span
-            p, skin = cloth(a, y, 0.0035 if side < 0 else 0.0055)
-            return p, (0.12 + 0.20 * u, 0.92 * v), skin
-
-        patch(lining, 10, 52, collar)
-        for edge in (0, 0.935):
-
-            def braid(u, v):
-                (x, y, z), uv, skin = collar(edge + 0.065 * u, v)
-                return (x * 1.007, y + 0.0004, z + 0.0011), uv, skin
-
-            patch(brass, 2, 52, braid)
-
     def belt(u, v, lift=0.006):
         a = tau * u
         y = 1.067 + 0.068 * v + 0.013 * sin(a - 0.55)
         p, skin = cloth(a, y, lift)
         return p, (u, v), skin
 
-    patch(crimson, 88, 10, belt)
+    patch(lining, 88, 10, belt)
     for band in (0.07, 0.87):
         patch(brass, 88, 3, lambda u, v: belt(u, band + 0.04 * v, 0.008))
     centre, _, buckle_skin = belt(0.034, 0.50, 0.009)
@@ -618,8 +697,8 @@ def dress(out, bones, rest, art):
 
         patch(river, 16, 48, streamer)
     globe(jade, rear, (0.018, 0.016, 0.010), rear_skin)
-    riding_legs(patch, rest, trousers, boots, sole, crimson, brass)
-    cloud_collar(patch, brocade, brass, crimson)
+    riding_legs(patch, rest, trousers, boots, sole, lining, silver)
+    regalia(patch, strand, globe, lapel_surface, silk, lining, silver, jade)
     finish()
     lash_shape = eyelashes(out, lash, verts, coords, bones["head"])
     install_shape(out, face, verts, closure=blink_delta, attachments={lash: lash_shape})

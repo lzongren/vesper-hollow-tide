@@ -59,10 +59,10 @@ def complexion(root):
         """
         float2 ch = (float2(abs(UV.x-.504), UV.y) - float2(.137,.545)) / float2(.071,.051);
         float2 lp = (UV-float2(.504,.689)) / float2(.082,.027);
-        float rouge = exp(-dot(ch,ch)) * .11;
+        float rouge = exp(-dot(ch,ch)) * .045;
         float lip = exp(-dot(lp,lp)) * smoothstep(.026,.082,Face.r-Face.g);
         return Face * lerp(float3(1,1,1),float3(1.18,.59,.71),rouge)
-                    * lerp(float3(1,1,1),float3(1.08,.63,.77),lip*.57);
+                    * lerp(float3(1,1,1),float3(1.08,.63,.77),lip*.18);
     """,
     )
     wire(projected, "RGB", paint, "Face")
@@ -75,7 +75,7 @@ def complexion(root):
     mat.set_editor_property("shading_model", unreal.MaterialShadingModel.MSM_SUBSURFACE)
     tint = node(unreal.MaterialExpressionMultiply, 40, 200)
     warm = node(unreal.MaterialExpressionConstant3Vector, -180, 300)
-    warm.set_editor_property("constant", unreal.LinearColor(0.46, 0.16, 0.10, 1))
+    warm.set_editor_property("constant", unreal.LinearColor(0.34, 0.17, 0.13, 1))
     wire(blend, "", tint, "A")
     wire(warm, "", tint, "B")
     density = node(unreal.MaterialExpressionConstant, 40, 370)

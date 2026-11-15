@@ -2,7 +2,7 @@
 
 [披纱鹭展扇、七羽齐射与海棠闪身 · Unreal 实机](../docs/runtime/heron-fan/) · [Moon court bridge and lotus pond](../docs/runtime/moon-water/)
 
-Haitang wears an original gilt swallow pin and a silk cloud collar over an embroidered travelling coat. The first court opens onto a roofed gallery with a carved egret screen. [Full-length riding coat and boots in play](../docs/runtime/lingbo-haitang/) · [Bell court](../docs/runtime/bell-gallery/)
+Haitang wears an ivory ceremonial crown and a crossed silk stole, with layered streamers fitted to her moving shoulders. The first court opens onto a roofed gallery with a carved egret screen. [Shoulders, face and sword motion](../docs/runtime/white-spectre/) · [Bell court](../docs/runtime/bell-gallery/)
 
 Haitang looks towards visible opponents in all three courts. [Eye movement and the fitted complexion in the game window](../docs/runtime/wayfarer-gaze/)
 
