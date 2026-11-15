@@ -34,6 +34,8 @@ previous_submix_mode = None
 start = last_sample = original = None
 last_attack = -1.0
 pressed = False
+last_contact = None
+contact_time = back_off_until = 0.0
 saved = Path(
     unreal.Paths.convert_relative_path_to_full(unreal.Paths.project_saved_dir())
 )
@@ -70,6 +72,9 @@ def finish(reason):
                     "player_hp",
                     "boss_hp",
                     "boss_state",
+                    "gaze_target",
+                    "gaze_yaw_deg",
+                    "gaze_pitch_deg",
                 ],
                 samples=rows,
                 victories=wins,
@@ -94,6 +99,7 @@ def finish(reason):
 def tick(dt):
     global stage, start, original, last_sample, last_attack, pressed
     global player_mesh, previous_frame, mix_started, previous_submix_mode
+    global last_contact, contact_time, back_off_until
     pawn = step.pawn
     if not runtime["live"](pawn):
         return
@@ -186,6 +192,11 @@ def tick(dt):
                 hp,
                 bhp,
                 duel.state if duel else "travel",
+                next(
+                    (d.tag for d in duels if d.actor is not None and d.actor == runtime["gaze"].target),
+                    None,
+                ),
+                *[round(math.degrees(a), 2) for a in runtime["gaze"].angles],
             ]
         )
         if len(rows) % 20 == 0:
@@ -200,6 +211,20 @@ def tick(dt):
         yaw = math.degrees(math.atan2(dy, dx))
         pc.set_control_rotation(unreal.Rotator(pitch=-8, yaw=yaw))
         pawn.set_actor_rotation(unreal.Rotator(yaw=yaw), False)
+    if duel and bhp is not None:
+        contact = (duel.tag, bhp)
+        if contact != last_contact or distance > 235:
+            last_contact, contact_time = contact, now
+        elif now - contact_time > 5.0:
+            # A shoulder-to-shoulder orbit can leave the blade outside its target.
+            # Use normal movement to make space and approach again.
+            contact_time, back_off_until = now, now + 0.55
+            unreal.log(f"VESPER_MELEE_REPOSITION {duel.tag} range={distance:.1f} dz={target.z - pos.z:.1f}")
+        if now < back_off_until:
+            back = pawn.get_actor_forward_vector() * -0.9
+            side = pawn.get_actor_right_vector() * 0.35
+            pawn.add_movement_input(back + side, 1)
+            return
     if distance > 95:
         pawn.add_movement_input(unreal.Vector(dx / distance, dy / distance, 0), 1)
     if not duel or distance > 235:

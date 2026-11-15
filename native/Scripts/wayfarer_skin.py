@@ -1,5 +1,7 @@
 """Blend the portrait into plain skin beyond the visible facial landmarks."""
 
+from pathlib import Path
+
 import unreal
 from keeper_materials import surface
 
@@ -7,7 +9,7 @@ from keeper_materials import surface
 def complexion(root):
     lib = unreal.EditorAssetLibrary
     edit = unreal.MaterialEditingLibrary
-    mat = surface(root, "RougeComplexion", "WayfarerSkin", 0, 0.52, specular=0.29)
+    mat = surface(root, "CamelliaComplexion", "WayfarerSkin", 0, 0.52, specular=0.29)
     if not mat.get_editor_property("used_with_morph_targets"):
         mat.set_editor_property("used_with_morph_targets", True)
         edit.recompile_material(mat)
@@ -60,6 +62,57 @@ def complexion(root):
         density, "", unreal.MaterialProperty.MP_OPACITY
     ):
         raise RuntimeError("Could not install skin density")
+    # UV1 fades the registered portrait off at the temples and the neck.
+    # Apply the same mask to relief and oiliness to avoid stretching pores there.
+    directory = Path(
+        unreal.Paths.convert_relative_path_to_full(unreal.Paths.project_dir())
+    )
+    finish = root + "/Finish"
+    neutral_normal = node(unreal.MaterialExpressionConstant3Vector, -390, 660)
+    neutral_normal.set_editor_property("constant", unreal.LinearColor(0, 0, 1, 1))
+    original_rough = edit.get_material_property_input_node(
+        mat, unreal.MaterialProperty.MP_ROUGHNESS
+    )
+    for name, compression, sampler, neutral, channel, output, row in (
+        (
+            "CamelliaSkinNormal",
+            unreal.TextureCompressionSettings.TC_NORMALMAP,
+            unreal.MaterialSamplerType.SAMPLERTYPE_NORMAL,
+            neutral_normal,
+            "RGB",
+            unreal.MaterialProperty.MP_NORMAL,
+            620,
+        ),
+        (
+            "CamelliaSkinRough",
+            unreal.TextureCompressionSettings.TC_MASKS,
+            unreal.MaterialSamplerType.SAMPLERTYPE_MASKS,
+            original_rough,
+            "R",
+            unreal.MaterialProperty.MP_ROUGHNESS,
+            850,
+        ),
+    ):
+        path = finish + "/" + name
+        if not lib.does_asset_exist(path):
+            task = unreal.AssetImportTask()
+            task.filename = str(directory / "Art" / "Wayfarer" / (name + ".png"))
+            task.destination_path = finish
+            task.automated = task.save = True
+            unreal.AssetToolsHelpers.get_asset_tools().import_asset_tasks([task])
+        texture = lib.load_asset(path)
+        texture.set_editor_property("compression_settings", compression)
+        texture.set_editor_property("srgb", False)
+        lib.save_loaded_asset(texture, only_if_is_dirty=False)
+        sample = node(unreal.MaterialExpressionTextureSample, -590, row)
+        sample.set_editor_property("texture", texture)
+        sample.set_editor_property("sampler_type", sampler)
+        mix = node(unreal.MaterialExpressionLinearInterpolate, -140, row)
+        wire(neutral, "", mix, "A")
+        wire(sample, channel, mix, "B")
+        wire(mask, "", mix, "Alpha")
+        if not edit.connect_material_property(mix, "", output):
+            raise RuntimeError("Could not attach " + name)
     edit.recompile_material(mat)
     if not lib.save_loaded_asset(mat, only_if_is_dirty=False):
         raise RuntimeError("Could not save the skin material")

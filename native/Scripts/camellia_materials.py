@@ -27,7 +27,7 @@ def lashes(root):
 
 
 def cornea(root):
-    mat = surface(root, "ClearCornea", "WetIris", 0, 0.18, specular=0.52)
+    mat = surface(root, "AttentiveCornea", "WetIris", 0, 0.18, specular=0.52)
     edit = unreal.MaterialEditingLibrary
     prop = unreal.MaterialProperty
     if edit.get_material_property_input_node(mat, prop.MP_EMISSIVE_COLOR):
@@ -43,6 +43,45 @@ def cornea(root):
 
     mat.set_editor_property("shading_model", unreal.MaterialShadingModel.MSM_CLEAR_COAT)
     # The clear-coat model defaults to a full coat at 0.1 roughness.
+    # Reproject the iris atlas on the front ellipsoid. Leave the corneal
+    # normals and the reflection in place as the pigment moves under them.
+    uv = node(unreal.MaterialExpressionTextureCoordinate, -900, -120)
+    direction = node(unreal.MaterialExpressionVectorParameter, -900, 40)
+    direction.set_editor_property("parameter_name", "IrisDirection")
+    direction.set_editor_property("default_value", unreal.LinearColor(0, 0, 0, 0))
+    project = node(unreal.MaterialExpressionCustom, -600, -80)
+    project.set_editor_property("description", "Iris on the fitted globe")
+    project.set_editor_property(
+        "output_type", unreal.CustomMaterialOutputType.CMOT_FLOAT2
+    )
+    inputs = []
+    for name in ("EyeUV", "Direction"):
+        pin = unreal.CustomInput()
+        pin.set_editor_property("input_name", name)
+        inputs.append(pin)
+    project.set_editor_property("inputs", inputs)
+    project.set_editor_property(
+        "code",
+        """
+        // wayfarer_outfit.globe projects 44.5 mm of the eye onto the atlas.
+        float2 r = float2(19.2, 15.8) / 44.5;
+        float2 xy = (EyeUV - 0.5) / float2(r.x, -r.y);
+        float z = sqrt(saturate(1 - dot(xy, xy)));
+        float2 c = sqrt(saturate(1 - Direction.xy * Direction.xy));
+        float localX = c.x * xy.x - Direction.x * z;
+        float yawZ = Direction.x * xy.x + c.x * z;
+        float localY = c.y * xy.y - Direction.y * yawZ;
+        return 0.5 + float2(localX * r.x, -localY * r.y);
+    """,
+    )
+    pigment = edit.get_material_property_input_node(mat, prop.MP_BASE_COLOR)
+    for source, dest, pin in (
+        (uv, project, "EyeUV"),
+        (direction, project, "Direction"),
+        (project, pigment, "UVs"),
+    ):
+        if not edit.connect_material_expressions(source, "", dest, pin):
+            raise RuntimeError("Could not wire iris projection at " + pin)
     # A reflected patch of the bright courtyard sky. Its position changes
     # across the cornea as the eye, camera, or character turns.
     reflection = node(unreal.MaterialExpressionReflectionVectorWS, -690, 620)

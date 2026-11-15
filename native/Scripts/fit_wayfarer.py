@@ -73,6 +73,6 @@ mesh.set_editor_property("materials", slots)
 lib.save_loaded_asset(mesh, only_if_is_dirty=False)
 fit("BP_CombatCharacter", "BP_BelfryPilgrim", mesh, {})
 (project / "Saved" / "WayfarerOutfit.json").write_text(
-    json.dumps({"mesh": mesh.get_path_name(), "revision": 8})
+    json.dumps({"mesh": mesh.get_path_name(), "revision": 9})
 )
 unreal.log("VESPER_WAYFARER_READY")

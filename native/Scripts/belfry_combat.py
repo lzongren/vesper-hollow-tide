@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from court_encounter import CourtEncounter, live
 from sash_motion import SashMotion
 from wayfarer_blink import Blink
+from wayfarer_gaze import Gaze
 from court_hud import CourtHUD
 from heron_combat import Heron
 from cinder_combat import Saint
@@ -88,6 +89,7 @@ class Bellwarden(CourtEncounter):
 step = runpy.run_path(str(Path(__file__).with_name("belfry_step.py")))["step"]
 sash = SashMotion()
 blink = Blink()
+gaze = Gaze()
 hud = CourtHUD()
 boss = Bellwarden(step)
 heron = Heron(step)
@@ -125,6 +127,7 @@ def update_encounters(dt):
             heron.active = []
             heron.feathers = []
             hud.clear()
+            gaze.clear()
             sash.pawn = sash.material = None
             step.release_world()
             fallen_at = fallen_pawn = None
@@ -134,6 +137,7 @@ def update_encounters(dt):
     boss.update(dt)
     heron.update(dt)
     saint.update(dt)
+    gaze.update(pawn, step.pc, (boss, heron, saint), dt)
     hud.update(pawn, (boss, heron, saint), dt)
 
 

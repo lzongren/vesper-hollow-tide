@@ -2,7 +2,7 @@
 
 **Visual rebuild in progress.** The browser prototype below did not meet the requested Bloodborne / Wuchang visual standard. The [native Unreal project](native/README.md) now includes a 205.4-metre route through three courtyards. The Bellwarden, the Veiled Heron and the Saint of Cinders are playable along the Unreal route and in the browser prototype.
 
-[Meet the playable Haitang swordswoman](docs/runtime/haitang-wayfarer/) · [Watch her three fights with game audio](docs/runtime/haitang-wayfarer/three-courts.mp4) · [Run and turn with the embroidered sash](docs/runtime/river-sash/)
+[See Haitang follow her opponent in-game](docs/runtime/wayfarer-gaze/) · [Meet the playable Haitang swordswoman](docs/runtime/haitang-wayfarer/) · [Watch her three fights with game audio](docs/runtime/haitang-wayfarer/three-courts.mp4) · [Run and turn with the embroidered sash](docs/runtime/river-sash/)
 
 [Walk from the cinder shrine into the inscribed pine ravine](docs/runtime/shrine-talus/)
 
