@@ -9,6 +9,7 @@ from cloud_collar import cloud_collar
 from jade_coiffure import coiffure
 from jade_swallow import swallow
 from begonia_ribbons import knot
+from wayfarer_legs import riding_legs
 from camellia_face import projection
 from camellia_jewels import pendants
 from camellia_lids import aperture, blink_delta, eyelashes
@@ -53,9 +54,12 @@ def dress(out, bones, rest, art):
     ribbon = material("BegoniaRibbon", (1, 1, 1), 0.46, texture="begonia-ribbon.jpg")
     eye = material("WetIris", (1, 1, 1), 0.23, texture="camellia-eye.jpg")
     lash = material("LashFringe", (0.029, 0.014, 0.012), 0.57)
+    trousers = material("IndigoTwill", (0.14, 0.20, 0.24), 0.81, texture="celadon.jpg")
+    boots = material("CordovanBoots", (0.58, 0.43, 0.41), 0.50, texture="leather.jpg")
+    damask = material("LakeSilk", (0.31, 0.41, 0.42), 0.67, texture="celadon.jpg")
+    sole = material("BootSole", (0.024, 0.018, 0.019), 0.76)
     patch, finish = garment_surfaces(out, bones)
     head = [("head", 1)]
-    waist = [("pelvis", 1)]
 
     def smooth(t):
         t = min(1, max(0, t))
@@ -328,17 +332,22 @@ def dress(out, bones, rest, art):
     # The bodice, skirt and lapel share one surface from hem to neckline.
     # Ring radii are half-width and half-depth in the skeleton's rest pose.
     rings = (
-        (0.425, 0.281, 0.226),
-        (0.67, 0.251, 0.205),
-        (0.83, 0.233, 0.198),
-        (0.99, 0.177, 0.151),
-        (1.09, 0.158, 0.127),
-        (1.21, 0.163, 0.123),
-        (1.32, 0.179, 0.142),
-        (1.385, 0.183, 0.135),
-        (1.431, 0.179, 0.108),
-        (1.465, 0.146, 0.089),
-        (1.488, 0.097, 0.074),
+        (0.425, 0.260, 0.188),
+        (0.58, 0.240, 0.171),
+        (0.70, 0.218, 0.153),
+        (0.825, 0.201, 0.149),
+        (0.92, 0.198, 0.147),
+        (0.99, 0.180, 0.131),
+        (1.045, 0.151, 0.115),
+        (1.105, 0.129, 0.100),
+        (1.163, 0.137, 0.106),
+        (1.226, 0.154, 0.117),
+        (1.285, 0.169, 0.126),
+        (1.343, 0.173, 0.133),
+        (1.396, 0.166, 0.112),
+        (1.438, 0.158, 0.092),
+        (1.472, 0.127, 0.077),
+        (1.492, 0.085, 0.065),
         (1.508, 0.062, 0.064),
     )
 
@@ -369,8 +378,21 @@ def dress(out, bones, rest, art):
         )
         x = (radius(1) + fold + lift) * sin(a)
         z = (radius(2) + 0.65 * fold + lift) * cos(a) + 0.010
+        # The jacket is cut over the ribcage and seat. Build the front and
+        # back independently so the form also reads when seen in profile.
+        breast = exp(-(((y - 1.31) / 0.083) ** 2) - ((abs(x) - 0.085) / 0.070) ** 2)
+        seat = exp(-(((y - 0.912) / 0.103) ** 2))
+        # Give the vent clearance over the advancing quadriceps.
+        allowance = exp(-(((y - 0.777) / 0.12) ** 2)) * abs(sin(a)) ** 1.5
+        x += 0.022 * allowance * sin(a)
+        z += 0.030 * allowance * cos(a)
+        z += 0.035 * breast * max(0, cos(a)) ** 1.5
+        z -= 0.022 * seat * max(0, -cos(a)) ** 2
         depth = 0.025 * smooth((y - 1.43) / 0.078) * max(0, cos(a))
-        leg = 0.83 * flare
+        # The wrap crosses the outer thigh as the hip turns. Follow that
+        # joint through the short side vent so the leg stays inside the coat.
+        side_panel = smooth((abs(sin(a)) - 0.20) / 0.62)
+        leg = max(0.83 * flare, side_panel * smooth((1.045 - y) / 0.18))
         rib = smooth((y - 0.99) / 0.19)
         chest = smooth((y - 1.15) / 0.20)
         skin = [
@@ -399,11 +421,47 @@ def dress(out, bones, rest, art):
 
     patch(lining, 72, 10, neckband)
     patch(silk, 96, 52, bodice)
+
+    # Trousers join inside the waistband, beneath the flared riding panels.
+    def yoke(u, v):
+        p, skin = cloth(tau * u, 0.81 + 0.205 * v, -0.015)
+        return p, (u, v), skin
+
+    patch(trousers, 80, 18, yoke)
+
+    # Side gores run from hip to armscye. Each seam follows the ribcage and
+    # turns towards the back under the arm as the player raises her sword.
+    for side in (-1, 1):
+
+        def gore(u, v, lift=0.003):
+            y = 0.997 + 0.398 * v
+            mid = side * (1.44 + 0.18 * v - 0.11 * sin(pi * v))
+            width = 0.45 + 0.22 * sin(pi * v) - 0.18 * v
+            a = mid + (u - 0.5) * width * 2
+            p, skin = cloth(a, y, lift)
+            return p, (u, v), skin
+
+        patch(damask, 20, 36, gore)
+        for edge in (0.016, 0.965):
+            patch(brass, 2, 30, lambda u, v: gore(edge + 0.010 * u, v, 0.0046))
+
+    def hem(a):
+        # Shorter inside front panels clear the advancing knee, longer back
+        # panels hang behind the calf. The sword-side vent rides highest.
+        return (
+            0.424
+            + 0.173 * max(0, cos(a))
+            + 0.116 * sin(a) ** 2
+            + 0.092 * max(0, sin(a)) ** 3
+        )
+
     for j in range(8):
 
         def panel(u, v):
-            a = tau * (j + (u - 0.5) * 1.025) / 8
-            p, skin = cloth(a, 0.425 + 0.573 * v)
+            span = 1.015 - 0.23 * (1 - v) ** 1.5
+            a = tau * (j + 0.5 + (u - 0.5) * span) / 8
+            edge = hem(a)
+            p, skin = cloth(a, edge + (0.999 - edge) * v)
             return p, (0.05 + 0.90 * u, 0.995 - 0.91 * v), skin
 
         patch(lining if j in (2, 6) else silk, 20, 36, panel)
@@ -421,9 +479,10 @@ def dress(out, bones, rest, art):
 
         def pleats(u, v):
             a = side * (0.54 + 2.06 * u)
-            y = 0.444 + 0.557 * v
+            edge = hem(a) + 0.012
+            y = edge + (1.001 - edge) * v
             fold = (0.5 + 0.5 * cos(tau * 12 * u)) ** 2
-            lift = 0.006 + (0.004 + 0.014 * (1 - v)) * fold
+            lift = 0.004 + (0.003 + 0.010 * (1 - v)) * fold
             (x, h, z), weights = cloth(a, y, lift)
             return (x, h, z), (u, 1 - v), weights
 
@@ -447,8 +506,8 @@ def dress(out, bones, rest, art):
             n = unit(cross(axis, (0, 0, 1)))
             m = cross(axis, n)
             width = (
-                (0.055 + 0.016 * smooth(v / 0.23)) * (1 - v)
-                + 0.043 * v
+                (0.048 + 0.008 * smooth(v / 0.23)) * (1 - v)
+                + 0.034 * v
                 + 0.0025 * sin(10 * pi * v + 2 * cos(tau * u))
                 + ease
             )
@@ -458,34 +517,43 @@ def dress(out, bones, rest, art):
                 + width * (n[k] * cos(tau * u) + m[k] * sin(tau * u))
                 for k in range(3)
             )
+            p = (p[0] - side * 0.014 * (1 - v) ** 1.3, p[1], p[2])
             return p, (u, 1 - v), [(chain[seg], 1 - t), (chain[seg + 1], t)]
 
         patch(silk, 36, 32, arm)
 
         def sleeve_cap(u, v):
             ring, _, _ = arm(u, 0)
-            centre = rest[chain[0]]
+            joint = rest[chain[0]]
+            centre = (joint[0] - side * 0.014, joint[1], joint[2])
             angle = v * pi / 2
             # The shoulder dome extends out of the sleeve opening along the
             # upper-arm axis, then joins the sloping bodice close to the neck.
             axis = unit([a - b for a, b in zip(centre, rest[chain[1]])])
-            dome = 0.016 * sin(angle)
+            dome = 0.043 * sin(angle)
             p = tuple(
                 centre[k] + (ring[k] - centre[k]) * cos(angle) + axis[k] * dome
                 for k in range(3)
             )
+            p = (p[0] - side * 0.010 * sin(angle), p[1] + 0.007 * sin(angle), p[2])
             blend = 0.60 * smooth(v)
-            return p, (u, 0.06 + 0.22 * v), [(chain[0], 1 - blend), ("spine_05", blend)]
+            return (
+                p,
+                (u, 0.06 + 0.22 * v),
+                [(chain[0], 1 - blend), ("clavicle_" + suffix, blend)],
+            )
 
         patch(silk, 36, 16, sleeve_cap)
 
-        for band in (0.11, 0.17, 0.67, 0.73, 0.82, 0.88, 0.94):
-
-            def cuff(u, v):
-                # Lay braid normal to the sleeve axis around its full circumference.
-                return arm(u, band + 0.022 * v, ease=0.0025)
-
-            patch(brass if band in (0.17, 0.67, 0.94) else crimson, 36, 3, cuff)
+        # A dark, tapered bracer leaves the elbow free and tapers into the glove.
+        patch(boots, 36, 22, lambda u, v: arm(u, 0.635 + 0.353 * v, ease=0.0022))
+        for band, width, slot in (
+            (0.635, 0.024, crimson),
+            (0.665, 0.006, brass),
+            (0.959, 0.018, crimson),
+            (0.982, 0.005, brass),
+        ):
+            patch(slot, 36, 4, lambda u, v: arm(u, band + width * v, ease=0.0038))
 
         def collar(u, v):
             end = 1.34 if side < 0 else 1.045
@@ -506,23 +574,18 @@ def dress(out, bones, rest, art):
 
             patch(brass, 2, 52, braid)
 
-    def belt(u, v):
+    def belt(u, v, lift=0.006):
         a = tau * u
-        return (
-            (
-                0.178 * sin(a),
-                1.01 + 0.094 * v + 0.007 * sin(a * 3),
-                0.160 * cos(a) + 0.015,
-            ),
-            (u, v),
-            waist,
-        )
+        y = 1.067 + 0.068 * v + 0.013 * sin(a - 0.55)
+        p, skin = cloth(a, y, lift)
+        return p, (u, v), skin
 
-    patch(crimson, 72, 8, belt)
-    for band in (0.05, 0.88):
-        patch(brass, 72, 2, lambda u, v: belt(u, band + 0.045 * v))
-    globe(jade, (0.025, 1.065, 0.182), (0.036, 0.024, 0.011), waist)
-    # Two folded loops gather the streamers against the rear waistband.
+    patch(crimson, 88, 10, belt)
+    for band in (0.07, 0.87):
+        patch(brass, 88, 3, lambda u, v: belt(u, band + 0.04 * v, 0.008))
+    centre, _, buckle_skin = belt(0.034, 0.50, 0.009)
+    globe(jade, centre, (0.021, 0.014, 0.008), buckle_skin)
+    rear, _, rear_skin = belt(0.50, 0.48, 0.008)
     for side in (-1, 1):
 
         def loop(u, v):
@@ -531,11 +594,11 @@ def dress(out, bones, rest, art):
             return (
                 (
                     side * (0.018 + 0.075 * (1 - cos(a)) / 2) + width * sin(a),
-                    1.066 + 0.024 * sin(a) + width * cos(a),
-                    -0.157 - 0.025 * sin(pi * v) - 0.008 * cos(tau * u),
+                    rear[1] + 0.018 * sin(a) + width * cos(a),
+                    rear[2] - 0.018 * sin(pi * v) - 0.006 * cos(tau * u),
                 ),
                 (u, v),
-                waist,
+                rear_skin,
             )
 
         patch(lining, 12, 40, loop)
@@ -549,12 +612,13 @@ def dress(out, bones, rest, art):
             crosswise = (2 * u - 1) * half_width
             spread = 0.033 + 0.068 * sin(pi * v * 0.65)
             x = side * spread + crosswise * cos(roll)
-            z = -0.164 - 0.096 * v + 0.012 * sin(5 * v) + crosswise * sin(roll)
-            y = 1.062 - length * v + 0.022 * (1 - abs(2 * u - 1)) * v**12
-            return (x, y, z), (u, v), waist
+            z = rear[2] - 0.008 - 0.135 * v + 0.012 * sin(5 * v) + crosswise * sin(roll)
+            y = rear[1] - length * v + 0.022 * (1 - abs(2 * u - 1)) * v**12
+            return (x, y, z), (u, v), rear_skin
 
         patch(river, 16, 48, streamer)
-    globe(jade, (0, 1.064, -0.175), (0.020, 0.019, 0.012), waist)
+    globe(jade, rear, (0.018, 0.016, 0.010), rear_skin)
+    riding_legs(patch, rest, trousers, boots, sole, crimson, brass)
     cloud_collar(patch, brocade, brass, crimson)
     finish()
     lash_shape = eyelashes(out, lash, verts, coords, bones["head"])

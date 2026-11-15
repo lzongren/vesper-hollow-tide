@@ -328,39 +328,27 @@ def build(reference, body_path, art, textures, output, *, bellwarden=False, arme
             base, prim, vertices, normals, joints, weights, offset + prim["material"]
         )
         if wayfarer:
-            # Keep the original gloves, trousers and boots underneath the tailoring.
-            indices = [i for i, in base.values(prim["indices"])]
-            keep = []
-            for position, joint_ids, influence in zip(
-                vertices, base.values(a["JOINTS_0"]), weights
-            ):
-                glove = any(
-                    "Hand" in source_names[i] and w > 0.44
-                    for i, w in zip(joint_ids, influence)
+            # The new trousers and boots cover the legs on the same rig.
+            # Retain the source gloves at the control points of the grip.
+            hand = [
+                any(
+                    "Hand" in source_names[j] and w > 0.44
+                    for j, w in zip(joints, values)
                 )
-                keep.append(position[1] < 0.81 or glove)
-            # UV seams duplicate vertices. Weld only for this component search,
-            # then export the original vertices with their UVs and skin weights.
-            points = [tuple(round(x, 4) for x in v) for v in vertices]
-            neighbours = {}
-            triangles = []
+                for joints, values in zip(base.values(a["JOINTS_0"]), weights)
+            ]
+            indices = [i for (i,) in base.values(prim["indices"])]
+            kept = []
             for start in range(0, len(indices), 3):
-                tri = indices[start:start + 3]
-                if all(keep[i] for i in tri):
-                    triangles.append(tri)
-                    corners = [points[i] for i in tri]
-                    for point in corners:
-                        neighbours.setdefault(point, set()).update(corners)
-            # Clipping the old coat at thigh height leaves a disconnected
-            # strip around the new skirt. Boots extend below it, gloves above.
-            pending = [pt for pt in neighbours if pt[1] < 0.68 or pt[1] > 0.82]
-            retained = set(pending)
-            while pending:
-                new = neighbours[pending.pop()] - retained
-                retained.update(new)
-                pending.extend(new)
-            kept = [(i,) for tri in triangles if points[tri[0]] in retained for i in tri]
-            out.doc["meshes"][0]["primitives"][-1]["indices"] = out.data(kept, "SCALAR", 5125)
+                triangle = indices[start : start + 3]
+                if all(hand[i] for i in triangle):
+                    kept.extend((i,) for i in triangle)
+            if kept:
+                out.doc["meshes"][0]["primitives"][-1]["indices"] = out.data(
+                    kept, "SCALAR", 5125
+                )
+            else:
+                out.doc["meshes"][0]["primitives"].pop()
 
     gear = [
         ("PilgrimRainHat", "Bamboo", "head"),

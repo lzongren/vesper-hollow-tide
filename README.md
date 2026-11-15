@@ -2,7 +2,7 @@
 
 [披纱鹭展扇、七羽齐射与海棠闪身 · Unreal 实机](docs/runtime/heron-fan/)
 
-[花钿海棠 · 新版可玩女剑客与三庭实机](docs/runtime/dianhua-haitang/) · [守钟人的双鹭照壁与木构雨廊](docs/runtime/bell-gallery/)
+[海棠骑装 · 全身实机对照与三庭交手](docs/runtime/lingbo-haitang/) · [守钟人的双鹭照壁与木构雨廊](docs/runtime/bell-gallery/) · [月门石桥、荷塘与实机过桥](docs/runtime/moon-water/)
 
 **Visual rebuild in progress.** The browser prototype below did not meet the requested Bloodborne / Wuchang visual standard. The [native Unreal project](native/README.md) now includes a 205.4-metre route through three courtyards. The Bellwarden, the Veiled Heron and the Saint of Cinders are playable along the Unreal route and in the browser prototype.
 

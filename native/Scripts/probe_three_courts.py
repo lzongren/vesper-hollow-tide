@@ -172,6 +172,7 @@ def tick(dt):
             name = duel.tag
         if name and name not in captured:
             captured.add(name)
+            unreal.log(f"VESPER_COURT_SHOT_CLOCK {name} {time.perf_counter():.6f}")
             if mix_started is not None:
                 unreal.log(
                     f"VESPER_MIX_MARK {name} {time.perf_counter() - mix_started:.6f}"

@@ -96,7 +96,7 @@ if ($rebuildHeron -or $fanReport.revision -ne 3) {
 $outfitReport = if (Test-Path "$project\Saved\WayfarerOutfit.json") {
     Get-Content -Raw "$project\Saved\WayfarerOutfit.json" | ConvertFrom-Json
 }
-if ($rebuildDuel -or $outfitReport.revision -ne 14 -or !(Test-Path "$project\Content\Vesper\Duel\HuadianHaitang\HuadianHaitang\SkeletalMeshes\HuadianHaitang.uasset")) {
+if ($rebuildDuel -or $outfitReport.revision -ne 17 -or !(Test-Path "$project\Content\Vesper\Duel\QingluoHaitang\QingluoHaitang\SkeletalMeshes\QingluoHaitang.uasset")) {
     Invoke-MapPass 'fit_wayfarer' 'VESPER_WAYFARER_READY'
 }
 if (!(Test-Path "$project\Saved\WestPass.json")) {
@@ -131,6 +131,12 @@ $galleryReport = if (Test-Path "$project\Saved\BellRainGallery.json") {
 }
 if ($galleryReport.revision -ne 3) {
     Invoke-MapPass 'fit_bell_gallery' 'VESPER_RAIN_GALLERY_READY'
+}
+$pondReport = if (Test-Path "$project\Saved\MoonWater.json") {
+    Get-Content -Raw "$project\Saved\MoonWater.json" | ConvertFrom-Json
+}
+if ($rebuildDuel -or $cinderReport.revision -ne 2 -or $ridgeReport.revision -ne 3 -or $screeReport.revision -ne 5 -or $pondReport.revision -ne 7) {
+    Invoke-MapPass 'fit_moon_water' 'VESPER_MOON_WATER_READY'
 }
 Start-Process "$bin\UnrealEditor.exe" -WorkingDirectory $project -ArgumentList @(
     "`"$descriptor`"", "$map`?game=$gameMode", '-game', '-windowed', '-ResX=1600', '-ResY=900', '-NoP4',

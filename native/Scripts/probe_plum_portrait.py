@@ -23,6 +23,14 @@ if unreal.SystemLibrary.parse_param(
         ("reverse", 222, 151, 285, 53, 33),
         ("dress", 222, 18, 478, 2, 39),
     ]
+if unreal.SystemLibrary.parse_param(
+    unreal.SystemLibrary.get_command_line(), "WayfarerSilhouette"
+):
+    views = [
+        ("front", 222, 18, 478, 2, 39),
+        ("side", 222, 83, 478, 2, 39),
+        ("back", 222, 161, 478, 2, 39),
+    ]
 idx = 0
 start = None
 

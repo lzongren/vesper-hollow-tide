@@ -86,12 +86,14 @@ def forest(field):
             )
 
 
-def summit_forest(path):
+def summit_forest(path, reshape=None):
     """Seed the upward-facing ledges of the eight rocks in their own local space."""
     rock = Glb(path)
     node = next(n for n in rock.doc["nodes"] if n.get("name") == "Limestone spurs")
     prim = rock.doc["meshes"][node["mesh"]]["primitives"][0]
     vertices = rock.values(prim["attributes"]["POSITION"])
+    if reshape is not None:
+        vertices = reshape(vertices)
     indices = [i for (i,) in rock.values(prim["indices"])]
     rng = Random(214)
     for i in range(0, len(indices), 3):
@@ -119,6 +121,29 @@ def summit_forest(path):
                     rng.uniform(0, math.tau),
                     rng.uniform(0.97, 1.28),
                 )
+
+
+def grove_geometry(sites):
+    pts, ns, atlas, idx = [], [], [], []
+    trees = 0
+    # Both cards represent the same tree seen from perpendicular directions.
+    # Bury the transparent margin under the triangle supporting the trunk.
+    for x, h, z, size, variant, yaw, spread in sites:
+        half_width = 0.32 * size * spread
+        base = h - 0.025 * size
+        for side in range(2):
+            a = yaw + side * math.pi / 2
+            dx, dz = half_width * math.cos(a), half_width * math.sin(a)
+            start = len(pts)
+            for across, top in ((-1, 0), (1, 0), (1, 1), (-1, 1)):
+                pts.append((x + across * dx, base + top * size, z + across * dz))
+                ns.append((0, 1, 0))
+                u = (variant + (0.001 if across < 0 else 0.999)) / 4
+                v = (side + (0.001 if top else 0.999)) / 2
+                atlas.append((u, v))
+            idx.extend(start + k for k in (0, 1, 2, 0, 2, 3))
+        trees += 1
+    return pts, ns, idx, atlas, trees
 
 
 def build(folder, path):
@@ -190,27 +215,9 @@ def build(folder, path):
     mesh("RiverRelief", 0, points, normals, faces, uvs=uv, colors=rock)
 
     def groves(name, sites):
-        pts, ns, atlas, idx = [], [], [], []
-        trees = 0
-        # Both cards represent the same tree seen from perpendicular directions.
-        # Bury the transparent margin under the triangle supporting the trunk.
-        for x, h, z, size, variant, yaw, spread in sites:
-            half_width = 0.32 * size * spread
-            base = h - 0.025 * size
-            for side in range(2):
-                a = yaw + side * math.pi / 2
-                dx, dz = half_width * math.cos(a), half_width * math.sin(a)
-                start = len(pts)
-                for across, top in ((-1, 0), (1, 0), (1, 1), (-1, 1)):
-                    pts.append((x + across * dx, base + top * size, z + across * dz))
-                    ns.append((0, 1, 0))
-                    u = (variant + (0.001 if across < 0 else 0.999)) / 4
-                    v = (side + (0.001 if top else 0.999)) / 2
-                    atlas.append((u, v))
-                idx.extend(start + k for k in (0, 1, 2, 0, 2, 3))
-            trees += 1
+        pts, ns, idx, atlas, count = grove_geometry(sites)
         mesh(name, 1, pts, ns, idx, uvs=atlas)
-        return trees
+        return count
 
     trees = groves("RiverGroves", forest(field))
     groves("ShrineGroves", summit_forest(folder.parent / "ShrineCliffWalk.glb"))
