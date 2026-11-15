@@ -4,6 +4,8 @@
 
 [Meet the playable Haitang swordswoman](docs/runtime/haitang-wayfarer/) · [Watch her three fights with game audio](docs/runtime/haitang-wayfarer/three-courts.mp4) · [Run and turn with the embroidered sash](docs/runtime/river-sash/)
 
+[Walk from the cinder shrine into the inscribed pine ravine](docs/runtime/shrine-talus/)
+
 [See the new pine-covered escarpments from the road and final shrine](docs/runtime/hillside-forest/)
 
 [Walk through the bronze guardian gate and watch the three fights with game audio](docs/runtime/bell-gate-lions/)

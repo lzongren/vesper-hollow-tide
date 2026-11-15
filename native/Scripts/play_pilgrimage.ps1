@@ -113,6 +113,12 @@ $gateReport = if (Test-Path "$project\Saved\BellGateLions.json") {
 if ($gateReport.revision -ne 2) {
     Invoke-MapPass 'fit_lion_gate' 'VESPER_BELL_GATE_LIONS_READY'
 }
+$screeReport = if (Test-Path "$project\Saved\ShrineTalus.json") {
+    Get-Content -Raw "$project\Saved\ShrineTalus.json" | ConvertFrom-Json
+}
+if ($screeReport.revision -ne 5) {
+    Invoke-MapPass 'fit_shrine_scree' 'VESPER_SHRINE_TALUS_READY'
+}
 Start-Process "$bin\UnrealEditor.exe" -WorkingDirectory $project -ArgumentList @(
     "`"$descriptor`"", "$map`?game=$gameMode", '-game', '-windowed', '-ResX=1600', '-ResY=900', '-NoP4',
     '-ForceEnablePython', '-ExecCmds="t.MaxFPS 60,py __import__(''runpy'').run_path(__import__(''unreal'').Paths.convert_relative_path_to_full(__import__(''unreal'').Paths.project_dir())+''Scripts/belfry_combat.py'')"'
