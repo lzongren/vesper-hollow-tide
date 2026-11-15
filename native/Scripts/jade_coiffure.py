@@ -3,7 +3,7 @@
 from math import cos, pi, sin, tau
 
 
-def coiffure(patch, strand, globe, shell, hair, jade, pearl, brass):
+def coiffure(patch, strand, globe, shell, hair, temple_hair, jade, pearl, brass):
     head = [("head", 1)]
 
     def card(u, v, index):
@@ -47,28 +47,33 @@ def coiffure(patch, strand, globe, shell, hair, jade, pearl, brass):
 
     # Side pieces frame the cheeks, pass in front of the ears and taper at the collar.
     for side in (-1, 1):
-        for k in range(3):
-            root = shell(side * (0.91 + k * 0.14), 0.16)
+        for k in range(7):
+            root = shell(side * (1.05 + k * 0.047), 0.14)
 
             def cheek(u, v):
                 # Bury the cut root and ease the width out through the combed shell.
                 emerge = min(1.0, v / 0.28)
                 emerge = emerge * emerge * (3 - 2 * emerge)
-                w = (2 * u - 1) * (0.0046 - 0.0008 * k) * (0.32 + 0.68 * emerge)
+                w = (
+                    (2 * u - 1)
+                    * (0.0023 + 0.0004 * sin(k * 3))
+                    * (0.32 + 0.68 * emerge)
+                    * (1 - 0.84 * v**2)
+                )
                 x = root[0] + side * (
                     0.015 * sin(pi * v) + 0.010 * v + w - 0.008 * (1 - emerge)
                 )
-                y = root[1] - (0.135 + 0.026 * k) * v
+                y = root[1] - (0.045 + 0.017 * ((k * 3) % 5)) * v
                 z = (
                     root[2]
-                    - 0.019 * v
+                    - (0.018 + 0.002 * k) * v
                     + 0.010 * sin(v * tau)
                     - 0.55 * w
                     - 0.006 * (1 - emerge)
                 )
                 return (x, y, z), card(u, v, k), head
 
-            patch(hair, 6, 26, cheek)
+            patch(temple_hair, 6, 26, cheek)
 
     # A curved gilt twig has three differently opened magnolias. Petals are
     # shallow shells with rolled rims and upward-curled tips.

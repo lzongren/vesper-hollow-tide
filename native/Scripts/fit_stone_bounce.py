@@ -19,7 +19,7 @@ existing = {
     a.get_actor_label(): a for a in actors.get_all_level_actors() if tag in a.tags
 }
 for label, yaw in (("Courtyard stone, west", -29), ("Courtyard stone, east", 114)):
-    rotation = unreal.Rotator(pitch=22, yaw=yaw)
+    rotation = unreal.Rotator(pitch=38, yaw=yaw)
     light = existing.get(label)
     if light is None:
         light = actors.spawn_actor_from_class(
@@ -34,8 +34,33 @@ for label, yaw in (("Courtyard stone, west", -29), ("Courtyard stone, east", 114
     component.set_editor_property("cast_shadows", False)
     component.set_lighting_channels(False, True, False)
     component.set_specular_scale(0.0)
-    component.set_intensity(1.08)
+    component.set_intensity(1.15)
     component.set_light_color(unreal.LinearColor(0.97, 0.99, 1.0, 1))
+
+# A short-range diffuse light represents reflection off the ivory stole.
+# Combat attaches it to the wearer's lower face once per possession.
+collars = [a for a in actors.get_all_level_actors() if "VesperStoleBounce" in a.tags]
+if len(collars) > 1:
+    raise RuntimeError("Duplicate stole bounce lights")
+if collars and collars[0].get_class() != unreal.PointLight.static_class():
+    actors.destroy_actor(collars.pop())
+stole = (
+    collars[0]
+    if collars
+    else actors.spawn_actor_from_class(unreal.PointLight, unreal.Vector(0, 0, 0))
+)
+stole.set_actor_label("Ivory stole reflection")
+stole.set_editor_property("tags", ["VesperStoleBounce"])
+lamp = stole.light_component
+lamp.set_mobility(unreal.ComponentMobility.MOVABLE)
+lamp.set_lighting_channels(False, True, False)
+lamp.set_editor_property("intensity_units", unreal.LightUnits.CANDELAS)
+lamp.set_editor_property("cast_shadows", False)
+lamp.set_editor_property("attenuation_radius", 32.0)
+lamp.set_editor_property("source_radius", 3.0)
+lamp.set_specular_scale(0.0)
+lamp.set_light_color(unreal.LinearColor(0.90, 0.98, 1.0, 1))
+lamp.set_intensity(0)
 
 lib = unreal.EditorAssetLibrary
 bp = lib.load_asset("/Game/Vesper/Duel/BP_BelfryPilgrim")
@@ -54,5 +79,5 @@ if (
     or not levels.save_current_level()
 ):
     raise RuntimeError("Could not save character lighting")
-(project / "Saved/StoneBounce.json").write_text(json.dumps({"revision": 3}))
+(project / "Saved/StoneBounce.json").write_text(json.dumps({"revision": 7}))
 unreal.log("VESPER_STONE_BOUNCE_READY")

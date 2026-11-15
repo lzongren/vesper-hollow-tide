@@ -148,3 +148,21 @@ def hair_roots(root):
     edit.recompile_material(mat)
     unreal.EditorAssetLibrary.save_loaded_asset(mat, only_if_is_dirty=False)
     return mat
+
+
+def temple_fibers(root):
+    mat = surface(root, "TempleFibers", "TempleSilkHair", 0, 0.74, specular=0.16)
+    edit = unreal.MaterialEditingLibrary
+    prop = unreal.MaterialProperty
+    mat.set_editor_property("blend_mode", unreal.BlendMode.BLEND_TRANSLUCENT)
+    mat.set_editor_property(
+        "translucency_lighting_mode",
+        unreal.TranslucencyLightingMode.TLM_SURFACE_PER_PIXEL_LIGHTING,
+    )
+    source = edit.get_material_property_input_node(mat, prop.MP_BASE_COLOR)
+    if not edit.connect_material_property(source, "A", prop.MP_OPACITY):
+        raise RuntimeError("Cannot bind temple strand coverage")
+    edit.recompile_material(mat)
+    if not unreal.EditorAssetLibrary.save_loaded_asset(mat, only_if_is_dirty=False):
+        raise RuntimeError("Cannot save temple hair")
+    return mat

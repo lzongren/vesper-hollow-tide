@@ -96,7 +96,7 @@ if ($rebuildHeron -or $fanReport.revision -ne 3) {
 $outfitReport = if (Test-Path "$project\Saved\WayfarerOutfit.json") {
     Get-Content -Raw "$project\Saved\WayfarerOutfit.json" | ConvertFrom-Json
 }
-$rebuildOutfit = $rebuildDuel -or $outfitReport.revision -ne 36 -or $outfitReport.surface_revision -ne 1 -or !(Test-Path "$project\Content\Vesper\Duel\HaitangPortrait36\HaitangPortrait36\SkeletalMeshes\HaitangPortrait36.uasset")
+$rebuildOutfit = $rebuildDuel -or $outfitReport.revision -ne 41 -or $outfitReport.surface_revision -ne 1 -or !(Test-Path "$project\Content\Vesper\Duel\HaitangPortrait41\HaitangPortrait41\SkeletalMeshes\HaitangPortrait41.uasset")
 if ($rebuildOutfit) {
     $python = Join-Path $EngineRoot 'Engine\Binaries\ThirdParty\Python3\Win64\python.exe'
     & $python "$PSScriptRoot\prepare_digital_head.py" $project
@@ -106,7 +106,7 @@ if ($rebuildOutfit) {
 $bounceReport = if (Test-Path "$project\Saved\StoneBounce.json") {
     Get-Content -Raw "$project\Saved\StoneBounce.json" | ConvertFrom-Json
 }
-if ($rebuildOutfit -or $bounceReport.revision -ne 3) {
+if ($rebuildOutfit -or $bounceReport.revision -ne 7) {
     Invoke-MapPass 'fit_stone_bounce' 'VESPER_STONE_BOUNCE_READY'
 }
 if (!(Test-Path "$project\Saved\WestPass.json")) {

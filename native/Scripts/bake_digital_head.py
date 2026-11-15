@@ -362,6 +362,12 @@ def cosmetics(diffuse, head, art):
         Image.open(art / "portrait-open.jpg").convert("RGB").resize((1254, 1254)),
         dtype=float,
     )
+    # Isolate soft regional variation from the registered guide. Removing its
+    # luminance prevents directional shadows from being printed into albedo.
+    guide = Image.fromarray(ref.astype(np.uint8))
+    chroma = np.asarray(guide.filter(ImageFilter.GaussianBlur(5)), dtype=float)
+    chroma -= np.asarray(guide.filter(ImageFilter.GaussianBlur(38)), dtype=float)
+    chroma -= (chroma @ [0.2126, 0.7152, 0.0722])[:, :, None]
     # Record the spatial pigment correction separately. Adjacent UV triangles
     # share edge texels; applying a gain within the raster loop would double it.
     undertone = np.ones((2048, 2048, 3), dtype=np.float32)
@@ -463,6 +469,21 @@ def cosmetics(diffuse, head, art):
             + brow[:, :, None] * [-0.009, -0.035, -0.029]
             + flank[:, :, None] * [0.026, 0.098, 0.135]
         )
+        malar_center = 0.59 + 0.026 * np.sign(sx - 629)
+        malar = np.exp(
+            -(((lateral - malar_center) / 0.38) ** 2)
+            - ((height - 0.47 + 0.24 * (lateral - malar_center)) / 0.31) ** 2
+        )
+        jaw = np.exp(-(((lateral - 0.48) / 0.31) ** 4) - ((height - 1.29) / 0.27) ** 2)
+        cheek = np.exp(
+            -(((lateral - 0.60) / 0.37) ** 4) - ((height - 0.66) / 0.49) ** 4
+        )
+        pigment_delta = (1 - v) * (
+            (1 - u) * chroma[j, i] + u * chroma[j, i + 1]
+        ) + v * ((1 - u) * chroma[j + 1, i] + u * chroma[j + 1, i + 1])
+        gain += malar[:, :, None] * [0.020, -0.014, -0.010]
+        gain += cheek[:, :, None] * np.clip(pigment_delta / 90, -0.055, 0.055)
+        gain += jaw[:, :, None] * [0.026, 0.078, 0.060]
         patch = undertone[lo[1] : hi[1] + 1, lo[0] : hi[0] + 1]
         patch[mask] = (1 + gain * gate[:, :, None])[mask]
     return target, undertone

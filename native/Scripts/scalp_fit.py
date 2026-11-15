@@ -6,9 +6,9 @@ from math import cos, floor, sin, tau
 def scalp_radius(vertices, faces):
     # A single forehead lookup serves both the hair cap and the temple strands.
     # Each row is sampled on the fitted head in the same units as its sculpt.
-    low, step, columns = 7.18, 0.027, 112
+    low, step, columns = 6.48, 0.027, 112
     rows = []
-    for j in range(48):
+    for j in range(74):
         y = low + j * step
         segments = []
         for f in faces:

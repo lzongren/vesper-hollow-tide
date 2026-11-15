@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from court_encounter import CourtEncounter, live
 from sash_motion import SashMotion
 from wayfarer_blink import Blink
-from wayfarer_gaze import Gaze
+from wayfarer_gaze import Gaze, head_axes
 from court_hud import CourtHUD
 from heron_combat import Heron
 from cinder_combat import Saint
@@ -99,13 +99,33 @@ heron = Heron(step)
 saint = Saint(step)
 fallen_at = None
 fallen_pawn = None
+stole_wearer = None
+
+
+def seat_reflection(pawn):
+    for light in unreal.GameplayStatics.get_all_actors_of_class(pawn, unreal.PointLight):
+        if "VesperStoleBounce" not in light.tags:
+            continue
+        # The collar reflection uses the animated head frame so that its
+        # calibrated distance from the throat survives crouches and turns.
+        mesh = pawn.mesh
+        forward, _, up = head_axes(pawn)
+        keep = unreal.AttachmentRule.KEEP_RELATIVE
+        lamp = light.root_component
+        lamp.attach_to_component(mesh, "head", keep, keep, keep, False)
+        lamp.set_relative_location(forward * 12.0 - up * 23.0, False, True)
+        lamp.set_intensity(0.112)
+        break
 
 
 def update_encounters(dt):
-    global fallen_at, fallen_pawn
+    global fallen_at, fallen_pawn, stole_wearer
     pawn = step.pawn
     if not live(pawn):
         return
+    if pawn != stole_wearer:
+        seat_reflection(pawn)
+        stole_wearer = pawn
     sash.update(pawn, dt)
     blink.update(pawn, dt)
     if pawn.get_editor_property("Current HP") <= 0:
