@@ -10,10 +10,11 @@ sys.path.insert(0, str(project / "Scripts"))
 from build_bellwarden import mesh_for, fit, lib, combat
 from keeper_materials import surface
 from sash_material import silk_motion
+from kingfisher_brocade import overdyed_collar
 from wayfarer_skin import complexion
 from camellia_materials import cornea, hair_roots, lashes
 
-mesh = mesh_for("HaitangWayfarer", "pilgrim.glb", armed=True, wayfarer=True)
+mesh = mesh_for("YuyanHaitang", "pilgrim.glb", armed=True, wayfarer=True)
 if not any(
     str(name).lower().endswith("blink") for name in mesh.get_all_morph_target_names()
 ):
@@ -27,7 +28,6 @@ lib.save_loaded_asset(mesh.skeleton, only_if_is_dirty=False)
 root = mesh.get_path_name().split("/SkeletalMeshes/")[0]
 slots = list(mesh.materials)
 finishes = {
-    "RuyiBrocade": (0.08, 0.62),
     "MagnoliaSilk": (0.06, 0.63),
     "CeladonSilk": (0.03, 0.77),
     "RoseBinding": (0.03, 0.70),
@@ -41,6 +41,8 @@ for slot in slots:
         slot.material_interface = cornea(root)
     elif name == "LashFringe":
         slot.material_interface = lashes(root)
+    elif name == "RuyiBrocade":
+        slot.material_interface = overdyed_collar(root)
     elif name in finishes:
         metal, rough = finishes[name]
         slot.material_interface = surface(root, name + "Surface", name, metal, rough)
@@ -73,6 +75,6 @@ mesh.set_editor_property("materials", slots)
 lib.save_loaded_asset(mesh, only_if_is_dirty=False)
 fit("BP_CombatCharacter", "BP_BelfryPilgrim", mesh, {})
 (project / "Saved" / "WayfarerOutfit.json").write_text(
-    json.dumps({"mesh": mesh.get_path_name(), "revision": 9})
+    json.dumps({"mesh": mesh.get_path_name(), "revision": 12})
 )
 unreal.log("VESPER_WAYFARER_READY")

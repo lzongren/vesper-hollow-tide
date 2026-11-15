@@ -12,6 +12,9 @@ step = runtime["step"]
 duels = [runtime[k] for k in ("boss", "heron", "saint")]
 stages = [
     (4200, 0, 0),
+    # Follow the centre of the roofed court past the end of the egret wall
+    # before turning onto the diagonal road to the moon gate.
+    (4890, 55, None),
     (7600, 1600, None),
     (11500, 1600, 1),
     # Leave the moon gate along the diagonal causeway, inside its gatepost.

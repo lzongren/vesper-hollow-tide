@@ -41,7 +41,33 @@ def complexion(root):
     wire(uv, "", mask, "")
     blend = node(unreal.MaterialExpressionLinearInterpolate, -80, 40)
     wire(skin, "RGB", blend, "A")
-    wire(projected, "RGB", blend, "B")
+    # A light rouge follows the face UVs so it stays on the cheeks and lip
+    # vermilion while the actor turns in and out of the eaves.
+    paint = node(unreal.MaterialExpressionCustom, -290, -200)
+    paint.set_editor_property("description", "Haitang cheek and lip rouge")
+    paint.set_editor_property(
+        "output_type", unreal.CustomMaterialOutputType.CMOT_FLOAT3
+    )
+    inputs = []
+    for key in ("Face", "UV"):
+        pin = unreal.CustomInput()
+        pin.set_editor_property("input_name", key)
+        inputs.append(pin)
+    paint.set_editor_property("inputs", inputs)
+    paint.set_editor_property(
+        "code",
+        """
+        float2 ch = (float2(abs(UV.x-.504), UV.y) - float2(.137,.545)) / float2(.071,.051);
+        float2 lp = (UV-float2(.504,.689)) / float2(.082,.027);
+        float rouge = exp(-dot(ch,ch)) * .11;
+        float lip = exp(-dot(lp,lp)) * smoothstep(.026,.082,Face.r-Face.g);
+        return Face * lerp(float3(1,1,1),float3(1.18,.59,.71),rouge)
+                    * lerp(float3(1,1,1),float3(1.08,.63,.77),lip*.57);
+    """,
+    )
+    wire(projected, "RGB", paint, "Face")
+    wire(node(unreal.MaterialExpressionTextureCoordinate, -720, -200), "", paint, "UV")
+    wire(paint, "", blend, "B")
     wire(mask, "", blend, "Alpha")
     if not edit.connect_material_property(blend, "", color):
         raise RuntimeError("Could not install facial colour blend")

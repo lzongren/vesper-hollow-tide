@@ -80,7 +80,7 @@ def coiffure(patch, strand, globe, shell, hair, jade, pearl, brass):
         )
 
     strand(brass, twig, lambda t: 0.0025 - 0.0016 * t, head, 32)
-    for j, (t, size) in enumerate(((0.44, 0.021), (0.80, 0.032), (0.99, 0.013))):
+    for j, (t, size) in enumerate(((0.44, 0.013), (0.80, 0.020), (0.99, 0.010))):
         x, y, z = twig(t)
         for ring, count in ((0, 5), (1, 4)):
             for k in range(count):

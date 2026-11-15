@@ -7,6 +7,7 @@ from bind_pilgrim import cross, unit
 from garment_surfaces import garment_surfaces
 from cloud_collar import cloud_collar
 from jade_coiffure import coiffure
+from jade_swallow import swallow
 from camellia_face import projection
 from camellia_jewels import pendants
 from camellia_lids import aperture, blink_delta, eyelashes
@@ -39,6 +40,7 @@ def dress(out, bones, rest, art):
     brass = material("ChasedBrass", (1, 1, 1), 0.38, 0.64, "brass.jpg")
     hair = material("InkHair", (1, 1, 1), 0.63, texture="hair.jpg")
     jade = material("CloudJade", (0.16, 0.40, 0.32), 0.27, 0.12)
+    enamel = material("PeacockEnamel", (0.012, 0.21, 0.30), 0.23, 0.18)
     pearl = material("SeedPearl", (0.84, 0.75, 0.62), 0.28, 0.09)
     flower = material("WhiteJadePetal", (0.80, 0.85, 0.69), 0.30, 0.04)
     locks = material("WillowLocks", (1, 1, 1), 0.49, texture="willow-locks.png")
@@ -73,12 +75,27 @@ def dress(out, bones, rest, art):
         # Give the cheeks a softer transition into the chin. Coordinates
         # for the lids stay in register with their independent eye surfaces.
         cheek = exp(-(((abs(x) - 0.42) / 0.27) ** 2) - ((y - 7.01) / 0.23) ** 2)
+        # Lift the lower cheek into the cheekbone and soften the chin in profile.
+        # Both envelope ends fade before the eyelids and the neck seam.
+        chin = exp(-(((y - 6.23) / 0.23) ** 2)) * smooth((y - 5.89) / 0.26)
+        lips = exp(-(((y - 6.60) / 0.115) ** 2) - (x / 0.35) ** 4) * front
+        brow = exp(-(((y - 7.54) / 0.13) ** 2) - ((abs(x) - 0.30) / 0.24) ** 4) * front
+        nose = exp(-(((y - 6.90) / 0.115) ** 2) - (x / 0.20) ** 4) * front
         return (
             x
-            * (1 + 0.031 * cheek * front - 0.045 * jaw)
+            * (1 + 0.059 * cheek * front - 0.050 * jaw + 0.055 * lips - 0.042 * nose)
             * (0.78 + 0.22 * smooth((y - 5.76) / 0.30)),
-            y + 0.016 * cheek * front + (point[1] - 7.274) * aperture(*point),
-            z + 0.035 * cheek * front - 0.022 * jaw * max(0, z - 0.5),
+            y
+            + 0.040 * cheek * front
+            + 0.055 * chin * front
+            - 0.042 * brow
+            + (point[1] - 7.274) * aperture(*point),
+            z
+            + 0.045 * cheek * front
+            - 0.032 * chin * front
+            + 0.017 * lips
+            - 0.027 * nose
+            - 0.022 * jaw * max(0, z - 0.5),
         )
 
     shaped = [sculpt(point, offset) for point, offset in zip(verts, offsets)]
@@ -199,11 +216,11 @@ def dress(out, bones, rest, art):
 
     def hair_shell(a, v):
         temple = abs(atan2(sin(a), cos(a)))
-        edge = 7.97 - 0.39 * smooth((temple - 0.32) / 0.77)
+        edge = 7.90 - 0.39 * smooth((temple - 0.32) / 0.77)
         edge -= 0.44 * smooth((temple - 1.06) / 0.45)
         edge -= 0.53 * smooth((temple - 1.62) / 0.95)
         # The part sits above the left brow. The opposite wave hangs lower.
-        edge += 0.22 * sin(a + 0.16) * max(0, cos(a)) - 0.065 * cos(2 * a + 0.32)
+        edge += 0.14 * sin(a + 0.16) * max(0, cos(a)) - 0.065 * cos(2 * a + 0.32)
         h = edge + (8.48 - edge) * sin(v * pi / 2)
         t = (h - 7.42) / (1.06 if h >= 7.42 else 1.32)
         radius = max(0, 1 - t * t) ** 0.5
@@ -246,6 +263,27 @@ def dress(out, bones, rest, art):
 
     patch(hair, 144, 38, swept_hair)
     patch(fringe, 160, 16, roots)
+
+    # The front sections are combed sideways from an off-centre part. Each
+    # overlapping card has its own arched root and hair-thread alpha fringe.
+    for side, count in ((-1, 7), (1, 5)):
+        for j in range(count):
+
+            def temple_lock(u, v, j=j, side=side):
+                angle = 0.17 + side * (0.08 + 0.065 * j + (0.75 + 0.05 * j) * v)
+                row = 0.17 + 0.020 * j - (0.23 + 0.016 * j) * v + 0.032 * sin(pi * v)
+                # Taper the card as its tip crosses the roots on the temple.
+                width = (0.008 + 0.012 * sin(pi * v)) * (1 - 0.80 * v**3)
+                row += (2 * u - 1) * width
+                x, y, z = hair_shell(angle, row)
+                lift = 0.0003 + 0.0007 * sin(pi * v) + 0.00008 * j
+                return (
+                    (x + lift * sin(angle), y, z + lift * cos(angle)),
+                    ((j % 4 + 0.001 + u * 0.998) / 4, v),
+                    head,
+                )
+
+            patch(locks, 6, 32, temple_lock)
     for side in (-1, 1):
         for j in range(4):
             root = hair_shell(side * (1.03 + 0.055 * j), 0.08)
@@ -272,6 +310,7 @@ def dress(out, bones, rest, art):
         strand(hair, coil, lambda t: 0.013 + 0.003 * sin(pi * t), head, 64)
 
     coiffure(patch, strand, globe, hair_shell, locks, flower, pearl, brass)
+    swallow(patch, strand, globe, brass, jade, enamel, pearl)
     pendants(strand, globe, jade, pearl, brass)
 
     # The bodice, skirt and lapel share one surface from hem to neckline.

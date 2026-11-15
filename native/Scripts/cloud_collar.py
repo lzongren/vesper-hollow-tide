@@ -21,8 +21,8 @@ def cloud_collar(patch, brocade, piping, binding):
         side = sin(angle)
         # Scallop the lower edge but keep the throat and shoulder crest continuous.
         lobe = 0.5 + 0.5 * cos(4 * angle)
-        reach = v - (1 - lobe) * 0.30 * v**2
-        reach *= 1 - 0.30 * abs(side) ** 2
+        reach = v * (0.94 - (1 - lobe) * 0.42 * v)
+        reach *= 1 - 0.43 * abs(side) ** 2
         t = min(len(rings) - 1, reach * (len(rings) - 1))
         k = min(int(t), len(rings) - 2)
         fraction = t - k
@@ -43,11 +43,24 @@ def cloud_collar(patch, brocade, piping, binding):
     for quarter in range(4):
 
         def section(u, v, lift=0, quarter=quarter):
-            angle = (quarter + u - 0.5) * pi / 2
+            # Four separate silk leaves share a circular neckband. The
+            # narrow tips expose the ivory coat between the shoulder and bib.
+            split = max(0.0, (v - 0.29) / 0.71)
+            span = 1 - 0.69 * split**1.36
+            angle = (quarter + (u - 0.5) * span) * pi / 2
             p, weights = drape(angle, v, lift)
             return p, (u, v), weights
 
         patch(brocade, 48, 35, section)
+
+        for side in (0, 1):
+
+            def selvedge(u, v, side=side, section=section):
+                t = 0.30 + 0.70 * v
+                p, _, w = section(0.010 * u if side == 0 else 1 - 0.010 * u, t, 0.0015)
+                return p, (u, v), w
+
+            patch(piping, 2, 30, selvedge)
 
         for slot, lo, hi in (
             (binding, 0.910, 1.000),

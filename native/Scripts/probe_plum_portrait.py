@@ -13,6 +13,16 @@ views = [
     ("eaves", 192, -15, 265, 72, 20),
     ("close", 222, -10, 205, 66, 19),
 ]
+if unreal.SystemLibrary.parse_param(
+    unreal.SystemLibrary.get_command_line(), "JadeSwallowPortrait"
+):
+    views = [
+        ("front", 222, -10, 205, 66, 19),
+        ("swallow", 202, 22, 220, 67, 20),
+        ("profile", 222, -39, 224, 59, 25),
+        ("reverse", 222, 151, 285, 53, 33),
+        ("dress", 222, 18, 478, 2, 39),
+    ]
 idx = 0
 start = None
 

@@ -9,3 +9,5 @@ To regenerate the bundled asset, install NumPy, SciPy, trimesh Pillow and fast-s
 The fine corrosion mask derives from the colour channel of [Poly Haven’s rusty_metal_02](https://polyhaven.com/a/rusty_metal_02) (CC0). The game projects it in three axes and uses it to vary bronze colour, roughness and metallic response.
 
 The court ambience is original synthesized audio. A 31-second loop combines two bands of gusting pine noise with six irregular bronze wind-bell strikes. It is a spatial mono source under the hall eaves. Rebuild it with `python art/bell_court_wind.py` and NumPy.
+
+The rain gallery is original timber and tile geometry. The two-egret wall uses an original ImageGen grayscale sculpt guide showing egrets, reeds and plum blossom. The game renders the birds as a 257 × 129 displaced mesh with tangent-space chisel marks and a clay finish. To rebake the bundled relief maps, run `python art/egret_brick.py /path/to/SourceAssets` with Pillow and NumPy. The existing rock-color image from the project's asset manifest supplies the grain. The ordinary launcher runs `fit_bell_gallery.py` to construct and place the roof and screen.

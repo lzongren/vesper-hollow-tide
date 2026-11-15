@@ -36,7 +36,7 @@ class CamelliaHeadTest(unittest.TestCase):
             self.assertGreater(lower, 0.467)
         self.assertAlmostEqual(projection(0, 6.604)[1], 0.688)
 
-    def test_enlarged_eye_closes_at_the_centre_of_each_lid(self):
+    def test_relaxed_eye_closes_at_the_centre_of_each_lid(self):
         for x in (-0.31, 0.31):
             rest, closed = [], []
             for y in (7.332, 7.240):
@@ -44,5 +44,5 @@ class CamelliaHeadTest(unittest.TestCase):
                 height = 0.103 * (y + (y - 7.274) * aperture(x, y, z))
                 rest.append(height)
                 closed.append(height + blink_delta(x, y, z)[1])
-            self.assertGreater(rest[0] - rest[1], 0.011)
+            self.assertTrue(0.0105 < rest[0] - rest[1] < 0.0117)
             self.assertLess(abs(closed[0] - closed[1]), 0.001)

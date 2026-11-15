@@ -35,4 +35,7 @@ def projection(x, y):
     if span and abs(y - axis) < 0.19:
         blend = max(0, 1 - (abs(y - axis) / 0.19) ** 2) ** 2 * span
         v += (-0.003 if y >= axis else 0.016) * blend
-    return u, v
+    # Relax the arch at the outer brow while keeping the closed-lid atlas
+    # registered to the lashes. A positive projected shift raises the pigment.
+    tail = exp(-((abs(x) - 0.46) / 0.18) ** 2 - ((y - 7.52) / 0.11) ** 2)
+    return u, v - 0.010 * tail

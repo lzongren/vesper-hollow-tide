@@ -9,7 +9,7 @@ def aperture(x, y, z):
     t = max(0, min(1, (abs(x) - 0.173) / 0.268))
     span = sin(pi * t) ** 0.66
     front = min(1, max(0, (z - 1.15) / 0.18))
-    return 0.30 * span * front * exp(-(((y - 7.282) / 0.118) ** 2))
+    return 0.21 * span * front * exp(-(((y - 7.282) / 0.118) ** 2))
 
 
 def blink_delta(x, y, z):

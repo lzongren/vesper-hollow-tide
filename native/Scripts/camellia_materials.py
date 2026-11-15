@@ -71,7 +71,7 @@ def cornea(root):
         float localX = c.x * xy.x - Direction.x * z;
         float yawZ = Direction.x * xy.x + c.x * z;
         float localY = c.y * xy.y - Direction.y * yawZ;
-        return 0.5 + float2(localX * r.x, -localY * r.y);
+        return 0.5 + float2(localX * r.x, -localY * r.y) / 1.065;
     """,
     )
     pigment = edit.get_material_property_input_node(mat, prop.MP_BASE_COLOR)
