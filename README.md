@@ -4,6 +4,8 @@
 
 [Meet the playable magnolia swordswoman](docs/runtime/yulan-wayfarer/) · [Watch her three fights with game audio](docs/runtime/yulan-wayfarer/three-courts.mp4) · [Run and turn with the embroidered sash](docs/runtime/river-sash/)
 
+[See the new pine-covered escarpments from the road and final shrine](docs/runtime/hillside-forest/)
+
 [Walk through the bronze guardian gate and watch the three fights with game audio](docs/runtime/bell-gate-lions/)
 
 [Enter the final reliquary and fight the Saint of Cinders](docs/runtime/cinder-duel/)

@@ -15,7 +15,7 @@ edit = unreal.MaterialEditingLibrary
 levels = unreal.get_editor_subsystem(unreal.LevelEditorSubsystem)
 actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
 root = "/Game/Vesper/RiverPeaks"
-folder = root + "/Foothills"
+folder = root + "/WoodedEscarpments"
 if not levels.load_level("/Game/Vesper/Maps/MountainPilgrimage"):
     raise RuntimeError("Missing pilgrimage level")
 
@@ -34,7 +34,7 @@ def load_meshes():
 
 
 meshes = load_meshes()
-if set(meshes) != {"RiverGroves", "RiverRelief"}:
+if set(meshes) != {"RiverGroves", "RiverRelief", "ShrineGroves"}:
     path = project / "Saved" / "XingpingRelief.glb"
     count = build(project / "Art" / "RiverPeaks", path)
     unreal.log("VESPER_RIVER_GROVES " + str(count))
@@ -44,7 +44,7 @@ if set(meshes) != {"RiverGroves", "RiverRelief"}:
     task.automated = task.replace_existing = task.save = True
     tools.import_asset_tasks([task])
     meshes = load_meshes()
-if set(meshes) != {"RiverGroves", "RiverRelief"}:
+if set(meshes) != {"RiverGroves", "RiverRelief", "ShrineGroves"}:
     raise RuntimeError("Incomplete terrain import: " + str(meshes))
 
 
@@ -56,6 +56,17 @@ def wire(src, pin, dst, socket):
 def output(src, pin, channel):
     if not edit.connect_material_property(src, pin, channel):
         raise RuntimeError("Could not wire " + str(channel))
+
+
+stone_path = root + "/EscarpmentStone"
+if not lib.does_asset_exist(stone_path):
+    task = unreal.AssetImportTask()
+    task.filename = str(project / "Art" / "RiverPeaks" / "EscarpmentStone.jpg")
+    task.destination_path = root
+    task.automated = task.save = True
+    tools.import_asset_tasks([task])
+if not lib.load_asset(stone_path):
+    raise RuntimeError("Missing weathered cliff colour")
 
 
 def finish(name, kind):
@@ -82,7 +93,7 @@ def finish(name, kind):
         c.set_editor_property("r", v)
         return c
 
-    def aligned(function, texture, x, y):
+    def aligned(function, texture, x, y, scale=680):
         call = node(unreal.MaterialExpressionMaterialFunctionCall, x, y)
         call.set_material_function(
             unreal.load_asset(
@@ -91,7 +102,12 @@ def finish(name, kind):
         )
         tex = node(unreal.MaterialExpressionTextureObject, x - 300, y)
         tex.set_editor_property(
-            "texture", lib.load_asset("/Game/Vesper/Understory/" + texture)
+            "texture",
+            lib.load_asset(
+                texture
+                if texture.startswith("/")
+                else "/Game/Vesper/Understory/" + texture
+            ),
         )
         if texture.endswith("Normal"):
             tex.set_editor_property(
@@ -109,16 +125,44 @@ def finish(name, kind):
         if texture_pin is None:
             raise RuntimeError(f"Missing texture input on {function}: {inputs}")
         wire(tex, "", call, str(texture_pin))
-        wire(constant((680, 680, 680), x - 300, y + 122), "", call, "TextureSize")
+        wire(constant((scale, scale, scale), x - 300, y + 122), "", call, "TextureSize")
         return call
 
     prop = unreal.MaterialProperty
     if kind == "grove":
-        output(
-            node(unreal.MaterialExpressionVertexColor, -240, 0),
-            "",
-            prop.MP_BASE_COLOR,
+        texture = lib.load_asset(folder + "/XingpingRelief/Textures/ConiferViews")
+        if not texture:
+            raise RuntimeError("Missing conifer atlas")
+        cutoff = 0.30
+        texture.set_editor_property("do_scale_mips_for_alpha_coverage", True)
+        texture.set_editor_property(
+            "alpha_coverage_thresholds", unreal.Vector4(0, 0, 0, cutoff)
         )
+        lib.save_loaded_asset(texture, only_if_is_dirty=False)
+        mat.set_editor_property("blend_mode", unreal.BlendMode.BLEND_MASKED)
+        mat.set_editor_property("two_sided", True)
+        mat.set_editor_property("opacity_mask_clip_value", cutoff)
+        foliage = next(
+            getattr(unreal.MaterialShadingModel, k)
+            for k in dir(unreal.MaterialShadingModel)
+            if k.replace("_", "") == "MSMTWOSIDEDFOLIAGE"
+        )
+        mat.set_editor_property("shading_model", foliage)
+        sample = node(unreal.MaterialExpressionTextureSample, -400, 0)
+        sample.set_editor_property("texture", texture)
+        output(sample, "RGB", prop.MP_BASE_COLOR)
+        output(sample, "A", prop.MP_OPACITY_MASK)
+        # A perpendicular view is a sample of the same crown. Keep both
+        # planes lit from above as the camera crosses their back faces.
+        mat.set_editor_property("tangent_space_normal", False)
+        axis = node(unreal.MaterialExpressionMultiply, -150, 330)
+        wire(constant((0, 0, 1), -420, 360), "", axis, "A")
+        wire(node(unreal.MaterialExpressionTwoSidedSign, -420, 475), "", axis, "B")
+        output(axis, "", prop.MP_NORMAL)
+        tint = node(unreal.MaterialExpressionMultiply, -180, 80)
+        tint.set_editor_property("const_b", 0.48)
+        wire(sample, "RGB", tint, "A")
+        output(tint, "", prop.MP_SUBSURFACE_COLOR)
     else:
         mapped = aligned("WorldAlignedTexture", "ShaleColor", -700, 30)
         # The orbital canopy map carries the broad colour. The rock scan is
@@ -154,7 +198,39 @@ def finish(name, kind):
         mul = node(unreal.MaterialExpressionMultiply, -35, -90)
         wire(base, pin, mul, "A")
         wire(factor, "", mul, "B")
-        output(mul, "", prop.MP_BASE_COLOR)
+        if kind == "river":
+            # Vertex red tracks steep rock exposures, including narrow strata
+            # which a canopy map projected from above cannot resolve.
+            stone = aligned("WorldAlignedTexture", stone_path, -200, -760, 1830)
+            land = node(unreal.MaterialExpressionLinearInterpolate, 195, -100)
+            wire(mul, "", land, "A")
+            wire(stone, "XYZ Texture", land, "B")
+            wire(
+                node(unreal.MaterialExpressionVertexColor, -15, -610),
+                "R",
+                land,
+                "Alpha",
+            )
+            output(land, "", prop.MP_BASE_COLOR)
+        else:
+            # Recover the original UV-mapped streaks of each individual spur.
+            atlas = node(unreal.MaterialExpressionTextureSample, -390, -740)
+            texture = lib.load_asset(
+                "/Game/Vesper/Duel/CinderRites/ShrineCliffs/ShrineCliffWalk/Textures/Eroded_limestone"
+            )
+            if not texture:
+                raise RuntimeError("Missing shrine cliff mineral atlas")
+            atlas.set_editor_property("texture", texture)
+            escarpment = aligned("WorldAlignedTexture", stone_path, -520, -1090, 1100)
+            strata = node(unreal.MaterialExpressionLinearInterpolate, -40, -640)
+            wire(atlas, "RGB", strata, "A")
+            wire(escarpment, "XYZ Texture", strata, "B")
+            strata.set_editor_property("const_alpha", 0.53)
+            ledge = node(unreal.MaterialExpressionLinearInterpolate, 180, -220)
+            wire(strata, "", ledge, "A")
+            wire(mul, "", ledge, "B")
+            wire(slope, "", ledge, "Alpha")
+            output(ledge, "", prop.MP_BASE_COLOR)
         normal = aligned("WorldAlignedNormal", "ShaleNormal", -700, 420)
         blend = node(unreal.MaterialExpressionLinearInterpolate, -320, 440)
         wire(constant((0, 0, 1), -550, 580), "", blend, "A")
@@ -204,11 +280,21 @@ for key, mat in (("RiverRelief", land), ("RiverGroves", leaves)):
     comp = a.static_mesh_component
     comp.set_static_mesh(meshes[key])
     comp.set_material(0, mat)
+    if key == "RiverGroves":
+        comp.set_cast_shadow(True)
+        comp.set_editor_property("affect_distance_field_lighting", False)
     a.set_actor_enable_collision(False)
 for a in old:
     a.modify()
     a.static_mesh_component.set_visibility(False)
     a.set_actor_hidden_in_game(True)
+summits = [a for a in scene if a.get_actor_label() == "Reliquary mountain Summit_pines"]
+if len(summits) != 1:
+    raise RuntimeError("Missing shrine summit grove")
+summits[0].modify()
+summits[0].static_mesh_component.set_static_mesh(meshes["ShrineGroves"])
+summits[0].static_mesh_component.set_material(0, leaves)
+summits[0].set_actor_enable_collision(False)
 for a in nearby:
     a.modify()
     a.static_mesh_component.set_material(0, near)
@@ -217,7 +303,7 @@ if not levels.save_current_level():
 (project / "Saved" / "RiverPeaks.json").write_text(
     json.dumps(
         dict(
-            revision=2,
+            revision=3,
             terrain=land.get_path_name(),
             replaced=len(old),
             shrine=len(nearby),

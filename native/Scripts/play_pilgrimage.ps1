@@ -104,7 +104,7 @@ if (!(Test-Path "$project\Saved\PineFoliage.json")) {
 $ridgeReport = if (Test-Path "$project\Saved\RiverPeaks.json") {
     Get-Content -Raw "$project\Saved\RiverPeaks.json" | ConvertFrom-Json
 }
-if ($ridgeReport.revision -ne 2) {
+if ($ridgeReport.revision -ne 3) {
     Invoke-MapPass 'fit_river_peaks' 'VESPER_RIVER_PEAKS_READY'
 }
 $gateReport = if (Test-Path "$project\Saved\BellGateLions.json") {

@@ -14,7 +14,7 @@ Install the engine’s Templates and Feature Packs component. The first launch i
 
 [Lotus road lanterns and pine foliage](../docs/runtime/lotus-lantern/) · [Combat health display](../docs/runtime/court-health/) · [Saint of Cinders duel](../docs/runtime/cinder-duel/) · [Veiled Heron duel](../docs/runtime/heron-duel/) · [Slate forecourt in combat](../docs/runtime/slate-forecourt/) · [Mountain bell hall at 1440p](../docs/runtime/bell-hall/) · [Bellwarden costume and camera comparison](../docs/runtime/keeper-regalia/) · [Bellwarden combat captures and timings](../docs/runtime/belfry-duel/) · [Valley forest floor and ferns](../docs/runtime/valley-understory/) · [Evening light on the mountain route](../docs/runtime/mountain-evening/) · [Mountain pine gameplay comparison](../docs/runtime/mountain-pines/) · [Retaining walls and valley stair](../docs/runtime/mountain-masonry/) · [Procession road gameplay](../docs/runtime/procession-road/) · [Traversal measurements](../docs/runtime/mountain-pilgrimage/) · [Art direction and acceptance target](Art/quality-target.json)
 
-A scaled elevation sample from the Li River valley provides the distant skyline. [Matched mountain views and data provenance](../docs/runtime/river-peaks/)
+The Xingping relief carries pine and fir stands on its sheltered slopes. Steeper faces show exposed strata and the shrine's eight limestone spurs have smaller trees rooted in their ledges. [Matched forest views and gameplay](../docs/runtime/hillside-forest/) · [Elevation and satellite provenance](Art/RiverPeaks/)
 
 The western pass includes layered limestone spurs, scanned foothill outcrops and planted pine stands. Tree locations drive a ground tint beneath the canopy. [Western pass gameplay views](../docs/runtime/western-pass/)
 
