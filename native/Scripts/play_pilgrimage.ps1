@@ -96,7 +96,7 @@ if ($rebuildHeron -or $fanReport.revision -ne 3) {
 $outfitReport = if (Test-Path "$project\Saved\WayfarerOutfit.json") {
     Get-Content -Raw "$project\Saved\WayfarerOutfit.json" | ConvertFrom-Json
 }
-if ($rebuildDuel -or $outfitReport.revision -ne 28 -or !(Test-Path "$project\Content\Vesper\Duel\YuhengHaitang\YuhengHaitang\SkeletalMeshes\YuhengHaitang.uasset")) {
+if ($rebuildDuel -or $outfitReport.revision -ne 32 -or !(Test-Path "$project\Content\Vesper\Duel\HaitangPortrait32\HaitangPortrait32\SkeletalMeshes\HaitangPortrait32.uasset")) {
     $python = Join-Path $EngineRoot 'Engine\Binaries\ThirdParty\Python3\Win64\python.exe'
     & $python "$PSScriptRoot\prepare_digital_head.py" $project
     if ($LASTEXITCODE -ne 0) { throw "Digital human face bake failed" }

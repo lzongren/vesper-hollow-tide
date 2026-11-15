@@ -141,6 +141,32 @@ def sculpt(points, section, frontal):
     return world
 
 
+def portrait_contour(rest):
+    """Fit the mandibular arch, nasal base and lip corners in neutral head space."""
+    x, height, depth = rest.T
+
+    # Fit the remaining contour after the jaw is fully weighted to the head.
+    # Anchor the lip seam and the neck ring.
+    def ramp(t):
+        t = np.clip(t, 0, 1)
+        return t * t * (3 - 2 * t)
+
+    lower_face = ramp((1.580 - height) / 0.028) * ramp((depth - 0.051) / 0.038)
+    central = np.exp(-((x / 0.0195) ** 2))
+    wings = np.exp(-(((abs(x) - 0.032) / 0.020) ** 2))
+    offset = np.zeros_like(rest)
+    offset[:, 0] = -x * 0.073 * wings * lower_face
+    offset[:, 1] = (0.0002 * wings - 0.0019 * central) * lower_face
+    # Register the nasal base and lip against the eye line without moving the
+    # eye sockets. Apply the same displacement to the oral mesh as to the skin.
+    front = ramp((depth - 0.068) / 0.035)
+    nose = np.exp(-((x / 0.021) ** 4) - ((height - 1.609) / 0.019) ** 4)
+    mouth = np.exp(-((x / 0.030) ** 4) - ((height - 1.586) / 0.013) ** 4)
+    offset[:, 1] -= front * (0.0023 * nose + 0.0017 * mouth)
+    offset[:, 0] += front * 0.13 * x * mouth
+    return offset
+
+
 def profile_section(p, guide):
     # Profile eye centre and scale registered to the frontal interocular scale.
     im = np.array(Image.open(guide).convert("RGB").resize((1254, 1254)), dtype=float)
@@ -248,7 +274,8 @@ def bake(cache, art):
             section = profile_section(p, art / "sculpt-profile.jpg")
         # Relax the neutral orbital muscles and keep the lips in light contact.
         relaxed = p + 0.12 * (targets["Blink"] - p)
-        rest = sculpt(relaxed, section, frontal)
+        registered = sculpt(relaxed, section, frontal)
+        rest = registered + portrait_contour(registered)
         layout = np.array(
             [d.getVertexLayout(mi, i) for i in range(d.getVertexLayoutCount(mi))]
         )
@@ -276,7 +303,8 @@ def bake(cache, art):
         pose = {}
         for key, v in targets.items():
             shaped = v if key == "Blink" else relaxed + (v - p)
-            delta = (sculpt(shaped, section, frontal) - rest)[index]
+            # Carry the neutral sculpt with its vertices as the jaw opens.
+            delta = (sculpt(shaped, section, frontal) - registered)[index]
             if np.abs(delta).max() > 0.00001:
                 pose[key] = pack(delta, "<f4")
         parts[name] = {
@@ -286,7 +314,11 @@ def bake(cache, art):
             "tri": pack(face, "<u4"),
             "poses": pose,
         }
-    textures(cache, art, parts["head"])
+        if name == "head":
+            # The pigment guide was registered on the original mesh. Keep
+            # each UV texel with its anatomical vertex when the lip moves.
+            paint_surface = dict(parts[name], p=pack(registered[index], "<f4"))
+    textures(cache, art, paint_surface)
     tmp = cache / "face.json.tmp"
     tmp.write_text(
         json.dumps({"parts": parts, "poses": list(POSES)}, separators=(",", ":"))

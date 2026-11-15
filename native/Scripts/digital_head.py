@@ -41,13 +41,25 @@ def neck_section(points, tris, height=1.520):
     return ring
 
 
+def head_weight(position):
+    _, height, depth = position
+    neck_blend = max(0, min(1, (height - 1.512) / 0.045))
+    # The chin projects in front of the throat at the same height. Keeping it
+    # on the head prevents neck rotation from flattening or twisting the jaw.
+    front = max(0, min(1, (depth - 0.060) / 0.025))
+    above_collar = max(0, min(1, (height - 1.520) / 0.016))
+    jaw = front * above_collar
+    jaw = jaw * jaw * (3 - 2 * jaw)
+    return neck_blend + (1 - neck_blend) * jaw
+
+
 def add_head(out, bones, cache, slots):
     data = json.loads((cache / "face.json").read_text())
     faceshape = {}
     for name, part in data["parts"].items():
         pos = unpack(part["p"], "fff")
         tri = unpack(part["tri"], "III")
-        amount = [max(0, min(1, (p[1] - 1.512) / 0.045)) for p in pos]
+        amount = [head_weight(p) for p in pos]
         attrs = dict(
             POSITION=out.data(pos, "VEC3", bounds=True),
             NORMAL=out.data(unpack(part["n"], "fff"), "VEC3"),

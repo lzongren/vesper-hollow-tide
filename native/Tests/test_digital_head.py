@@ -5,10 +5,15 @@ from types import SimpleNamespace
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "Scripts"))
 from court_face import CourtFace
-from digital_head import neck_section
+from digital_head import head_weight, neck_section
 
 
 class DigitalHeadTest(unittest.TestCase):
+    def test_menton_follows_the_head_while_throat_and_collar_keep_their_blend(self):
+        self.assertEqual(head_weight((0, 1.541, 0.11)), 1)
+        self.assertAlmostEqual(head_weight((0, 1.541, 0.052)), (1.541 - 1.512) / 0.045)
+        self.assertAlmostEqual(head_weight((0.024, 1.52, 0.09)), (1.52 - 1.512) / 0.045)
+
     def test_neckline_has_a_continuous_front_and_back(self):
         import math
 

@@ -107,6 +107,18 @@ def dress(out, bones, rest, art):
 
         patch(mat, 48, 24, surface)
 
+    # Close the back and sides of the oral cavity behind the dental arch.
+    # The visible opening follows the animated lips and jaw in front of it.
+    mucosa = material("OralMucosa", (0.041, 0.008, 0.011), 0.84)
+
+    def inner_cheek(u, v):
+        side = 2 * u - 1
+        half_height = 0.016 - 0.006 * side**2
+        pos = (side * 0.023, 1.584 + (2 * v - 1) * half_height, 0.059 + 0.013 * side**2)
+        return pos, (u, v), head
+
+    patch(mucosa, 16, 4, inner_cheek)
+
     # A low, offset chignon reads in silhouette in both profile and the combat view.
     globe(hair, (-0.021, 1.701, -0.079), (0.061, 0.048, 0.060), head, grooves=1)
 

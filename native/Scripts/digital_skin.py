@@ -12,7 +12,7 @@ def digital_finish(root, slot, cache):
         "NecklineSkin": (0.56, 0.25),
         "WetIris": (0.22, 0.38),
         "LashFringe": (0.66, 0.20),
-        "PorcelainTeeth": (0.33, 0.34),
+        "PorcelainTeeth": (0.47, 0.22),
     }[slot]
     mat = surface(
         root,

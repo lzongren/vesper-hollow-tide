@@ -1,5 +1,7 @@
 # Native Unreal project
 
+[海棠脸型精修 · 原画与 Unreal 实机对照](../docs/runtime/mandible/)
+
 [海棠数字人头部 · Unreal 转面、表情与三庭实战](../docs/runtime/digital-human/)
 
 [海棠面部对照 · 原设定图、旧版与新版 Unreal 实机](../docs/runtime/portrait-match/)

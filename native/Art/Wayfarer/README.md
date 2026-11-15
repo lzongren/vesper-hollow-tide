@@ -70,7 +70,9 @@ The comparison used MediaPipe 1.2.3 and the Face Landmarker task bundle with SHA
 
 ## Digital human build
 
-The current playable head uses Epic's Ada sample DNA as its three-dimensional base. The local bake evaluates the LOD0 neutral mesh, skin weights, neutral joint orientations, control-to-joint matrices and corresponding corrective blendshapes. Seven posed results are retargeted to the game rig. The facial sculpt uses the open frontal identity guide and a newly drawn profile. The skin uses an unwrapped diffuse, registered normal and roughness, a subsurface profile and independently moving eyes, lashes, teeth and inner eye tissue. [Native captures](../../../docs/runtime/digital-human/)
+The current playable head uses Epic's Ada sample DNA as its three-dimensional base. The local bake evaluates the LOD0 neutral mesh, skin weights, neutral joint orientations, control-to-joint matrices and corresponding corrective blendshapes. Seven posed results are retargeted to the game rig. The facial sculpt uses the open frontal identity guide and a newly drawn profile. The chin follows the head during neck rotation, with a smooth weight transition into the throat. A local neutral-space correction registers the nasal base and lip corners while the pigment remains attached to the same UVs. [Frontal comparison and turntable](../../../docs/runtime/mandible/)
+
+The skin uses an unwrapped diffuse, registered normal and roughness, a subsurface profile and independently moving eyes, lashes, teeth and inner eye tissue. [Native captures](../../../docs/runtime/digital-human/)
 
 The Windows launcher retrieves the [official example and DNA reader](https://github.com/EpicGames/MetaHuman-DNA-Calibration/tree/8297ff1bd6f1692a6e221aa8395a66486e5a53c9) and verifies pinned SHA-256 hashes. The SDK, DNA, source maps, converted face and interpreter are kept locally in the project's `Saved/DigitalHuman`. The public repository contains the original code, character calibration, original concept images and rendered evidence. Epic's inputs have their [own license](https://github.com/EpicGames/MetaHuman-DNA-Calibration/blob/8297ff1bd6f1692a6e221aa8395a66486e5a53c9/LICENSE).
 
