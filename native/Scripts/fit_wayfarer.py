@@ -14,7 +14,7 @@ from kingfisher_brocade import overdyed_collar
 from wayfarer_skin import complexion
 from camellia_materials import cornea, hair_roots, lashes
 
-mesh = mesh_for("YuyanHaitang", "pilgrim.glb", armed=True, wayfarer=True)
+mesh = mesh_for("HuadianHaitang", "pilgrim.glb", armed=True, wayfarer=True)
 if not any(
     str(name).lower().endswith("blink") for name in mesh.get_all_morph_target_names()
 ):
@@ -75,6 +75,6 @@ mesh.set_editor_property("materials", slots)
 lib.save_loaded_asset(mesh, only_if_is_dirty=False)
 fit("BP_CombatCharacter", "BP_BelfryPilgrim", mesh, {})
 (project / "Saved" / "WayfarerOutfit.json").write_text(
-    json.dumps({"mesh": mesh.get_path_name(), "revision": 12})
+    json.dumps({"mesh": mesh.get_path_name(), "revision": 14})
 )
 unreal.log("VESPER_WAYFARER_READY")

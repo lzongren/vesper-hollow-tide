@@ -27,7 +27,7 @@ def lashes(root):
 
 
 def cornea(root):
-    mat = surface(root, "AttentiveCornea", "WetIris", 0, 0.18, specular=0.52)
+    mat = surface(root, "CourtyardCornea", "WetIris", 0, 0.18, specular=0.52)
     edit = unreal.MaterialEditingLibrary
     prop = unreal.MaterialProperty
     if edit.get_material_property_input_node(mat, prop.MP_EMISSIVE_COLOR):
@@ -35,11 +35,6 @@ def cornea(root):
 
     def node(cls, x, y):
         return edit.create_material_expression(mat, cls, x, y)
-
-    def constant(value, x, y):
-        n = node(unreal.MaterialExpressionConstant, x, y)
-        n.set_editor_property("r", value)
-        return n
 
     mat.set_editor_property("shading_model", unreal.MaterialShadingModel.MSM_CLEAR_COAT)
     # The clear-coat model defaults to a full coat at 0.1 roughness.
@@ -82,23 +77,41 @@ def cornea(root):
     ):
         if not edit.connect_material_expressions(source, "", dest, pin):
             raise RuntimeError("Could not wire iris projection at " + pin)
-    # A reflected patch of the bright courtyard sky. Its position changes
-    # across the cornea as the eye, camera, or character turns.
+    # Approximate two soft reflections from the open side of the gallery.
+    # Evaluate on the curved cornea, independently of the moving pigment.
     reflection = node(unreal.MaterialExpressionReflectionVectorWS, -690, 620)
-    sky = node(unreal.MaterialExpressionConstant3Vector, -690, 700)
-    sky.set_editor_property("constant", unreal.LinearColor(-0.52, -0.46, 0.72, 1))
-    dot = node(unreal.MaterialExpressionDotProduct, -500, 620)
-    edit.connect_material_expressions(reflection, "", dot, "A")
-    edit.connect_material_expressions(sky, "", dot, "B")
-    cutoff = node(unreal.MaterialExpressionSaturate, -330, 620)
-    edit.connect_material_expressions(dot, "", cutoff, "")
-    shape = node(unreal.MaterialExpressionPower, -150, 620)
-    shape.set_editor_property("const_exponent", 105)
-    edit.connect_material_expressions(cutoff, "", shape, "Base")
-    gain = node(unreal.MaterialExpressionMultiply, 0, 620)
-    edit.connect_material_expressions(shape, "", gain, "A")
-    edit.connect_material_expressions(constant(0.70, -150, 710), "", gain, "B")
-    edit.connect_material_property(gain, "", prop.MP_EMISSIVE_COLOR)
+    view = node(unreal.MaterialExpressionCameraVectorWS, -690, 750)
+    glint = node(unreal.MaterialExpressionCustom, -420, 620)
+    glint.set_editor_property("description", "Soft corneal catchlights")
+    glint.set_editor_property(
+        "output_type", unreal.CustomMaterialOutputType.CMOT_FLOAT3
+    )
+    pins = []
+    for key in ("Reflection", "View"):
+        pin = unreal.CustomInput()
+        pin.set_editor_property("input_name", key)
+        pins.append(pin)
+    glint.set_editor_property("inputs", pins)
+    glint.set_editor_property(
+        "code",
+        """
+        float3 v = normalize(View);
+        float3 axis = abs(v.z) < .98 ? float3(0,0,1) : float3(0,1,0);
+        float3 right = normalize(cross(axis,v));
+        float3 up = cross(v,right);
+        float3 r = normalize(Reflection);
+        float2 uv = float2(dot(r,right),dot(r,up));
+        float2 main = (uv-float2(-.22,.18))/float2(.108,.069);
+        float2 edge = (uv-float2(.175,-.085))/float2(.042,.032);
+        float lit = .86*exp(-1.7*dot(main,main)) + .25*exp(-1.5*dot(edge,edge));
+        return float3(.92,.97,1.0)*lit*smoothstep(.62,.94,dot(r,v));
+    """,
+    )
+    for source, pin in ((reflection, "Reflection"), (view, "View")):
+        if not edit.connect_material_expressions(source, "", glint, pin):
+            raise RuntimeError("Could not connect corneal reflection input " + pin)
+    if not edit.connect_material_property(glint, "", prop.MP_EMISSIVE_COLOR):
+        raise RuntimeError("Could not attach corneal reflection")
     edit.recompile_material(mat)
     unreal.EditorAssetLibrary.save_loaded_asset(mat, only_if_is_dirty=False)
     return mat

@@ -8,6 +8,7 @@ from garment_surfaces import garment_surfaces
 from cloud_collar import cloud_collar
 from jade_coiffure import coiffure
 from jade_swallow import swallow
+from begonia_ribbons import knot
 from camellia_face import projection
 from camellia_jewels import pendants
 from camellia_lids import aperture, blink_delta, eyelashes
@@ -33,7 +34,7 @@ def dress(out, bones, rest, art):
         )
         return len(out.doc["materials"]) - 1
 
-    face = material("WayfarerSkin", (1, 1, 1), 0.60, texture="camellia-face.jpg")
+    face = material("WayfarerSkin", (1, 1, 1), 0.60, texture="begonia-face.jpg")
     silk = material("MagnoliaSilk", (1, 1, 1), 0.66, texture="magnolia-silk.jpg")
     lining = material("CeladonSilk", (1, 1, 1), 0.76, texture="celadon.jpg")
     crimson = material("RoseBinding", (1, 1, 1), 0.71, texture="rosewood.jpg")
@@ -49,6 +50,7 @@ def dress(out, bones, rest, art):
     out.doc["materials"][fringe].update(alphaMode="MASK", alphaCutoff=0.38)
     river = material("RiverBrocade", (1, 1, 1), 0.65, texture="river-sash.jpg")
     brocade = material("RuyiBrocade", (1, 1, 1), 0.58, texture="camellia-silk.jpg")
+    ribbon = material("BegoniaRibbon", (1, 1, 1), 0.46, texture="begonia-ribbon.jpg")
     eye = material("WetIris", (1, 1, 1), 0.23, texture="camellia-eye.jpg")
     lash = material("LashFringe", (0.029, 0.014, 0.012), 0.57)
     patch, finish = garment_surfaces(out, bones)
@@ -81,17 +83,25 @@ def dress(out, bones, rest, art):
         lips = exp(-(((y - 6.60) / 0.115) ** 2) - (x / 0.35) ** 4) * front
         brow = exp(-(((y - 7.54) / 0.13) ** 2) - ((abs(x) - 0.30) / 0.24) ** 4) * front
         nose = exp(-(((y - 6.90) / 0.115) ** 2) - (x / 0.20) ** 4) * front
+        # Lift both mouth corners slightly and bring the resting lips together.
+        # The falloff ends inside the nasolabial fold and below the eye socket.
+        corner = (
+            exp(-(((abs(x) - 0.208) / 0.116) ** 2) - ((y - 6.61) / 0.105) ** 2) * front
+        )
+        lip_seal = (6.606 - y) * 0.34 * lips
         return (
             x
             * (1 + 0.059 * cheek * front - 0.050 * jaw + 0.055 * lips - 0.042 * nose)
             * (0.78 + 0.22 * smooth((y - 5.76) / 0.30)),
             y
-            + 0.040 * cheek * front
+            + 0.064 * cheek * front
+            + 0.044 * corner
+            + lip_seal
             + 0.055 * chin * front
-            - 0.042 * brow
+            - 0.012 * brow
             + (point[1] - 7.274) * aperture(*point),
             z
-            + 0.045 * cheek * front
+            + 0.073 * cheek * front
             - 0.032 * chin * front
             + 0.017 * lips
             - 0.027 * nose
@@ -220,7 +230,8 @@ def dress(out, bones, rest, art):
         edge -= 0.44 * smooth((temple - 1.06) / 0.45)
         edge -= 0.53 * smooth((temple - 1.62) / 0.95)
         # The part sits above the left brow. The opposite wave hangs lower.
-        edge += 0.14 * sin(a + 0.16) * max(0, cos(a)) - 0.065 * cos(2 * a + 0.32)
+        edge += 0.075 * sin(a + 0.16) * max(0, cos(a)) - 0.062 * cos(2 * a + 0.32)
+        edge -= 0.080 * exp(-(((temple - 0.59) / 0.36) ** 2))
         h = edge + (8.48 - edge) * sin(v * pi / 2)
         t = (h - 7.42) / (1.06 if h >= 7.42 else 1.32)
         radius = max(0, 1 - t * t) ** 0.5
@@ -311,6 +322,7 @@ def dress(out, bones, rest, art):
 
     coiffure(patch, strand, globe, hair_shell, locks, flower, pearl, brass)
     swallow(patch, strand, globe, brass, jade, enamel, pearl)
+    knot(patch, globe, strand, ribbon, brass, pearl)
     pendants(strand, globe, jade, pearl, brass)
 
     # The bodice, skirt and lapel share one surface from hem to neckline.
@@ -427,7 +439,7 @@ def dress(out, bones, rest, art):
     for side, suffix in [(-1, "r"), (1, "l")]:
         chain = [k + "_" + suffix for k in ("upperarm", "lowerarm", "hand")]
 
-        def arm(u, v):
+        def arm(u, v, ease=0):
             seg = min(1, int(2 * v))
             t = 2 * v - seg
             a, b = (rest[k] for k in chain[seg : seg + 2])
@@ -438,6 +450,7 @@ def dress(out, bones, rest, art):
                 (0.055 + 0.016 * smooth(v / 0.23)) * (1 - v)
                 + 0.043 * v
                 + 0.0025 * sin(10 * pi * v + 2 * cos(tau * u))
+                + ease
             )
             p = tuple(
                 a[k] * (1 - t)
@@ -469,9 +482,8 @@ def dress(out, bones, rest, art):
         for band in (0.11, 0.17, 0.67, 0.73, 0.82, 0.88, 0.94):
 
             def cuff(u, v):
-                p, uv, skin = arm(u, band + 0.022 * v)
-                a = tau * u
-                return (p[0] + 0.002 * cos(a), p[1] + 0.002 * sin(a), p[2]), uv, skin
+                # Lay braid normal to the sleeve axis around its full circumference.
+                return arm(u, band + 0.022 * v, ease=0.0025)
 
             patch(brass if band in (0.17, 0.67, 0.94) else crimson, 36, 3, cuff)
 
