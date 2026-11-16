@@ -94,9 +94,13 @@ def add_head(out, bones, cache, slots):
             WEIGHTS_0=out.data([(t, 1 - t, 0, 0) for t in amount], "VEC4"),
         )
         if name == "head":
-            attrs["COLOR_0"] = out.data(
-                [skin_reflectance(p, n) for p, n in zip(pos, normals)], "VEC4"
-            )
+            color = [skin_reflectance(p, n) for p, n in zip(pos, normals)]
+            if "ear_visibility" in part:
+                visibility = unpack(part["ear_visibility"], "f")
+                if len(visibility) != len(color):
+                    raise ValueError("Ear visibility and head vertex counts differ")
+                color = [(*rgb[:3], ao[0]) for rgb, ao in zip(color, visibility)]
+            attrs["COLOR_0"] = out.data(color, "VEC4")
         primitive = dict(
             attributes=attrs,
             material=slots[name],

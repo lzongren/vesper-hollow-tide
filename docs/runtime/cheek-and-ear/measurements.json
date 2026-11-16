@@ -1,0 +1,876 @@
+{
+  "anterior_chin_x": {
+    "art": {
+      "875": 1022,
+      "885": 1013,
+      "895": 1010,
+      "905": 1010,
+      "915": 1011,
+      "925": 1012,
+      "935": 1013,
+      "945": 1012,
+      "955": 1011,
+      "965": 1007,
+      "975": 1003,
+      "985": 995
+    },
+    "MalarBase61_58": {
+      "875": 988,
+      "885": 972,
+      "895": 974,
+      "905": 982,
+      "915": 986,
+      "925": 987,
+      "935": 987,
+      "945": 986,
+      "955": 984,
+      "965": 979,
+      "975": 972,
+      "985": 962
+    },
+    "Qinghe": {
+      "875": 997,
+      "885": 987,
+      "895": 993,
+      "905": 1002,
+      "915": 1007,
+      "925": 1009,
+      "935": 1010,
+      "945": 1009,
+      "955": 1008,
+      "965": 1005,
+      "975": 1000,
+      "985": 994
+    }
+  },
+  "guide_size_px": [
+    1254,
+    1254
+  ],
+  "guide_reference_pupil": [
+    956,
+    521
+  ],
+  "guide_reference_mouth": [
+    960,
+    828
+  ],
+  "guide_sha256": "df42ddd8d8d4be4d44e3329ad5f6e705219f0c9cca69fbcde1839f1386cd14a9",
+  "versions": {
+    "MalarBase61_58": 58,
+    "Qinghe": 61
+  },
+  "source_88": {
+    "MalarBase61_58": {
+      "pose": "profile",
+      "pupil_xy": [
+        1392.0,
+        720.0
+      ],
+      "mouth_xy": [
+        1410.0,
+        1091.0
+      ],
+      "ncc_relative_to_58": [
+        1.0,
+        1.0
+      ],
+      "reference_to_source_affine": [
+        1.209027740943086,
+        0.04287911738184905,
+        213.8294595024663,
+        -0.04287911738184905,
+        1.209027740943086,
+        131.08898318569982
+      ],
+      "source_sha256": "d5837efb7390e9192c4fc02f6f7c6ad090973c8625126963b837751a1ffb6e4a"
+    },
+    "Qinghe": {
+      "pose": "profile",
+      "pupil_xy": [
+        1392.0,
+        720.0
+      ],
+      "mouth_xy": [
+        1410.0,
+        1091.0
+      ],
+      "ncc_relative_to_58": [
+        0.9988,
+        0.9991
+      ],
+      "reference_to_source_affine": [
+        1.209027740943086,
+        0.04287911738184905,
+        213.8294595024663,
+        -0.04287911738184905,
+        1.209027740943086,
+        131.08898318569982
+      ],
+      "source_sha256": "b4b5581a2a3ce6e90ca29692071711dd07f04c0d7b7d7ed604b2c47f4814e1a7"
+    }
+  },
+  "visible_neck_and_underside": {
+    "art": {
+      "neck_or_transition": {
+        "740": {
+          "y": 1081,
+          "evidence": "warm skin to neutral grey"
+        },
+        "750": {
+          "y": 1054,
+          "evidence": "warm skin to neutral grey"
+        },
+        "760": {
+          "y": 1028,
+          "evidence": "warm skin to neutral grey"
+        },
+        "770": {
+          "y": 1007,
+          "evidence": "warm skin to neutral grey"
+        },
+        "780": {
+          "y": 995,
+          "evidence": "warm skin to neutral grey"
+        },
+        "790": {
+          "y": 988,
+          "evidence": "warm skin to neutral grey"
+        }
+      },
+      "exposed_underside": {
+        "800": {
+          "y": 985,
+          "evidence": "warm skin to neutral grey"
+        },
+        "820": {
+          "y": 985,
+          "evidence": "warm skin to neutral grey"
+        },
+        "840": {
+          "y": 988,
+          "evidence": "warm skin to neutral grey"
+        },
+        "860": {
+          "y": 994,
+          "evidence": "warm skin to neutral grey"
+        },
+        "880": {
+          "y": 999,
+          "evidence": "warm skin to neutral grey"
+        },
+        "900": {
+          "y": 1002,
+          "evidence": "warm skin to neutral grey"
+        },
+        "920": {
+          "y": 1005,
+          "evidence": "warm skin to neutral grey"
+        },
+        "940": {
+          "y": 1007,
+          "evidence": "warm skin to neutral grey"
+        },
+        "960": {
+          "y": 1006,
+          "evidence": "warm skin to neutral grey"
+        }
+      }
+    },
+    "MalarBase61_58": {
+      "neck_or_transition": {
+        "740": {
+          "y": 989,
+          "edge_strength": 94.0
+        },
+        "750": {
+          "y": 965,
+          "edge_strength": 89.8
+        },
+        "760": {
+          "y": 966,
+          "edge_strength": 78.8
+        },
+        "770": {
+          "y": 971,
+          "edge_strength": 72.2
+        },
+        "780": {
+          "y": 974,
+          "edge_strength": 76.2
+        },
+        "790": {
+          "y": 978,
+          "edge_strength": 78.6
+        }
+      },
+      "exposed_underside": {
+        "800": {
+          "y": 981,
+          "edge_strength": 68.2
+        },
+        "820": {
+          "y": 991,
+          "edge_strength": 105.4
+        },
+        "840": {
+          "y": 994,
+          "edge_strength": 85.6
+        },
+        "860": {
+          "y": 997,
+          "edge_strength": 94.4
+        },
+        "880": {
+          "y": 996,
+          "edge_strength": 113.2
+        },
+        "900": {
+          "y": 997,
+          "edge_strength": 102.0
+        },
+        "920": {
+          "y": 999,
+          "edge_strength": 90.8
+        },
+        "940": {
+          "y": 994,
+          "edge_strength": 116.4
+        },
+        "960": {
+          "y": 986,
+          "edge_strength": 110.4
+        }
+      }
+    },
+    "Qinghe": {
+      "neck_or_transition": {
+        "740": {
+          "y": 1025,
+          "edge_strength": 87.4
+        },
+        "750": {
+          "y": 1019,
+          "edge_strength": 75.2
+        },
+        "760": {
+          "y": 1012,
+          "edge_strength": 62.8
+        },
+        "770": {
+          "y": 1003,
+          "edge_strength": 79.8
+        },
+        "780": {
+          "y": 988,
+          "edge_strength": 83.4
+        },
+        "790": {
+          "y": 986,
+          "edge_strength": 88.4
+        }
+      },
+      "exposed_underside": {
+        "800": {
+          "y": 980,
+          "edge_strength": 80.6
+        },
+        "820": {
+          "y": 981,
+          "edge_strength": 69.2
+        },
+        "840": {
+          "y": 985,
+          "edge_strength": 95.2
+        },
+        "860": {
+          "y": 991,
+          "edge_strength": 82.8
+        },
+        "880": {
+          "y": 996,
+          "edge_strength": 121.0
+        },
+        "900": {
+          "y": 1004,
+          "edge_strength": 101.2
+        },
+        "920": {
+          "y": 1007,
+          "edge_strength": 121.4
+        },
+        "940": {
+          "y": 1009,
+          "edge_strength": 120.0
+        },
+        "960": {
+          "y": 1005,
+          "edge_strength": 108.4
+        }
+      }
+    }
+  },
+  "interior_skin_plane": {
+    "art": [
+      {
+        "xy": [
+          650,
+          857
+        ],
+        "above_luma": 158.7,
+        "below_luma": 151.4,
+        "above_minus_below": 7.3
+      },
+      {
+        "xy": [
+          675,
+          885
+        ],
+        "above_luma": 156.4,
+        "below_luma": 146.6,
+        "above_minus_below": 9.8
+      },
+      {
+        "xy": [
+          700,
+          899
+        ],
+        "above_luma": 153.4,
+        "below_luma": 142.9,
+        "above_minus_below": 10.5
+      },
+      {
+        "xy": [
+          725,
+          915
+        ],
+        "above_luma": 151.6,
+        "below_luma": 137.9,
+        "above_minus_below": 13.7
+      }
+    ],
+    "MalarBase61_58": [
+      {
+        "xy": [
+          650,
+          857
+        ],
+        "above_luma": 151.5,
+        "below_luma": 154.0,
+        "above_minus_below": -2.6
+      },
+      {
+        "xy": [
+          675,
+          885
+        ],
+        "above_luma": 153.3,
+        "below_luma": 158.5,
+        "above_minus_below": -5.2
+      },
+      {
+        "xy": [
+          700,
+          899
+        ],
+        "above_luma": 157.6,
+        "below_luma": 162.6,
+        "above_minus_below": -5.0
+      },
+      {
+        "xy": [
+          725,
+          915
+        ],
+        "above_luma": 162.6,
+        "below_luma": 164.9,
+        "above_minus_below": -2.3
+      }
+    ],
+    "Qinghe": [
+      {
+        "xy": [
+          650,
+          857
+        ],
+        "above_luma": 149.9,
+        "below_luma": 147.1,
+        "above_minus_below": 2.8
+      },
+      {
+        "xy": [
+          675,
+          885
+        ],
+        "above_luma": 148.9,
+        "below_luma": 150.8,
+        "above_minus_below": -1.9
+      },
+      {
+        "xy": [
+          700,
+          899
+        ],
+        "above_luma": 154.8,
+        "below_luma": 154.8,
+        "above_minus_below": -0.0
+      },
+      {
+        "xy": [
+          725,
+          915
+        ],
+        "above_luma": 158.3,
+        "below_luma": 157.5,
+        "above_minus_below": 0.9
+      }
+    ]
+  },
+  "oblique": {
+    "turn": {
+      "MalarBase61_58": {
+        "near_iris_xy": [
+          1221,
+          716
+        ],
+        "ncc_to_58": 1
+      },
+      "Qinghe": {
+        "near_iris_xy": [
+          1221,
+          716
+        ],
+        "ncc_to_58": 0.9998
+      }
+    },
+    "threequarter": {
+      "MalarBase61_58": {
+        "near_iris_xy": [
+          1304,
+          715
+        ],
+        "ncc_to_58": 1
+      },
+      "Qinghe": {
+        "near_iris_xy": [
+          1304,
+          715
+        ],
+        "ncc_to_58": 0.9997
+      }
+    }
+  },
+  "notes": [
+    "All xy reference units use top-left origin. A visible skin/background transition localizes only that external surface.",
+    "Columns x740–790 include the neck-to-jaw turn. They must not be interpreted as mandibular thickness.",
+    "Columns x800–960 report the exposed underside. The forward chin is at higher x.",
+    "Interior samples compare upper and lower skin only. Their gradient is influenced by lighting, albedo, and geometry and is not a bone silhouette."
+  ],
+  "forehead_silhouette_x": {
+    "art": {
+      "60": 892,
+      "70": 903,
+      "80": 908,
+      "90": 915,
+      "100": 923,
+      "110": 937,
+      "120": 946,
+      "130": 951,
+      "140": 959,
+      "150": 967,
+      "160": 971,
+      "170": 973,
+      "180": 976,
+      "190": 977,
+      "200": 977,
+      "210": 975,
+      "220": 975,
+      "230": 977,
+      "240": 977,
+      "250": 974,
+      "260": 978,
+      "270": 982,
+      "280": 986,
+      "290": 990,
+      "300": 994,
+      "310": 997
+    },
+    "MalarBase61_58": {
+      "60": 850,
+      "70": 861,
+      "80": 927,
+      "90": 925,
+      "100": 929,
+      "110": 936,
+      "120": 943,
+      "130": 949,
+      "140": 956,
+      "150": 963,
+      "160": 967,
+      "170": 971,
+      "180": 977,
+      "190": 973,
+      "200": 969,
+      "210": 973,
+      "220": 976,
+      "230": 969,
+      "240": 971,
+      "250": 976,
+      "260": 980,
+      "270": 984,
+      "280": 988,
+      "290": 988,
+      "300": 994,
+      "310": 996
+    },
+    "Qinghe": {
+      "60": 850,
+      "70": 861,
+      "80": 927,
+      "90": 925,
+      "100": 929,
+      "110": 936,
+      "120": 943,
+      "130": 949,
+      "140": 956,
+      "150": 963,
+      "160": 967,
+      "170": 971,
+      "180": 979,
+      "190": 973,
+      "200": 969,
+      "210": 973,
+      "220": 973,
+      "230": 969,
+      "240": 971,
+      "250": 976,
+      "260": 980,
+      "270": 986,
+      "280": 989,
+      "290": 988,
+      "300": 994,
+      "310": 997
+    }
+  },
+  "neck_to_submental_first_exit_y": {
+    "art": {
+      "730": 1117,
+      "735": 1099,
+      "740": 1081,
+      "745": 1068,
+      "750": 1054,
+      "755": 1040,
+      "760": 1028,
+      "765": 1016,
+      "770": 1007,
+      "775": 1000,
+      "780": 995,
+      "785": 991,
+      "790": 988,
+      "795": 986,
+      "800": 985,
+      "805": 984,
+      "810": 984,
+      "815": 984,
+      "820": 985,
+      "825": 986
+    },
+    "MalarBase61_58": {
+      "730": null,
+      "735": 1003,
+      "740": 988,
+      "745": 976,
+      "750": 965,
+      "755": 965,
+      "760": 966,
+      "765": 968,
+      "770": 970,
+      "775": 972,
+      "780": 974,
+      "785": 976,
+      "790": 978,
+      "795": 980,
+      "800": 982,
+      "805": 984,
+      "810": 987,
+      "815": 988,
+      "820": 990,
+      "825": 991
+    },
+    "Qinghe": {
+      "730": null,
+      "735": 1032,
+      "740": 1025,
+      "745": 1022,
+      "750": 1020,
+      "755": 1017,
+      "760": 1012,
+      "765": 1007,
+      "770": 1002,
+      "775": 994,
+      "780": 987,
+      "785": 986,
+      "790": 985,
+      "795": 983,
+      "800": 981,
+      "805": 981,
+      "810": 981,
+      "815": 982,
+      "820": 982,
+      "825": 983
+    }
+  },
+  "front_pupils": {
+    "art": [
+      [
+        488.2540898323059,
+        546.9382470846176
+      ],
+      [
+        770.1078336238861,
+        547.2147259712219
+      ]
+    ],
+    "MalarBase61_58": [
+      [
+        1115.9568481445312,
+        719.547830581665
+      ],
+      [
+        1445.1853637695312,
+        722.0038032531738
+      ]
+    ],
+    "Qinghe": [
+      [
+        1115.9568481445312,
+        719.547830581665
+      ],
+      [
+        1445.1853637695312,
+        722.0038032531738
+      ]
+    ]
+  },
+  "source_90": {
+    "MalarBase61_58": {
+      "pose": "sideskull",
+      "pupil_xy": [
+        1351.0,
+        813.0
+      ],
+      "mouth_xy": [
+        1363.0,
+        1041.0
+      ],
+      "ncc_relative_to_58": [
+        1.0,
+        1.0
+      ],
+      "reference_to_source_affine": [
+        0.7430541558372673,
+        0.029406460510263622,
+        625.3194610937251,
+        -0.029406460510263622,
+        0.7430541558372673,
+        453.98136105659574
+      ],
+      "source_sha256": "c3011e6eba357afb20be005123a3cf6bca55643420b1f62ae9a1331c07e12a00"
+    },
+    "Qinghe": {
+      "pose": "sideskull",
+      "pupil_xy": [
+        1351.0,
+        813.0
+      ],
+      "mouth_xy": [
+        1363.0,
+        1041.0
+      ],
+      "ncc_relative_to_58": [
+        0.9995,
+        0.9984
+      ],
+      "reference_to_source_affine": [
+        0.7430541558372673,
+        0.029406460510263622,
+        625.3194610937251,
+        -0.029406460510263622,
+        0.7430541558372673,
+        453.98136105659574
+      ],
+      "source_sha256": "a0a1ba9cd6daa48b81c8dca18fe722d183e0482aa7625431c525ba78340f9631"
+    }
+  },
+  "clay_sources": {
+    "MalarBase61_58": {
+      "clayside": "3719171ba1b38aee8e192fcb2d709cb2b7ed3f11bf484bae8238e1ac327f569b",
+      "clayangle": "cc54e6670ac43bea1174c2a0c9fb9057d1b9443c5405c55267c7b10fd7fb38c4"
+    },
+    "Qinghe": {
+      "clayside": "b3fd3abe5e75bfb3c87e0fee5380443074a62f281dae57c74c5520fe5b3b97a2",
+      "clayangle": "68737a8755339c594457b50ab3494dfecac37d1706624f886afe86853d6fff14"
+    }
+  },
+  "clay_interior_skin_plane": {
+    "MalarBase61_58": [
+      {
+        "xy": [
+          650,
+          857
+        ],
+        "above_luma": 166.1,
+        "below_luma": 169.1,
+        "above_minus_below": -3.0
+      },
+      {
+        "xy": [
+          675,
+          885
+        ],
+        "above_luma": 166.9,
+        "below_luma": 171.9,
+        "above_minus_below": -5.0
+      },
+      {
+        "xy": [
+          700,
+          899
+        ],
+        "above_luma": 169.8,
+        "below_luma": 175.8,
+        "above_minus_below": -6.0
+      },
+      {
+        "xy": [
+          725,
+          915
+        ],
+        "above_luma": 173.6,
+        "below_luma": 177.6,
+        "above_minus_below": -4.0
+      }
+    ],
+    "Qinghe": [
+      {
+        "xy": [
+          650,
+          857
+        ],
+        "above_luma": 163.8,
+        "below_luma": 155.9,
+        "above_minus_below": 8.0
+      },
+      {
+        "xy": [
+          675,
+          885
+        ],
+        "above_luma": 160.1,
+        "below_luma": 160.4,
+        "above_minus_below": -0.3
+      },
+      {
+        "xy": [
+          700,
+          899
+        ],
+        "above_luma": 166.9,
+        "below_luma": 168.7,
+        "above_minus_below": -1.9
+      },
+      {
+        "xy": [
+          725,
+          915
+        ],
+        "above_luma": 170.6,
+        "below_luma": 172.7,
+        "above_minus_below": -2.1
+      }
+    ]
+  },
+  "ear_manual_landmarks": {
+    "art": {
+      "upper_helix": {
+        "xy": [
+          477,
+          506
+        ],
+        "uncertainty_px": 6,
+        "description": "uppermost visible outer helix near hair"
+      },
+      "posterior_helix": {
+        "xy": [
+          419,
+          580
+        ],
+        "uncertainty_px": 7,
+        "description": "most posterior visible curved helix on the upper-middle arc"
+      },
+      "visible_lobe": {
+        "xy": [
+          555,
+          750
+        ],
+        "uncertainty_px": 5,
+        "description": "visible lowest round edge of lobule"
+      },
+      "concha_note": "conchal recess and shaded entrance visible, bifurcating antihelix legible"
+    },
+    "MalarBase61_58": {
+      "upper_helix": {
+        "xy": [
+          532,
+          467
+        ],
+        "uncertainty_px": 6,
+        "description": "upper helix; verified using fixed clay"
+      },
+      "posterior_helix": {
+        "xy": [
+          465,
+          565
+        ],
+        "uncertainty_px": 6,
+        "description": "posterior upper-mid helix"
+      },
+      "visible_lobe": null,
+      "lobe_note": "The lowest flesh in beauty overlaps the ring. Use the bare gray landmark for actual lobule.",
+      "concha_note": "earlobe jewelry overlaps anterior conchal area, helix/concha transition appears shallow and weakly shaded",
+      "verified_bare_lobule": {
+        "xy": [
+          579,
+          720
+        ],
+        "uncertainty_px": 4
+      }
+    },
+    "Qinghe": {
+      "upper_helix": {
+        "xy": [
+          483,
+          501
+        ],
+        "uncertainty_px": 6
+      },
+      "posterior_helix": {
+        "xy": [
+          423,
+          569
+        ],
+        "uncertainty_px": 7
+      },
+      "visible_lobe": null,
+      "verified_bare_lobule": {
+        "xy": [
+          546,
+          747
+        ],
+        "uncertainty_px": 5
+      },
+      "concha_note": "The outward helix and its arch are legible in neutral clay. The shallow diagonal antihelix branches and sharp dark conchal recess still differ from the profile art.",
+      "lobe_note": "The earring masks the lowest flesh in beauty; checked the bare clay."
+    }
+  }
+}

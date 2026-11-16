@@ -4551,7 +4551,8 @@
             7.21
           ]
         ]
-      }
+      },
+      "scope": "Measured on the original 360-pair registration; the eight independent angle anchors (all n>=60) are present in the final master, after the warmed indices 0-12."
     },
     "eight_angle_checks": [
       {
@@ -4741,6 +4742,242 @@
       "minimum_grey_level": 4.331,
       "note": "Every file is unique. The small angular step near the turning point naturally produces small adjacent differences."
     },
-    "time_domain": "Source55 includes the playing character idle animation. For 58 the character pose is held and the engine camera advances by its assigned angle after settling each step."
+    "time_domain": "Source55 includes the playing character idle animation. For 58 the character pose is held and the engine camera advances by its assigned angle after settling each step.",
+    "55_source_motion_health": {
+      "source_encoded_frames": 1079,
+      "CFR": {
+        "frames": 1079,
+        "dup": 570,
+        "drop": 0
+      },
+      "complete_source_seconds_to_last_PTS": 17.9667,
+      "near_frozen_definition": "Mean per-pixel full viewport grey absolute change <0.5 levels AND spatial p90 <1.4 on successive native samples. Largest packet interval independently measured from true PTS. Native camera start and return excluded.",
+      "whole_source_max_hold_seconds": 0.8167,
+      "whole_source_max_hold_interval_seconds": [
+        0.0667,
+        0.8833
+      ],
+      "native_source_section_displayed_seconds": [
+        1.333,
+        13.4
+      ],
+      "displayed_section_max_source_hold_seconds": 0.1666,
+      "displayed_section_max_hold_interval_seconds": [
+        5.2667,
+        5.4333
+      ]
+    },
+    "guide_tip_framing": {
+      "source": "Gardenia native recording",
+      "decoded_source_resolution": [
+        1600,
+        900
+      ],
+      "capture_start_seconds": 1.35,
+      "reference_target_88_xy": [
+        1018,
+        1301
+      ],
+      "reference_lower_earlobe_y": 980,
+      "all_360_target_padding_min_px_from_detail_edges_L_R_T_B": [
+        166.7,
+        232.1,
+        550.6,
+        64.1
+      ],
+      "coordinate_note": "Padding in the raw 1600 x 900 movie before upscaling. The projection follows a fixed guide endpoint on the side of the skull for all camera angles. Side and oblique frames are used for the visible fiber assessment."
+    },
+    "native_capture_log": [
+      "[2026.11.16-00.06.31:135][  3]LogPython: PORTRAIT_MATCH_MESH HaitangPortrait58",
+      "[2026.11.16-00.06.31:493][  4]LogPython: VESPER_FRAME_ORBIT_START",
+      "[2026.11.16-00.08.07:869][723]LogPython: VESPER_FRAME_ORBIT_COMPLETE"
+    ],
+    "files_sha256": {
+      "detail.mp4": "653a5ce3ef90a9dbcaf442ea05dc8792959fc8c8aef615a381285176bb1ac352",
+      "matched.mp4": "f9fecbd0769f52ab8d3ef98afc6987a20d244be439841c611476868339950cec"
+    },
+    "source58_original_viewport": "Game-owned UE Shot PNGs. Final n0–12 are MalarFrameOrbit58.tsv, n13–359 are SweepFrameOrbit58.tsv; the rejected DXGI movie was excluded.",
+    "independent_current_viewport_camera_steps": "-12 degrees + 64 degrees * (1 - cos(2*pi*index/360)), returning to near -12 degrees at index 359",
+    "startup_texture_observation": {
+      "viewport_frames": [
+        0,
+        7
+      ],
+      "duration_seconds": 0.2667,
+      "first_sharp_index": 8,
+      "observation": "The source has a softer eyebrow and upper lid for the first eight native renders; the brow retains its fine detail from index 8. All ordinal source frames were preserved.",
+      "brow_negative_highpass_p98_srgb_gray_at_frames_0_through_10": [
+        6.2,
+        6.1,
+        5.9,
+        6.0,
+        6.0,
+        5.8,
+        5.9,
+        5.9,
+        25.7,
+        26.0,
+        25.9
+      ],
+      "native_1600px_roi_xyxy": [
+        650,
+        369,
+        724,
+        415
+      ],
+      "scope": "Superseded cold source, before replacing indices 0-12. The final MP4s begin with the true native warmed render at n0."
+    },
+    "warmed_prefix": {
+      "prefix_58": [
+        {
+          "index": 0,
+          "new_shot": "ScreenShot01716.png",
+          "new_sha256": "87cfd2e1215e4851195f504a74c27d4890642bb14d4be18ed8f2974e2cff4d5f",
+          "original_shot": "ScreenShot01340.png",
+          "original_sha256": "06d188407185d66d7bf3d85b52c5067881ec3c3461b67e78ec424fec43b772c7"
+        },
+        {
+          "index": 1,
+          "new_shot": "ScreenShot01717.png",
+          "new_sha256": "892b539c3830964b603f5b40db99724be153313104a581b3f5ff997ae6662958",
+          "original_shot": "ScreenShot01341.png",
+          "original_sha256": "936387e9f2778d4e9ce9fcad04f0960bc0feef13dc4bfe679eec370d2a2926f6"
+        },
+        {
+          "index": 2,
+          "new_shot": "ScreenShot01718.png",
+          "new_sha256": "1459ae1678f6c6cff8cfd43a678d8a99c33082538889db1b81c941afc8bfab09",
+          "original_shot": "ScreenShot01342.png",
+          "original_sha256": "e8d3d68a671ea83047e316c9025fcaf58decac5e7925681ea0762eaade6a5221"
+        },
+        {
+          "index": 3,
+          "new_shot": "ScreenShot01719.png",
+          "new_sha256": "8b40e5bcc452b14e8395ef50030d6d1f6cf2da0ed3e0336a0a459b72f75477fe",
+          "original_shot": "ScreenShot01343.png",
+          "original_sha256": "c4c177b9a20a1b1be8a2a2415d739378f76c6297145034549ccf161a95103a61"
+        },
+        {
+          "index": 4,
+          "new_shot": "ScreenShot01720.png",
+          "new_sha256": "c15981722274aa8137a7bcaa830b1362d471f446adc4befb471ad2974a75796d",
+          "original_shot": "ScreenShot01344.png",
+          "original_sha256": "f3dfce96c325059b6e3139b3372eb168c2e4c90a74a5acf53b44ddacf0f17d52"
+        },
+        {
+          "index": 5,
+          "new_shot": "ScreenShot01721.png",
+          "new_sha256": "b7bc277156e7a7442646e16361dc1d19589e30a4c129bd07a22d346617f50fe9",
+          "original_shot": "ScreenShot01345.png",
+          "original_sha256": "1b5519aed21e71c80faeec49bb7a3ec1aeea6fdaeb0231b3a4e4381e99965f35"
+        },
+        {
+          "index": 6,
+          "new_shot": "ScreenShot01722.png",
+          "new_sha256": "5e363ff5c6a309d2bdb6dea39c3ef466871aa92a08480e5f3acb365f6354379f",
+          "original_shot": "ScreenShot01346.png",
+          "original_sha256": "1539786cdff1bc360a9c6b91b6416526626b720023c530038df0f825e10af37a"
+        },
+        {
+          "index": 7,
+          "new_shot": "ScreenShot01723.png",
+          "new_sha256": "b24201e626d47e911480e8b67662c9ab2ffc4e182b6ecd4329d27e5b00dba756",
+          "original_shot": "ScreenShot01347.png",
+          "original_sha256": "86d5dc4e52705713c0ef550d53af206f55a328e62517bbdddf74250dc40e834f"
+        },
+        {
+          "index": 8,
+          "new_shot": "ScreenShot01724.png",
+          "new_sha256": "aab404a6c3d0bab111f5319b33d140a8e5060adb90b66430942fb51e7e135800",
+          "original_shot": "ScreenShot01348.png",
+          "original_sha256": "9e31305b3a35bf416c0a76afa4799bcd8059f4ef506a5983b1134cb121fb49cc"
+        },
+        {
+          "index": 9,
+          "new_shot": "ScreenShot01725.png",
+          "new_sha256": "54140ebb7d0c5671c37db081b68e5e1bdc4a38390e00634ae895950ab8f4d059",
+          "original_shot": "ScreenShot01349.png",
+          "original_sha256": "8352a3fb598b5a21cf7aa707923712f5da0c3b3160a64a7938c1f26985e1c8c1"
+        },
+        {
+          "index": 10,
+          "new_shot": "ScreenShot01726.png",
+          "new_sha256": "ef06af8053556d7babdaceaee77a8eb1b4e59377ac7815d8a6b065c9489d3218",
+          "original_shot": "ScreenShot01350.png",
+          "original_sha256": "44abd73a4bdb504f03899133fa99e00deb78e19c085bb226081388bed1bda47e"
+        },
+        {
+          "index": 11,
+          "new_shot": "ScreenShot01727.png",
+          "new_sha256": "d53f69be9aefbf084fae6860f5d7330acac18eb6f11d166b0854f5cfb65669ae",
+          "original_shot": "ScreenShot01351.png",
+          "original_sha256": "163c23e983b5a27095ee3b5f1c045609b700f95fe415ede39202a647dfecfdbc"
+        },
+        {
+          "index": 12,
+          "new_shot": "ScreenShot01728.png",
+          "new_sha256": "a38c6dc117ebc6fd2f4033e5d040fdf2860b3377adae26dc2e7e6dcfcb160938",
+          "original_shot": "ScreenShot01352.png",
+          "original_sha256": "9b263efab205b774ed33c844c311152c64655e0b61df8797ee9d404c76e60490"
+        }
+      ],
+      "source_manifests": [
+        "MalarFrameOrbit58.tsv[0:13]",
+        "SweepFrameOrbit58.tsv[13:360]"
+      ],
+      "explicit_method": "Unchanged pairs are passed through from the independently verified prior master, then H.264-encoded without any timing change. In the first 13 samples only the right panel is overlaid from real warmed native PNGs.",
+      "decoded_all_360_frames_each_stream": true,
+      "framewise_RGB_P90_differences_8bit": {
+        "Face": {
+          "left_55_against_previously_verified_identical_sampling": {
+            "median": 2.0,
+            "p95": 2.0,
+            "max": 2.0,
+            "worst_index": 0
+          },
+          "right_58_vs_13_new_and_347_original_PNGs": {
+            "median": 4.0,
+            "p95": 5.0,
+            "max": 5.0,
+            "worst_index": 58
+          },
+          "right_warm_first_13": {
+            "median": 2.0,
+            "p95": 3.0,
+            "max": 3.0,
+            "worst_index": 0
+          }
+        },
+        "Ear": {
+          "left_55_against_previously_verified_identical_sampling": {
+            "median": 2.0,
+            "p95": 2.0,
+            "max": 2.0,
+            "worst_index": 0
+          },
+          "right_58_vs_13_new_and_347_original_PNGs": {
+            "median": 4.0,
+            "p95": 5.0,
+            "max": 6.0,
+            "worst_index": 25
+          },
+          "right_warm_first_13": {
+            "median": 4.0,
+            "p95": 5.0,
+            "max": 5.0,
+            "worst_index": 11
+          }
+        }
+      },
+      "visual_check": "New brow negative high-pass P98 at n0,4,7,8,12: 27.3,27.4,27.6,27.5,27.3; eyebrow and lid continuously sharp into n13 and n14.",
+      "new_indices": [
+        0,
+        12
+      ],
+      "retained_original_indices": [
+        13,
+        359
+      ]
+    }
   }
 }

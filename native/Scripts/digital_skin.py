@@ -84,6 +84,10 @@ def digital_finish(root, slot, cache):
                 and edit.connect_material_property(mix, "", prop.MP_BASE_COLOR)
             ):
                 raise RuntimeError("Cannot connect anatomical skin pigment")
+            if slot == "WayfarerSkin" and not edit.connect_material_property(
+                tint, "A", prop.MP_AMBIENT_OCCLUSION
+            ):
+                raise RuntimeError("Cannot connect pinna surface visibility")
         if slot == "WayfarerSkin" and not edit.get_material_property_input_node(
             mat, prop.MP_NORMAL
         ):

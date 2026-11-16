@@ -463,7 +463,7 @@ def dress(out, bones, rest, art):
 
     coiffure(patch, strand, globe, locks, flower, pearl, brass)
     knot(patch, globe, strand, ribbon, brass, pearl)
-    pendants(strand, globe, jade, pearl, brass)
+    pendants(strand, globe, jade, pearl, brass, shaped, faces)
 
     # The bodice, skirt and lapel share one surface from hem to neckline.
     # Ring radii are half-width and half-depth in the skeleton's rest pose.

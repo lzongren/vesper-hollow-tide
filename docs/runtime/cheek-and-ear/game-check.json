@@ -1,0 +1,15 @@
+{
+  "player_mesh": "HaitangPortrait61",
+  "outcome": "cleared",
+  "stages_observed": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "capture": "Native Unreal, RTX 5080, same shrine and fixed idle pose; 2560x1440 stills."
+}

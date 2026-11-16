@@ -211,7 +211,140 @@ def cheek_volume(rest):
     )
     change[:, 2] += 0.0020 * pad
     change[:, 1] += 0.00042 * pad
-    return change
+    return change + jaw_and_neck_planes(rest + portrait_contour(rest) + change)
+
+
+def jaw_and_neck_planes(rest):
+    """Refine the lower cheek against the registered ear-to-chin curve, in metres."""
+    x, y, z = rest.T
+    side = np.abs(x)
+
+    def ramp(t):
+        t = np.clip(t, 0, 1)
+        return t * t * (3 - 2 * t)
+
+    # In side view the jaw seam crosses skin, not the background. Its ridge
+    # falls from the rear masseter toward the chin. Tuck the plane below the
+    # ridge, leaving the high cheek and anterior lip pad at their old volume.
+    along = z - 0.060
+    ridge_y = 1.5638 - 0.539 * along + 3.88 * along**2
+    height = y - ridge_y
+    length = ramp((z - 0.017) / 0.019) * (1 - ramp((z - 0.084) / 0.021))
+    flank = ramp((side - 0.017) / 0.024)
+    # A rolled cheek meets a sloping underside. A centered hollow would
+    # tilt *both* sides of this ridge into the light and flatten the jaw.
+    below = ramp((0.003 - height) / 0.013)
+    below *= np.exp(-((np.minimum(height + 0.014, 0) / 0.024) ** 2))
+    cheek = np.exp(-(((z - 0.060) / 0.029) ** 4) - ((y - 1.587) / 0.023) ** 2)
+    # Keep the head-to-clothing ring untouched and avoid shaping the pinna.
+    lower = ramp((y - 1.523) / 0.015) * (1 - ramp((y - 1.608) / 0.015))
+    delta = np.zeros_like(rest)
+    delta[:, 0] = (
+        -np.sign(x) * flank * length * lower * (0.0080 * below + 0.0035 * cheek)
+    )
+    delta[:, 2] = -0.0013 * flank * length * lower * cheek
+
+    # The previous under-chin turned into the neck too far back and ended
+    # almost flat. Round that corner locally; lift the slightly low middle
+    # and bring the front pad down without moving the mouth or narrowing it.
+    middle = np.exp(-(((z - 0.084) / 0.009) ** 2) - ((x / 0.027) ** 4))
+    chin = np.exp(-(((z - 0.108) / 0.013) ** 4) - ((x / 0.023) ** 4))
+    sole = np.exp(-(((y - 1.549) / 0.009) ** 4))
+    # The reference mental pad also projects in front of the lip-to-chin
+    # hollow. Bring the pad forward without stretching the lip seam.
+    central = np.exp(-((x / 0.023) ** 4))
+    lower_lip = 1 - ramp((y - 1.569) / 0.011)
+    pad = np.exp(-(((y - 1.558) / 0.017) ** 4))
+    delta[:, 2] += 0.00515 * central * pad * lower_lip * ramp((z - 0.085) / 0.021)
+    delta[:, 1] += sole * (0.00115 * middle - 0.00265 * chin)
+    # A diagonal section coordinate remains monotone around the bend from
+    # the front of the neck to the horizontal underside of the mandible.
+    # Move the *existing bend* onto the reference curve along that diagonal.
+    # A local forward bulge in the throat alone produces an unwanted step.
+    section = 1000 * (z + y - 1.600)
+    knots = (
+        -28,
+        -17,
+        -9,
+        -3.8,
+        1.3,
+        5.3,
+        9.5,
+        11.7,
+        12.6,
+        14.2,
+        15.3,
+        16.6,
+        18.1,
+        19.7,
+        21.3,
+        23,
+        25.1,
+        27.2,
+        29,
+        32,
+        38,
+    )
+    surface_z = np.interp(
+        section,
+        knots,
+        (
+            58.5,
+            59.5,
+            60.2,
+            60.9,
+            61.9,
+            62.7,
+            63.4,
+            64.3,
+            65.0,
+            66.2,
+            67.3,
+            69.0,
+            70.8,
+            72.9,
+            75.0,
+            77.3,
+            80.0,
+            82.5,
+            84.6,
+            87.6,
+            94,
+        ),
+    )
+    outward = np.interp(
+        section,
+        knots,
+        (
+            0,
+            2.9,
+            4.6,
+            5.7,
+            6.3,
+            6.6,
+            6.9,
+            6.7,
+            6.25,
+            5.50,
+            4.85,
+            4.0,
+            2.9,
+            1.70,
+            0.45,
+            -0.25,
+            -0.90,
+            -1.35,
+            -1.35,
+            -0.85,
+            0,
+        ),
+    )
+    core = np.exp(-(((1000 * z - surface_z) / 14) ** 2) - ((x / 0.028) ** 4))
+    core *= ramp((y - 1.520) / 0.013) * (1 - ramp((y - 1.556) / 0.013))
+    swing = 0.00092 * core * outward
+    delta[:, 2] += swing
+    delta[:, 1] -= swing
+    return delta
 
 
 def forehead_profile(rest):
@@ -235,11 +368,210 @@ def forehead_profile(rest):
     return (lower - upper) * above_brow * anterior * width
 
 
+def ear_cartilage_offset(rest):
+    """Fit the free pinna and its cartilage in the head's bilateral neutral space."""
+    x, y, z = rest.T
+    side = abs(x)
+    change = np.zeros_like(rest)
+
+    # The free rim is lateral to the mastoid. The root of the canal and the
+    # skin approaching the jaw move less, so the pinna stays joined.
+    def ramp(a):
+        a = np.clip(a, 0.0, 1.0)
+        return a * a * (3.0 - 2.0 * a)
+
+    local = (
+        ramp((side - 0.056) / 0.017)
+        * ramp((y - 1.591) / 0.016)
+        * ramp((1.675 - y) / 0.012)
+        * ramp((z + 0.012) / 0.014)
+        * ramp((0.040 - z) / 0.014)
+    )
+    active = local > 0
+    height = (y[active] - 1.640) * 1000
+    forward = z[active] * 1000
+    lateral = side[active] * 1000
+
+    # Paths follow the scan's helix, scapha and the two crura of the
+    # antihelix. Coordinates are millimetres (anterior, superior). Moving
+    # the lateral surface changes the real fold and its relit normal.
+    def fold(path, width):
+        distance = np.full_like(forward, np.inf)
+        for (za, ya), (zb, yb) in zip(path, path[1:]):
+            dz, dy = zb - za, yb - ya
+            t = np.clip(
+                ((forward - za) * dz + (height - ya) * dy) / (dz * dz + dy * dy), 0, 1
+            )
+            distance = np.minimum(
+                distance, (forward - za - dz * t) ** 2 + (height - ya - dy * t) ** 2
+            )
+        return np.exp(-distance / width**2)
+
+    def pad(zc, yc, rz, ry):
+        return np.exp(-(((forward - zc) / rz) ** 2) - ((height - yc) / ry) ** 2)
+
+    rim = fold(
+        [
+            (21, 19),
+            (16, 21),
+            (12, 21),
+            (8, 19),
+            (5, 14),
+            (3, 9),
+            (3, 4),
+            (4, -2),
+            (6, -6),
+            (9, -11),
+        ],
+        2.1,
+    )
+    scapha = fold([(14, 17), (10.5, 14), (7.8, 10), (6.6, 5), (7.4, 0), (8.9, -4)], 2.3)
+    antihelix = fold(
+        [
+            (14.6, -10),
+            (11.8, -7),
+            (10.4, -3),
+            (11.9, 0.3),
+            (13.4, 2.3),
+            (16.5, 6),
+            (19.2, 9),
+        ],
+        2.5,
+    )
+    superior_crus = fold(
+        [
+            (12.0, 0.3),
+            (10.8, 3.3),
+            (10.0, 6.0),
+            (10.1, 8.7),
+            (11.2, 11.4),
+            (12.5, 13.2),
+        ],
+        2.25,
+    )
+    exposed = ramp((lateral - 63) / 11)
+    ridges = np.maximum(antihelix, 1.09 * superior_crus)
+    relief = exposed * (1.05 * rim - 1.45 * scapha + 1.65 * ridges)
+    # Separate the cymba and cavum behind the meatus; leave an actual
+    # raised crus between them. The floor remains continuous with the tragus.
+    relief -= 1.95 * pad(20.5, 4.0, 4.4, 3.4) + 2.35 * pad(20.2, -6.1, 5.4, 4.0)
+    relief += 1.15 * pad(25.8, -0.3, 2.7, 3.2) + 0.85 * pad(19.8, -12.5, 3.6, 2.5)
+    relief -= 0.85 * pad(15.2, 12.7, 2.9, 2.7)
+    relief -= 0.55 * exposed * pad(13.5, 7.1, 1.95, 3.0)
+    weight = local[active]
+    change[active, 0] = np.sign(x[active]) * relief * weight / 1000
+    # The guide places the upper margin and lobe lower and more posterior.
+    # Give the hanging lobe more travel than the root near the ear canal.
+    change[active, 1] = -(0.0064 + 0.0016 * ramp((-height - 2) / 22)) * weight
+    change[active, 2] = -(0.0056 + 0.0007 * ramp(height / 16)) * weight
+    # The residual registration error is at the superior and posterior
+    # rim. Taper the adjustment to zero well above the lobe piercing.
+    upper = weight * ramp((height + 9) / 16) * ramp((32 - forward) / 13)
+    change[active, 1] -= 0.00165 * upper
+    change[active, 2] -= 0.00375 * upper
+    # Round the anterior wall where the tragus returns to the cavum.
+    # At the deep wall the scan turns through an abrupt right angle.
+    corner = pad(23.5, -14.1, 5.1, 4.5) * ramp((lateral - 58) / 5)
+    corner *= ramp((71 - lateral) / 6) * ramp((height + 22) / 6)
+    change[active, 0] += np.sign(x[active]) * 0.0013 * corner
+    change[active, 1] += 0.00085 * corner
+    change[active, 2] += 0.00090 * corner
+    return change
+
+
+def ear_ambient_visibility(points, faces, normals):
+    """Cosine-weighted visibility of nearby pinna triangles, in the neutral pose."""
+    x, y, z = points.T
+
+    def ramp(v):
+        v = np.clip(v, 0, 1)
+        return v * v * (3 - 2 * v)
+
+    region = (
+        ramp((abs(x) - 0.053) / 0.011)
+        * ramp((y - 1.595) / 0.012)
+        * ramp((1.666 - y) / 0.013)
+        * ramp((z + 0.014) / 0.011)
+        * ramp((0.034 - z) / 0.009)
+    )
+    visibility = np.ones(len(points), dtype=np.float32)
+    radius = 0.018
+    # Same deterministic cosine-weighted hemisphere on both sides. Ray length
+    # limits this signal to local cartilage, independent of the scene lights.
+    k = np.arange(32, dtype=float) + 0.5
+    disk_r = np.sqrt(k / len(k))
+    phi = k * np.pi * (3 - np.sqrt(5))
+    disk_x = disk_r * np.cos(phi)
+    disk_y = disk_r * np.sin(phi)
+    axial = np.sqrt(1 - disk_r**2)
+    for side in (-1, 1):
+        active = np.flatnonzero((region > 0) & (side * x > 0))
+        if not len(active):
+            continue
+        q = points[active]
+        lo, hi = q.min(0) - radius, q.max(0) + radius
+        triangles = points[faces]
+        inside = ((triangles.max(1) >= lo) & (triangles.min(1) <= hi)).all(1)
+        a, b, c = triangles[inside].transpose(1, 0, 2)
+        e1, e2 = b - a, c - a
+        plane = np.cross(e1, e2)
+        aa = (e1 * e1).sum(1)
+        ab = (e1 * e2).sum(1)
+        bb = (e2 * e2).sum(1)
+        determinant = aa * bb - ab * ab
+        centers = (a + b + c) / 3
+        reach = radius + np.maximum.reduce(
+            [np.linalg.norm(v - centers, axis=1) for v in (a, b, c)]
+        )
+        for i in active:
+            normal = normals[i]
+            if np.linalg.norm(normal) < 0.9:
+                continue
+            origin = points[i] + 0.00030 * normal
+            tangent = np.cross(
+                normal, [0, 1, 0] if abs(normal[1]) < 0.94 else [0, 0, 1]
+            )
+            tangent /= np.linalg.norm(tangent)
+            bitangent = side * np.cross(normal, tangent)
+            rays = (
+                disk_x[:, None] * tangent
+                + disk_y[:, None] * bitangent
+                + axial[:, None] * normal
+            )
+            sub = np.flatnonzero(
+                (((centers - origin) ** 2).sum(1) < reach**2) & (determinant > 1e-19)
+            )
+            if not len(sub):
+                continue
+            denom = rays @ plane[sub].T
+            numerator = ((a[sub] - origin) * plane[sub]).sum(1)
+            dist = np.divide(
+                numerator[None, :],
+                denom,
+                out=np.full_like(denom, np.inf),
+                where=abs(denom) > 1e-13,
+            )
+            ri, local_face = np.where((dist > 0.00025) & (dist < radius))
+            tri = sub[local_face]
+            lengths = dist[ri, local_face]
+            hit = origin + lengths[:, None] * rays[ri] - a[tri]
+            s1, s2 = (hit * e1[tri]).sum(1), (hit * e2[tri]).sum(1)
+            u = (bb[tri] * s1 - ab[tri] * s2) / determinant[tri]
+            v = (aa[tri] * s2 - ab[tri] * s1) / determinant[tri]
+            actual = (u >= 0) & (v >= 0) & (u + v <= 1)
+            first = np.full(len(rays), radius)
+            np.minimum.at(first, ri[actual], lengths[actual])
+            blocked = (1 - (first / radius) ** 2) ** 2
+            visibility[i] = 1 - region[i] * min(0.55, 0.85 * blocked.mean())
+    return visibility
+
+
 def fit_rest_pose(registered, part):
     rest = registered + portrait_contour(registered)
     if part == "head":
         rest += cheek_volume(registered)
         rest[:, 2] += forehead_profile(registered)
+        rest += ear_cartilage_offset(registered)
     return rest
 
 
@@ -379,10 +711,23 @@ def bake(cache, art):
             np.add.at(normals, index[face[:, corner]], area)
         normals /= np.maximum(1e-12, np.linalg.norm(normals, axis=1, keepdims=True))
         pose = {}
+        if name == "head":
+            # The pierced lobule follows the head with the earring. The donor
+            # jaw target otherwise tugs this spot by roughly 1.3 mm. Fade
+            # that motion locally and keep the surrounding jaw articulation.
+            hole = (
+                np.minimum(np.abs(rest[:, 0] - 0.0742), np.abs(rest[:, 0] + 0.0742))
+                ** 2
+            )
+            hole += (rest[:, 1] - 1.6075) ** 2 + (rest[:, 2] - 0.0160) ** 2
+            lobe_motion = np.clip((np.sqrt(hole) - 0.0035) / 0.009, 0, 1)
+            lobe_motion *= lobe_motion * (3 - 2 * lobe_motion)
         for key, v in targets.items():
             shaped = v if key == "Blink" else relaxed + (v - p)
             # Carry the neutral sculpt with its vertices as the jaw opens.
             delta = (sculpt(shaped, section, frontal) - registered)[index]
+            if name == "head":
+                delta *= lobe_motion[index, None]
             if np.abs(delta).max() > 0.00001:
                 pose[key] = pack(delta, "<f4")
         parts[name] = {
@@ -393,6 +738,8 @@ def bake(cache, art):
             "poses": pose,
         }
         if name == "head":
+            visibility = ear_ambient_visibility(rest, index[face], normals)
+            parts[name]["ear_visibility"] = pack(visibility[index], "<f4")
             # The pigment guide was registered on the original mesh. Keep
             # each UV texel with its anatomical vertex when the lip moves.
             paint_surface = dict(parts[name], p=pack(registered[index], "<f4"))
