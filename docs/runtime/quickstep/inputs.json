@@ -1,0 +1,29 @@
+{
+  "results": [
+    {
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+      "boss": "The Bellwarden",
+      "mode": "PILGRIM",
+      "dir": "a",
+      "before": "100 STAMINA",
+      "after": "77 STAMINA"
+    },
+    {
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+      "boss": "The Veiled Heron",
+      "mode": "PILGRIM",
+      "dir": "w",
+      "before": "100 STAMINA",
+      "after": "77 STAMINA"
+    },
+    {
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+      "boss": "Saint of Cinders",
+      "mode": "PILGRIM",
+      "dir": "s",
+      "before": "100 STAMINA",
+      "after": "77 STAMINA"
+    }
+  ],
+  "errors": []
+}

@@ -1,0 +1,140 @@
+[
+  {
+    "boss": 0,
+    "frames": [
+      {
+        "step": 0,
+        "edge pixels": 199104,
+        "previous": 5.144,
+        "rebuilt": 4.029
+      },
+      {
+        "step": 3,
+        "edge pixels": 199104,
+        "previous": 4.932,
+        "rebuilt": 3.864
+      },
+      {
+        "step": 6,
+        "edge pixels": 199104,
+        "previous": 4.924,
+        "rebuilt": 3.883
+      },
+      {
+        "step": 9,
+        "edge pixels": 199104,
+        "previous": 4.95,
+        "rebuilt": 3.896
+      },
+      {
+        "step": 12,
+        "edge pixels": 199104,
+        "previous": 5.046,
+        "rebuilt": 3.907
+      },
+      {
+        "step": 15,
+        "edge pixels": 199104,
+        "previous": 5.066,
+        "rebuilt": 3.921
+      }
+    ],
+    "mean": [
+      5.01,
+      3.917
+    ],
+    "reductionPercent": 21.83
+  },
+  {
+    "boss": 1,
+    "frames": [
+      {
+        "step": 0,
+        "edge pixels": 199104,
+        "previous": 6.137,
+        "rebuilt": 4.753
+      },
+      {
+        "step": 3,
+        "edge pixels": 199104,
+        "previous": 6.208,
+        "rebuilt": 4.978
+      },
+      {
+        "step": 6,
+        "edge pixels": 199104,
+        "previous": 6.57,
+        "rebuilt": 5.221
+      },
+      {
+        "step": 9,
+        "edge pixels": 199104,
+        "previous": 6.334,
+        "rebuilt": 4.959
+      },
+      {
+        "step": 12,
+        "edge pixels": 199104,
+        "previous": 27.632,
+        "rebuilt": 28.147
+      },
+      {
+        "step": 15,
+        "edge pixels": 199104,
+        "previous": 26.534,
+        "rebuilt": 31.103
+      }
+    ],
+    "mean": [
+      13.236,
+      13.194
+    ],
+    "reductionPercent": 0.32
+  },
+  {
+    "boss": 2,
+    "frames": [
+      {
+        "step": 0,
+        "edge pixels": 199104,
+        "previous": 8.787,
+        "rebuilt": 9.807
+      },
+      {
+        "step": 3,
+        "edge pixels": 199104,
+        "previous": 7.986,
+        "rebuilt": 8.811
+      },
+      {
+        "step": 6,
+        "edge pixels": 199104,
+        "previous": 7.308,
+        "rebuilt": 7.964
+      },
+      {
+        "step": 9,
+        "edge pixels": 199104,
+        "previous": 6.995,
+        "rebuilt": 7.295
+      },
+      {
+        "step": 12,
+        "edge pixels": 199104,
+        "previous": 6.729,
+        "rebuilt": 7.037
+      },
+      {
+        "step": 15,
+        "edge pixels": 199104,
+        "previous": 6.382,
+        "rebuilt": 6.541
+      }
+    ],
+    "mean": [
+      7.364,
+      7.909
+    ],
+    "reductionPercent": -7.4
+  }
+]

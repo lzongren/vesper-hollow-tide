@@ -1,0 +1,212 @@
+{
+  "results": [
+    {
+      "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5080 (0x00002C02) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "boss": "Saint of Cinders",
+      "mode": "PILGRIM",
+      "timing": {
+        "samples": 2980,
+        "median": 16.7,
+        "p95": 16.8,
+        "max": 1801.8
+      },
+      "title": "Vigil released",
+      "stats": "0:50TIME4PARRIES8HITS TAKEN",
+      "bossHealth": "0%",
+      "playerHealth": 95,
+      "awakened": true,
+      "elapsed": 52.83120000001304,
+      "terminal": true,
+      "frames": [
+        {
+          "start": 847,
+          "duration": 4312.3,
+          "blocking": 4262.3,
+          "render": 1066.8,
+          "intro": "1",
+          "tell": "Observe. Endure. Answer.",
+          "scripts": [
+            {
+              "duration": 218.9,
+              "fn": "",
+              "source": "scene-KBl5Osit.js",
+              "char": 237344,
+              "invoker": "resolve-promise"
+            },
+            {
+              "duration": 4088.9,
+              "fn": "we",
+              "source": "index-BzB2PMvl.js",
+              "char": 26811,
+              "invoker": "user-callback"
+            }
+          ]
+        },
+        {
+          "start": 25205.4,
+          "duration": 1811.5,
+          "blocking": 0,
+          "render": 27011.4,
+          "intro": "0",
+          "tell": "Falling prayers · RED / EVADE",
+          "scripts": [
+            {
+              "duration": 5.2,
+              "fn": "we",
+              "source": "index-BzB2PMvl.js",
+              "char": 26811,
+              "invoker": "user-callback"
+            }
+          ]
+        },
+        {
+          "start": 13127.6,
+          "duration": 1765.1,
+          "blocking": 0,
+          "render": 14886.4,
+          "intro": "0",
+          "tell": "AN OPENING. ANSWER.",
+          "scripts": [
+            {
+              "duration": 5.8,
+              "fn": "we",
+              "source": "index-BzB2PMvl.js",
+              "char": 26811,
+              "invoker": "user-callback"
+            }
+          ]
+        },
+        {
+          "start": 40070.9,
+          "duration": 1475.1,
+          "blocking": 0,
+          "render": 41540.6,
+          "intro": "0",
+          "tell": "THE VIGIL AWAKENS",
+          "scripts": []
+        },
+        {
+          "start": 20267.5,
+          "duration": 1439.7,
+          "blocking": 0,
+          "render": 21701.6,
+          "intro": "0",
+          "tell": "POSTURE BROKEN · HEAVY STRIKE TO RIPOSTE",
+          "scripts": [
+            {
+              "duration": 5.1,
+              "fn": "we",
+              "source": "index-BzB2PMvl.js",
+              "char": 26811,
+              "invoker": "user-callback"
+            }
+          ]
+        },
+        {
+          "start": 60542,
+          "duration": 1430,
+          "blocking": 0,
+          "render": 61966.4,
+          "intro": "0",
+          "tell": "LOW STAMINA · MAKE SPACE",
+          "scripts": [
+            {
+              "duration": 5.1,
+              "fn": "we",
+              "source": "index-BzB2PMvl.js",
+              "char": 26811,
+              "invoker": "user-callback"
+            }
+          ]
+        },
+        {
+          "start": 47011.2,
+          "duration": 1372.2,
+          "blocking": 0,
+          "render": 48377.8,
+          "intro": "0",
+          "tell": "Falling prayers · RED / EVADE",
+          "scripts": [
+            {
+              "duration": 5.3,
+              "fn": "we",
+              "source": "index-BzB2PMvl.js",
+              "char": 26811,
+              "invoker": "user-callback"
+            }
+          ]
+        },
+        {
+          "start": 44659.7,
+          "duration": 1249.1,
+          "blocking": 0,
+          "render": 45902,
+          "intro": "0",
+          "tell": "AN OPENING. ANSWER.",
+          "scripts": [
+            {
+              "duration": 6.2,
+              "fn": "we",
+              "source": "index-BzB2PMvl.js",
+              "char": 26811,
+              "invoker": "user-callback"
+            }
+          ]
+        },
+        {
+          "start": 7121.1,
+          "duration": 1181.7,
+          "blocking": 0,
+          "render": 8297.9,
+          "intro": "1",
+          "tell": "Observe. Endure. Answer.",
+          "scripts": []
+        },
+        {
+          "start": 76207.6,
+          "duration": 1154.9,
+          "blocking": 0,
+          "render": 77355.7,
+          "intro": "0",
+          "tell": "AN OPENING. ANSWER.",
+          "scripts": [
+            {
+              "duration": 6.2,
+              "fn": "we",
+              "source": "index-BzB2PMvl.js",
+              "char": 26811,
+              "invoker": "user-callback"
+            }
+          ]
+        },
+        {
+          "start": 83415.9,
+          "duration": 1124,
+          "blocking": 0,
+          "render": 84533.5,
+          "intro": "0",
+          "tell": "AN OPENING. ANSWER.",
+          "scripts": [
+            {
+              "duration": 5.8,
+              "fn": "we",
+              "source": "index-BzB2PMvl.js",
+              "char": 26811,
+              "invoker": "user-callback"
+            }
+          ]
+        },
+        {
+          "start": 51133.3,
+          "duration": 1060.1,
+          "blocking": 0,
+          "render": 52188,
+          "intro": "0",
+          "tell": "AN OPENING. ANSWER.",
+          "scripts": []
+        }
+      ]
+    }
+  ],
+  "errors": []
+}

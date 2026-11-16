@@ -1,0 +1,13 @@
+{
+  "results": [
+    {
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+      "boss": "The Veiled Heron",
+      "mode": "PILGRIM",
+      "strikes": 5,
+      "before": 100,
+      "after": 96.1111
+    }
+  ],
+  "errors": []
+}

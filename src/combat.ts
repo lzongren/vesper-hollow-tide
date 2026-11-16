@@ -18,6 +18,7 @@ export type EventKind =
   | "parry"
   | "heal"
   | "telegraph"
+  | "ignition"
   | "slam"
   | "phase"
   | "stagger"
@@ -225,6 +226,7 @@ export interface Boss extends Vec {
 export interface Hazard extends Vec {
   id: number;
   type: "feather" | "ring" | "eruption";
+  targeted?: boolean;
   vx: number;
   vz: number;
   life: number;
@@ -240,6 +242,11 @@ export const distance = (a: Vec, b: Vec) => Math.hypot(a.x - b.x, a.z - b.z);
 export const angleTo = (a: Vec, b: Vec) => Math.atan2(b.x - a.x, b.z - a.z);
 export const angleDiff = (a: number, b: number) =>
   Math.atan2(Math.sin(a - b), Math.cos(a - b));
+export const SWEEP_MARGIN = 0.32;
+export const SLAM_MARGIN = 0.3;
+export const DASH_REACH = 1.8;
+export const DASH_SPEED = 20;
+
 export function inSector(
   origin: Vec,
   target: Vec,
@@ -248,7 +255,7 @@ export function inSector(
   arc: number,
 ) {
   return (
-    distance(origin, target) <= range + 0.32 &&
+    distance(origin, target) <= range + SWEEP_MARGIN &&
     Math.abs(angleDiff(angleTo(origin, target), facing)) <= arc / 2
   );
 }
@@ -266,6 +273,7 @@ export class Combat {
   parries = 0;
   damageDealt = 0;
   arenaRadius = 12.3;
+  private travelVelocity: Vec = { x: 0, z: 0 };
   constructor(
     readonly bossIndex = 0,
     readonly difficulty: Difficulty = "penitent",
@@ -421,12 +429,28 @@ export class Combat {
     }
     p.timer += dt;
     if (p.action === "idle") {
-      p.x += move.x * 5.2 * dt;
-      p.z += move.z * 5.2 * dt;
+      // Integrate the exponential velocity ramp exactly, including displacement.
+      // Braking takes less time than accelerating into a run.
+      const rate = ml > 0.01 ? 15 : 24;
+      const carry = -Math.expm1(-rate * dt) / rate;
+      for (const axis of ["x", "z"] as const) {
+        const desired = move[axis] * 5.2;
+        const delta = this.travelVelocity[axis] - desired;
+        p[axis] += desired * dt + delta * carry;
+        this.travelVelocity[axis] = desired + delta * Math.exp(-rate * dt);
+      }
+    } else {
+      this.travelVelocity.x = this.travelVelocity.z = 0;
     }
-    if (p.action === "dodge" && p.timer < 0.32) {
-      p.x += p.dodgeDir.x * 14 * dt;
-      p.z += p.dodgeDir.z * 14 * dt;
+    if (p.action === "dodge") {
+      // Same travel budget, with continuous velocity at lift-off and landing.
+      const travel = (time: number) => {
+        const t = Math.max(0, Math.min(1, time / 0.32));
+        return 4.48 * (t - Math.sin(2 * Math.PI * t) / (2 * Math.PI));
+      };
+      const advance = travel(p.timer) - travel(p.timer - dt);
+      p.x += p.dodgeDir.x * advance;
+      p.z += p.dodgeDir.z * advance;
     }
     if (p.action === "light" || p.action === "heavy") {
       const impact = p.action === "light" ? 0.14 : 0.46;
@@ -611,16 +635,16 @@ export class Combat {
     if (b.state === "active") {
       const a = this.attack;
       if (a.shape === "dash") {
-        b.x += b.dashDir.x * 20 * dt;
-        b.z += b.dashDir.z * 20 * dt;
+        b.x += b.dashDir.x * DASH_SPEED * dt;
+        b.z += b.dashDir.z * DASH_SPEED * dt;
         this.constrain(b, 1);
       }
       if (!b.hit) {
         const hit =
           a.shape === "circle"
-            ? distance(b, p) < a.range + 0.3
+            ? distance(b, p) < a.range + SLAM_MARGIN
             : a.shape === "dash"
-              ? distance(b, p) < 1.8
+              ? distance(b, p) < DASH_REACH
               : a.shape === "sector"
                 ? inSector(b, p, b.facing, a.range, a.arc)
                 : false;
@@ -691,6 +715,7 @@ export class Combat {
       for (const [i, t] of targets.entries())
         add({
           type: "eruption",
+          targeted: i === 0,
           ...t,
           vx: 0,
           vz: 0,
@@ -703,7 +728,10 @@ export class Combat {
   }
   updateHazards(dt: number) {
     for (const h of this.hazards) {
+      const previous = h.age;
       h.age += dt;
+      if (h.type === "eruption" && previous < h.delay && h.age >= h.delay)
+        this.event("ignition",h,h.id);
       if (h.age < h.delay) continue;
       if (h.type === "feather") {
         h.x += h.vx * dt;

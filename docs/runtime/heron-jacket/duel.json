@@ -1,0 +1,23 @@
+{
+  "results": [
+    {
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+      "boss": "The Veiled Heron",
+      "mode": "PILGRIM",
+      "timing": {
+        "samples": 1540,
+        "median": 16.7,
+        "p95": 33.3,
+        "max": 66.7
+      },
+      "title": "Vigil released",
+      "stats": "0:27TIME5PARRIES0HITS TAKEN",
+      "bossHealth": "0%",
+      "playerHealth": 100,
+      "awakened": true,
+      "elapsed": 27.785000000142766,
+      "terminal": true
+    }
+  ],
+  "errors": []
+}

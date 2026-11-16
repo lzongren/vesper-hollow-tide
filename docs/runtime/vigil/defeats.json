@@ -1,0 +1,26 @@
+{
+  "results": [
+    {
+      "name": "bellwarden",
+      "title": "Taken by the tide",
+      "stats": "0:14TIME0PARRIES4HITS TAKEN",
+      "health": "0 / 100",
+      "terminal": true
+    },
+    {
+      "name": "heron",
+      "title": "Taken by the tide",
+      "stats": "0:19TIME0PARRIES5HITS TAKEN",
+      "health": "0 / 100",
+      "terminal": true
+    },
+    {
+      "name": "cinders",
+      "title": "Taken by the tide",
+      "stats": "0:16TIME0PARRIES4HITS TAKEN",
+      "health": "0 / 100",
+      "terminal": true
+    }
+  ],
+  "errors": []
+}

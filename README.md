@@ -1,10 +1,68 @@
 # Vesper — The Hollow Tide
 
+[海棠 · 第 61 与 65 版的颊下弧线和耳窝前壁](docs/runtime/jaw-arc-and-concha/)
+
+[海棠 · 58 与 61 版下颊、下巴和耳廓的烬殿同机位对比](docs/runtime/cheek-and-ear/)
+
+[海棠 · 55 与 58 版额顶弧线、垂鬓和烬殿转面](docs/runtime/crest-and-tendrils/)
+
+[海棠 · 烬殿侧面额顶、去发灰模与鬓丝实录](docs/runtime/temple-and-forehead/)
+
+[海棠 · 五个机位的颊型与鬓角实机转面](docs/runtime/cheek-turn/)
+
+[海棠 · 侧面原画、颊部灰模与烬殿实机转面](docs/runtime/nape-profile/)
+
+[海棠 · 烬殿侧光与耳后发际的同机位转面](docs/runtime/shrine-portrait/)
+
+[海棠 · 下颌、颊色与鬓角的实机转面对比](docs/runtime/temple-portrait/)
+
+[海棠面颊与肤色 · 原画、转面与两处实机光照](docs/runtime/cheek-skin/)
+
+[海棠脸型精修 · 原画与 Unreal 实机对照](docs/runtime/mandible/)
+
+[海棠数字人头部 · Unreal 转面、表情与三庭实战](docs/runtime/digital-human/)
+
+[海棠面部对照 · 原设定图、旧版与新版 Unreal 实机](docs/runtime/portrait-match/)
+
+[披纱鹭展扇、七羽齐射与海棠闪身 · Unreal 实机](docs/runtime/heron-fan/)
+
+[白无常装束 · 海棠的脸、肩与交手实机](docs/runtime/white-spectre/) · [上一版骑装](docs/runtime/lingbo-haitang/) · [守钟人的双鹭照壁与木构雨廊](docs/runtime/bell-gallery/) · [月门石桥、荷塘与实机过桥](docs/runtime/moon-water/)
+
+**Visual rebuild in progress.** The browser prototype below did not meet the requested Bloodborne / Wuchang visual standard. The [native Unreal project](native/README.md) now includes a 205.4-metre route through three courtyards. The Bellwarden, the Veiled Heron and the Saint of Cinders are playable along the Unreal route and in the browser prototype.
+
+[See Haitang follow her opponent in-game](docs/runtime/wayfarer-gaze/) · [Meet the playable Haitang swordswoman](docs/runtime/haitang-wayfarer/) · [Watch her three fights with game audio](docs/runtime/haitang-wayfarer/three-courts.mp4) · [Run and turn with the embroidered sash](docs/runtime/river-sash/)
+
+[Walk from the cinder shrine into the inscribed pine ravine](docs/runtime/shrine-talus/)
+
+[See the new pine-covered escarpments from the road and final shrine](docs/runtime/hillside-forest/)
+
+[Walk through the bronze guardian gate and watch the three fights with game audio](docs/runtime/bell-gate-lions/)
+
+[Enter the final reliquary and fight the Saint of Cinders](docs/runtime/cinder-duel/)
+
+[Fight the Veiled Heron at the moon gate](docs/runtime/heron-duel/)
+
+[Walk the forest floor below the first court](docs/runtime/valley-understory/)
+
+[Compare evening light on the playable mountain route](docs/runtime/mountain-evening/)
+
+[See the palm cape on the playable pilgrim](docs/runtime/palm-mantle/)
+
+[Compare the mountain pines in actual gameplay](docs/runtime/mountain-pines/)
+
+[Walk down the mountain stair and back up to the court](docs/runtime/mountain-masonry/)
+
+[Watch the playable pilgrim run and turn in Unreal](docs/runtime/native-pilgrim/)
+
+[Watch the updated Unreal approach to the belfry on RTX 5080](docs/runtime/procession-road/)
+
 **Three fallen saints. One last bell.**
 
 An original, playable 3D soulslike boss-rush chapter for the browser. Deliberate melee combat, weathered temple courtyards, detailed armoured and skeletal characters, pale feathers, and an adaptive dark-ambient score. Inspired by the tension and combat language of games such as Bloodborne and Wuchang: Fallen Feathers; no characters, music, models, or other assets from those games are used.
 
-![Vesper title artwork](public/art/vesper-cover.png)
+![Pilgrim and Heron on the crane mosaic](docs/runtime/flagstones/garden.jpg)
+
+[The shrine eruption from warning to ash, with stereo sound](docs/runtime/shrine-fire/) · [Three court lighting comparisons and the shrine duel](docs/runtime/court-radiance/) · [The Bellwarden’s articulated armour during his sweep](docs/runtime/bellwarden-regalia/) · [The bell walk and river procession gallery during a complete duel](docs/runtime/belfry-galleries/) · [The painted belfry threshold at approach and sword contact](docs/runtime/painted-belfry/) · [The Saint’s casting hand and paired bronze lion guards](docs/runtime/cinder-armour/) · [Three court mosaics in combat](docs/runtime/flagstones/) · [The Saint’s bronze face and lotus vestments in a complete shrine duel](docs/runtime/cinder-icon/) · [The pilgrim’s rain cape, bamboo hat and scabbard in three fights](docs/runtime/travel-gear/) · [Lotus pools and the west water gallery during a complete duel](docs/runtime/lotus-pools/) · [The Heron’s silk jacket, hands and glazed mask in three combat poses](docs/runtime/heron-jacket/) · [Sword contact and stereo hit sounds in three courts](docs/runtime/blade-contact/) · [Directional evasion and foot contact in three courts](docs/runtime/quickstep/) · [The guardian and paired dragon relief](docs/runtime/guardian/) · [The lotus arch and the complete shrine fight](docs/runtime/lotus-arch/) · [The pilgrim’s jian in combat](docs/runtime/jian/) · [Mountain skylines in three playable courts](docs/runtime/karst/) · [Painted crane court, paired sabres and gameplay comparison](docs/runtime/sabres/) · [Rain porch in the playable garden](docs/runtime/porch/) · [The masked duelist and the moon bridge](docs/runtime/moonbridge/) · [Firelight, draped shoulders and the ring staff](docs/runtime/firelight/) · [Complete Saint of Cinders fight with sound](docs/runtime/firelight/shrine.mp4) · [Shrine fire and belfry sweep comparisons](docs/runtime/embers/) · [Watch a complete Bellwarden victory with sound](docs/runtime/vigil/bellwarden.mp4) · [Three courts in gameplay](docs/runtime/vigil/) · [Rain courts in motion](docs/runtime/rain/) · [Three encounter galleries](docs/runtime/sanctuary/) · [Bellwarden combat with game audio](docs/runtime/bronze/bellwarden.mp4)
 
 ## Play locally
 
@@ -55,7 +113,7 @@ The third-person camera follows the locked boss; movement is camera-relative. Ta
 
 ## In-game captures
 
-![The Drowned Belfry](docs/screenshots/bellwarden.png)
+![The Drowned Belfry in a playable encounter](docs/runtime/painted-belfry/contact.jpg)
 ![The Garden of Veils](docs/screenshots/heron.png)
 ![The Ashen Reliquary](docs/screenshots/cinders.png)
 

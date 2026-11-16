@@ -1,0 +1,802 @@
+{
+  "versions": [
+    61,
+    65
+  ],
+  "native_gray_and_beauty_capture_angles_degrees": 88,
+  "physical_method": "Actual exported meshes in identical neutral pose. Same verified 88 degree shrine camera projection, one ray per screen pixel over the anterior conchal wall. Depth jump measures two adjacent projected pixel intervals; transition width follows the visible 20 to 80 percent depth, measured relative to each station\u2019s own floor and projecting skin.",
+  "rendered_method": "Same shrine, bare-gray skin, camera and pose, stabilized with pupils and lips from adjacent beauty frames. For each of 45 raw image stations across the anterior conchal wall, select the brightest 8px forward lightness rise after radius 2.5px softening. Report median across stations in D65 CIELAB L*. The shaded toe endpoint is threshold dependent. The raw game captures are 2560x1440; these are camera image coordinates.",
+  "samples": {
+    "61": {
+      "mirrored_right_median_20_to_80_percent_width_px": 0.67,
+      "mirrored_right_median_depth_jump_across_2px_mm": 8.34,
+      "physical_cross_sections": {
+        "850": {
+          "max_depth_jump_per_2px_mm": 9.91,
+          "20_to_80_percent_width_px": 0.65,
+          "floor_to_plate_mm": 10.43
+        },
+        "860": {
+          "max_depth_jump_per_2px_mm": 9.21,
+          "20_to_80_percent_width_px": 0.73,
+          "floor_to_plate_mm": 10.11
+        },
+        "870": {
+          "max_depth_jump_per_2px_mm": 8.57,
+          "20_to_80_percent_width_px": 0.66,
+          "floor_to_plate_mm": 9.23
+        },
+        "880": {
+          "max_depth_jump_per_2px_mm": 7.67,
+          "20_to_80_percent_width_px": 0.63,
+          "floor_to_plate_mm": 7.88
+        },
+        "890": {
+          "max_depth_jump_per_2px_mm": 6.22,
+          "20_to_80_percent_width_px": 0.64,
+          "floor_to_plate_mm": 6.26
+        },
+        "896": {
+          "max_depth_jump_per_2px_mm": 3.99,
+          "20_to_80_percent_width_px": 0.77,
+          "floor_to_plate_mm": 4.84
+        }
+      },
+      "median_20_to_80_percent_width_px": 0.66,
+      "median_depth_jump_across_2px_mm": 8.12,
+      "photometric_cross_sections": {
+        "sources": {
+          "color_sha256": "b9ef67ff9f6a202d235c594b1454d0de21b1d87fe7353632978b01d79d5c0793",
+          "clay_sha256": "2b1b2501677a621754af329449d395944e08c4cf1b5913d9a29a7e75f21dc637"
+        },
+        "source_pupil_and_mouth_xy": [
+          [
+            1392.0,
+            720.0
+          ],
+          [
+            1410.0,
+            1091.0
+          ]
+        ],
+        "registration_NCC": [
+          0.9973,
+          0.999
+        ],
+        "median_max_8px_rise_Lstar": 27.33,
+        "Q25_Q75_max_8px_Lstar": [
+          25.06,
+          29.28
+        ],
+        "visible_dark_toe_last_row_given_deficit_and_8px_width": [
+          [
+            8,
+            905
+          ],
+          [
+            12,
+            904
+          ],
+          [
+            16,
+            903
+          ]
+        ]
+      },
+      "actual_exported_earrings": {
+        "left": {
+          "actual_pearl_bbox_center_mm": [
+            -76.3,
+            1607.5,
+            16.0
+          ],
+          "half_span_xyz_mm": [
+            3.1,
+            3.4,
+            3.1
+          ],
+          "skin_axial_x_mm": -74.2,
+          "axial_pearl_overlap_mm": 1.0,
+          "closest_skin_point_to_pearl_center_mm": 1.908,
+          "head_weight_min": 1.0,
+          "max_skin_morph_translation_at_piercing_mm": 0.0
+        },
+        "right": {
+          "actual_pearl_bbox_center_mm": [
+            76.254,
+            1607.5,
+            16.0
+          ],
+          "half_span_xyz_mm": [
+            3.1,
+            3.4,
+            3.1
+          ],
+          "skin_axial_x_mm": 74.154,
+          "axial_pearl_overlap_mm": 1.0,
+          "closest_skin_point_to_pearl_center_mm": 1.899,
+          "head_weight_min": 1.0,
+          "max_skin_morph_translation_at_piercing_mm": 0.0
+        }
+      }
+    },
+    "65": {
+      "mirrored_right_median_20_to_80_percent_width_px": 8.09,
+      "mirrored_right_median_depth_jump_across_2px_mm": 2.94,
+      "physical_cross_sections": {
+        "850": {
+          "max_depth_jump_per_2px_mm": 5.57,
+          "20_to_80_percent_width_px": 1.42,
+          "floor_to_plate_mm": 8.39
+        },
+        "860": {
+          "max_depth_jump_per_2px_mm": 5.25,
+          "20_to_80_percent_width_px": 3.72,
+          "floor_to_plate_mm": 8.96
+        },
+        "870": {
+          "max_depth_jump_per_2px_mm": 3.69,
+          "20_to_80_percent_width_px": 7.19,
+          "floor_to_plate_mm": 8.84
+        },
+        "880": {
+          "max_depth_jump_per_2px_mm": 1.73,
+          "20_to_80_percent_width_px": 11.88,
+          "floor_to_plate_mm": 8.47
+        },
+        "890": {
+          "max_depth_jump_per_2px_mm": 0.94,
+          "20_to_80_percent_width_px": 14.9,
+          "floor_to_plate_mm": 7.38
+        },
+        "896": {
+          "max_depth_jump_per_2px_mm": 0.6,
+          "20_to_80_percent_width_px": 15.68,
+          "floor_to_plate_mm": 6.27
+        }
+      },
+      "median_20_to_80_percent_width_px": 9.54,
+      "median_depth_jump_across_2px_mm": 2.71,
+      "photometric_cross_sections": {
+        "sources": {
+          "color_sha256": "4af1a7c64bbf5c8ed52f992483e64e0344a41c96cd7cf9783d8cc6d960c5ddcd",
+          "clay_sha256": "2fec48220a6a7bbaf7502fcaa05a3263d2cae1c70496b8f56ffbd9594290359a"
+        },
+        "source_pupil_and_mouth_xy": [
+          [
+            1392.0,
+            720.0
+          ],
+          [
+            1410.0,
+            1091.0
+          ]
+        ],
+        "registration_NCC": [
+          0.9998,
+          0.9994
+        ],
+        "median_max_8px_rise_Lstar": 9.27,
+        "Q25_Q75_max_8px_Lstar": [
+          9.0,
+          10.08
+        ],
+        "visible_dark_toe_last_row_given_deficit_and_8px_width": [
+          [
+            8,
+            907
+          ],
+          [
+            12,
+            902
+          ],
+          [
+            16,
+            899
+          ]
+        ]
+      },
+      "actual_exported_earrings": {
+        "left": {
+          "actual_pearl_bbox_center_mm": [
+            -76.3,
+            1607.5,
+            16.0
+          ],
+          "half_span_xyz_mm": [
+            3.1,
+            3.4,
+            3.1
+          ],
+          "skin_axial_x_mm": -74.2,
+          "axial_pearl_overlap_mm": 1.0,
+          "closest_skin_point_to_pearl_center_mm": 1.908,
+          "head_weight_min": 1.0,
+          "max_skin_morph_translation_at_piercing_mm": 0.0
+        },
+        "right": {
+          "actual_pearl_bbox_center_mm": [
+            76.254,
+            1607.5,
+            16.0
+          ],
+          "half_span_xyz_mm": [
+            3.1,
+            3.4,
+            3.1
+          ],
+          "skin_axial_x_mm": 74.154,
+          "axial_pearl_overlap_mm": 1.0,
+          "closest_skin_point_to_pearl_center_mm": 1.899,
+          "head_weight_min": 1.0,
+          "max_skin_morph_translation_at_piercing_mm": 0.0
+        }
+      }
+    }
+  },
+  "geometry_controls": {
+    "exact_triangle_indices_and_uv": true,
+    "upper_helix_max_displacement_mm": 0.0,
+    "lower_ear_and_adjacent_neck_max_displacement_mm": 0.22836,
+    "free_lateral_lobe_max_displacement_mm": 0.0006,
+    "lobe_morph_delta_change_mm": 6e-05,
+    "ear_triangles_reversed_relative_to_61": 0,
+    "total_ear_triangle_count": 8514,
+    "ear_mesh_max_change_mm": 8.26782
+  },
+  "limits": [
+    "Cross sections describe this view of the visible surface, not a new physiological tissue measurement.",
+    "Native material, shadow thresholds and the source illustration\u2019s separate lighting limit direct photographic contrast comparison."
+  ],
+  "cavum_and_tragus_tracking_and_baked_diffuse": {
+    "same_visible_62_surface_points_tracked_on_65": {
+      "lower_cavum_floor": {
+        "L": {
+          "point62_mm": [
+            -62.386,
+            1625.1,
+            21.8
+          ],
+          "signed_outward_up_forward_delta_mm": [
+            -2.938,
+            0.0,
+            -0.512
+          ]
+        },
+        "R": {
+          "point62_mm": [
+            62.141,
+            1625.1,
+            21.8
+          ],
+          "signed_outward_up_forward_delta_mm": [
+            -2.967,
+            0.0,
+            -0.512
+          ]
+        }
+      },
+      "lower_cavity_front_return": {
+        "L": {
+          "point62_mm": [
+            -63.525,
+            1622.5,
+            25.5
+          ],
+          "signed_outward_up_forward_delta_mm": [
+            -2.34,
+            0.0,
+            -0.327
+          ]
+        },
+        "R": {
+          "point62_mm": [
+            63.657,
+            1622.5,
+            25.5
+          ],
+          "signed_outward_up_forward_delta_mm": [
+            -2.368,
+            0.0,
+            -0.322
+          ]
+        }
+      },
+      "tragus_tip": {
+        "L": {
+          "point62_mm": [
+            -67.194,
+            1630.5,
+            27.8
+          ],
+          "signed_outward_up_forward_delta_mm": [
+            0.929,
+            0.0,
+            -4.069
+          ]
+        },
+        "R": {
+          "point62_mm": [
+            67.248,
+            1630.5,
+            27.8
+          ],
+          "signed_outward_up_forward_delta_mm": [
+            0.921,
+            0.0,
+            -4.056
+          ]
+        }
+      },
+      "rear_shoulder_of_bowl": {
+        "L": {
+          "point62_mm": [
+            -63.261,
+            1625.1,
+            15.0
+          ],
+          "signed_outward_up_forward_delta_mm": [
+            -0.929,
+            0.0,
+            -0.103
+          ]
+        },
+        "R": {
+          "point62_mm": [
+            62.671,
+            1625.1,
+            15.0
+          ],
+          "signed_outward_up_forward_delta_mm": [
+            -0.917,
+            0.0,
+            -0.103
+          ]
+        }
+      },
+      "low_lobe": {
+        "L": {
+          "point62_mm": [
+            -74.2,
+            1607.5,
+            16.0
+          ],
+          "signed_outward_up_forward_delta_mm": [
+            -0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "R": {
+          "point62_mm": [
+            74.154,
+            1607.5,
+            16.0
+          ],
+          "signed_outward_up_forward_delta_mm": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      }
+    },
+    "native_diffuse_swatch62_65": {
+      "(0.1781, 0.456)": {
+        "62": [
+          84,
+          115,
+          120
+        ],
+        "65": [
+          154,
+          100,
+          90
+        ]
+      },
+      "(0.1778, 0.4555)": {
+        "62": [
+          76,
+          114,
+          117
+        ],
+        "65": [
+          151,
+          99,
+          88
+        ]
+      },
+      "(0.1785, 0.456)": {
+        "62": [
+          96,
+          115,
+          122
+        ],
+        "65": [
+          156,
+          101,
+          94
+        ]
+      },
+      "(0.1837, 0.45)": {
+        "62": [
+          211,
+          144,
+          135
+        ],
+        "65": [
+          211,
+          144,
+          135
+        ]
+      },
+      "(0.8212, 0.455)": {
+        "62": [
+          153,
+          123,
+          123
+        ],
+        "65": [
+          162,
+          121,
+          119
+        ]
+      }
+    }
+  },
+  "registered_rendered_cyan_test": {
+    "crop_raw_xyxy": [
+      895,
+      816,
+      970,
+      892
+    ],
+    "threshold": "D65 Lab a* below zero and L* below 58; 4-neighbor pixel components",
+    "samples": {
+      "61": {
+        "green_skin_pixels": 0,
+        "largest_connected_component_px": 0,
+        "largest_raw_bbox": null,
+        "minimum_a_star": 11.19
+      },
+      "62": {
+        "green_skin_pixels": 34,
+        "largest_connected_component_px": 33,
+        "largest_raw_bbox": [
+          938,
+          838,
+          948,
+          848
+        ],
+        "minimum_a_star": -9.56
+      },
+      "65": {
+        "green_skin_pixels": 0,
+        "largest_connected_component_px": 0,
+        "largest_raw_bbox": null,
+        "minimum_a_star": 12.24
+      }
+    },
+    "actual_suspect_uvs_followed": [
+      {
+        "original_62_raw_xy": [
+          939,
+          840
+        ],
+        "source_uv": [
+          0.17687,
+          0.4638
+        ],
+        "predicted_65_raw_xy": [
+          929.9,
+          840.0
+        ],
+        "occlusion_depth_mm": 4.442,
+        "visible_in_65": false,
+        "62_radius2_box_median_Lab": [
+          44.41,
+          2.1,
+          9.94
+        ],
+        "65_radius2_box_median_Lab": [
+          59.57,
+          20.71,
+          18.46
+        ]
+      },
+      {
+        "original_62_raw_xy": [
+          943,
+          842
+        ],
+        "source_uv": [
+          0.17811,
+          0.45603
+        ],
+        "predicted_65_raw_xy": [
+          924.8,
+          842.0
+        ],
+        "occlusion_depth_mm": 0.0,
+        "visible_in_65": true,
+        "62_radius2_box_median_Lab": [
+          40.44,
+          -1.35,
+          6.37
+        ],
+        "65_radius2_box_median_Lab": [
+          48.96,
+          22.17,
+          20.93
+        ]
+      },
+      {
+        "original_62_raw_xy": [
+          947,
+          846
+        ],
+        "source_uv": [
+          0.17888,
+          0.45579
+        ],
+        "predicted_65_raw_xy": [
+          925.8,
+          846.0
+        ],
+        "occlusion_depth_mm": 0.0,
+        "visible_in_65": true,
+        "62_radius2_box_median_Lab": [
+          40.93,
+          0.04,
+          5.91
+        ],
+        "65_radius2_box_median_Lab": [
+          49.09,
+          23.47,
+          21.78
+        ]
+      },
+      {
+        "original_62_raw_xy": [
+          950,
+          850
+        ],
+        "source_uv": [
+          0.17951,
+          0.4563
+        ],
+        "predicted_65_raw_xy": [
+          927.8,
+          850.1
+        ],
+        "occlusion_depth_mm": 0.0,
+        "visible_in_65": true,
+        "62_radius2_box_median_Lab": [
+          46.64,
+          5.06,
+          7.32
+        ],
+        "65_radius2_box_median_Lab": [
+          50.18,
+          23.08,
+          20.97
+        ]
+      }
+    ]
+  },
+  "visible_cavity_lightness": {
+    "correspondence": "Lower cavum floor and nearer tragus tip on 62 mesh, tracked as actual triangle+barycentrics to 65 and projected to the verified profile camera. Artwork is separately aligned via pupils and labial commissure and manually picked. Independent concept lighting.",
+    "samples": {
+      "lower_cavum_floor": {
+        "art": {
+          "source_xy": [
+            883,
+            882
+          ],
+          "median_visible_Lstar": 51.67
+        },
+        "62": {
+          "source_xy": [
+            921,
+            881
+          ],
+          "median_visible_Lstar": 65.44
+        },
+        "65": {
+          "source_xy": [
+            920,
+            881
+          ],
+          "median_visible_Lstar": 57.7
+        }
+      },
+      "tragus_tip": {
+        "art": {
+          "source_xy": [
+            918,
+            874
+          ],
+          "median_visible_Lstar": 59.2
+        },
+        "62": {
+          "source_xy": [
+            952,
+            852
+          ],
+          "median_visible_Lstar": 47.68
+        },
+        "65": {
+          "source_xy": [
+            930,
+            852
+          ],
+          "median_visible_Lstar": 51.08
+        }
+      }
+    }
+  },
+  "revision63_ear_lock": {
+    "surface_of_cavum_and_tragus": {
+      "n": 980,
+      "position_max_change_mm": 0.0,
+      "jaw_morph_delta_change_mm": 0.0,
+      "neutral_AO_max_diff": 0.0,
+      "vertex_RGB_max_unit_change": 0.0
+    },
+    "free_outer_rim_and_lobe": {
+      "n": 1956,
+      "position_max_change_mm": 0.0,
+      "jaw_morph_delta_change_mm": 0.0,
+      "neutral_AO_max_diff": 0.0,
+      "vertex_RGB_max_unit_change": 0.0
+    },
+    "left_inner_albedo_UV": {
+      "pixel_box": [
+        348,
+        880,
+        387,
+        978
+      ],
+      "n_pixels": 3822,
+      "max_RGB_change_uint8": 0,
+      "all_pixels_exactly_equal": true
+    },
+    "right_inner_albedo_UV": {
+      "pixel_box": [
+        1650,
+        878,
+        1720,
+        978
+      ],
+      "n_pixels": 7000,
+      "max_RGB_change_uint8": 0,
+      "all_pixels_exactly_equal": true
+    },
+    "vertex_uvs_triangles_exact_match": true,
+    "rephotographed_visible_cartilage_63_vs_65": {
+      "beauty": {
+        "sampled_pixels": 16711,
+        "median_signed_Lstar": 0.0,
+        "median_absolute_Lstar": 0.388,
+        "P95_abs_Lstar": 1.312
+      },
+      "bare_clay": {
+        "sampled_pixels": 16711,
+        "median_signed_Lstar": 0.0,
+        "median_absolute_Lstar": 0.084,
+        "P95_abs_Lstar": 0.695
+      }
+    },
+    "raw_63_anatomical_polygon": [
+      [
+        790,
+        753
+      ],
+      [
+        834,
+        744
+      ],
+      [
+        861,
+        759
+      ],
+      [
+        880,
+        781
+      ],
+      [
+        902,
+        803
+      ],
+      [
+        932,
+        820
+      ],
+      [
+        942,
+        851
+      ],
+      [
+        939,
+        877
+      ],
+      [
+        934,
+        898
+      ],
+      [
+        899,
+        904
+      ],
+      [
+        860,
+        894
+      ],
+      [
+        829,
+        879
+      ],
+      [
+        804,
+        856
+      ],
+      [
+        791,
+        828
+      ]
+    ]
+  },
+  "native_orbit_cyan_visibility": {
+    "62": {
+      "revision": 62,
+      "tracked_native_source": "HaitangPortrait62, WayfarerSkin UV=(0.17811,0.45603)",
+      "method": "Direct uncompressed UE PNGs from the real orbit, 63\u2013103 degrees, near-side skin ray visibility, 7x7 pixel neighborhood. Samples include outward and return camera passes.",
+      "examined_frames": 86,
+      "frames_with_at_least_two_cyan_pixels": 66,
+      "worst_neighborhood_cyan_pixels": 21,
+      "first_and_last_examined_ordinal": [
+        100,
+        260
+      ],
+      "examined_angle_range_deg": [
+        63.11,
+        102.43
+      ],
+      "max_cyan_pixel_ordinal": 218
+    },
+    "63": {
+      "revision": 63,
+      "tracked_native_source": "HaitangPortrait63, WayfarerSkin UV=(0.17811,0.45603)",
+      "method": "Direct uncompressed UE PNGs from the real orbit, 63\u2013103 degrees, near-side skin ray visibility, 7x7 pixel neighborhood. Samples include outward and return camera passes.",
+      "examined_frames": 74,
+      "frames_with_at_least_two_cyan_pixels": 0,
+      "worst_neighborhood_cyan_pixels": 0,
+      "first_and_last_examined_ordinal": [
+        106,
+        254
+      ],
+      "examined_angle_range_deg": [
+        69.64,
+        102.43
+      ],
+      "max_cyan_pixel_ordinal": null
+    },
+    "65": {
+      "revision": 65,
+      "tracked_native_source": "HaitangPortrait65, WayfarerSkin UV=(0.17811,0.45603)",
+      "method": "Direct uncompressed UE PNGs from the real orbit, 63\u2013103 degrees, near-side skin ray visibility, 7x7 pixel neighborhood. Samples include outward and return camera passes.",
+      "examined_frames": 74,
+      "frames_with_at_least_two_cyan_pixels": 0,
+      "worst_neighborhood_cyan_pixels": 0,
+      "first_and_last_examined_ordinal": [
+        106,
+        254
+      ],
+      "examined_angle_range_deg": [
+        69.64,
+        102.43
+      ],
+      "max_cyan_pixel_ordinal": null
+    }
+  }
+}

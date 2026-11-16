@@ -6,13 +6,59 @@ function isBone(o: T.Object3D): o is T.Bone {
   return (o as T.Bone).isBone === true;
 }
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+import { CourtBeauty, courtSamples } from "./court-sampling";
+import { FXAAPass } from "three/addons/postprocessing/FXAAPass.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
-import { SSAOPass } from "three/addons/postprocessing/SSAOPass.js";
+import { CourtOcclusion, classifyCourtSurface, markNonOccluding } from "./court-occlusion";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { Combat, angleDiff, type GameEvent, type Vec } from "./combat";
 import { ArtLibrary } from "./assets";
+import {
+  bellGuard,
+  bellStroke,
+  BellPauldron,
+  MantleMotion,
+} from "./vestments";
+import type { Attack } from "./combat";
+import { WeaponGrip, mantleGeometry, BladeTrail } from "./pilgrim";
+import { pilgrimJian } from "./pilgrim-jian";
+import {
+  courtyardMaple,
+  mapleLeaf,
+  featherGeometry,
+  foldingScreen,
+  leafDrifts,
+  valleyHorizon,
+} from "./sanctuary";
+import { waitForOpeningDraw } from "./first-frame";
+import { karstSpurs } from "./karst";
+import { heronStroke } from "./heron-sabres";
+import { HeronWing, bridalMask, dressHeron } from "./heron";
+import { RingStaff } from "./ring-staff";
+import { belfryGallery } from "./belfry-gallery";
+import { belfryFront } from "./belfry-front";
+import { cinderArmour } from "./cinder-armour";
+import { cinderIcon } from "./cinder-icon";
+import { WristBeads } from "./wrist-beads";
+import { CinderCast, castFingers, sealTime } from "./cinder-cast";
+import { CinderFire, CinderLights, shrineFireVolume } from "./cinder-fire";
+import { CourtLight, vigilLamp } from "./vigil-light";
+import { batchCourt } from "./static-court";
+import { incenseVessel, incenseSmoke } from "./incense";
+import { ceremonialSilks, type SilkPanel } from "./silk";
+import { pilgrimScabbard } from "./pilgrim-scabbard";
+import { travelHat } from "./travel-hat";
+import { BladeImpact } from "./blade-impact";
+import { fitTravelBoots } from "./pilgrim-footwear";
+import { Footwork } from "./footwork";
+import { RainCourt } from "./raincourt";
+import { flagstoneSeal } from "./flagstone-seal";
+import { courtPaving, runoffChannel } from "./court";
+import { lotusGarden } from "./lotus-garden";
+import { porchLamp } from "./moon-gate";
+import { heronGarden, cinderReliquary } from "./landmarks";
 
 const Y = new T.Vector3(0, 1, 0);
 const standard = (color: number, metalness = 0, roughness = 0.6) =>
@@ -158,12 +204,29 @@ interface Actor {
   model: T.Group;
   bones: Map<string, T.Bone>;
   rest: Map<string, T.Quaternion>;
+  feet: Footwork;
+  stridePhase: number;
+  gaitWeight: number;
+  impactAge: number;
+  impactSide: number;
+  impactForward: number;
+  silks?: SilkPanel[];
+  pauldrons?: BellPauldron[];
   robe?: T.Mesh;
+  clothMotion?: MantleMotion;
   weapon: T.Group;
   kind: number;
   height: number;
+  grip?: WeaponGrip;
   rightHand?: T.Bone;
   halo?: T.Group;
+  castingHand?: T.Mesh;
+  seal?: CinderCast;
+  beads?: WristBeads;
+  votiveEmber?: T.MeshStandardMaterial;
+  staff?: RingStaff;
+  pinions?: HeronWing[];
+  sabres?: ReturnType<typeof dressHeron>;
 }
 interface Effect {
   mesh: T.Mesh;
@@ -175,23 +238,27 @@ interface Effect {
 
 export class World {
   readonly ready: Promise<void>;
+  onPlayerStep?: (x: number, z: number) => void;
   art = new ArtLibrary();
   renderer: T.WebGLRenderer;
   scene = new T.Scene();
   camera = new T.PerspectiveCamera(54, 1, 0.1, 200);
   composer: EffectComposer;
-  ao: SSAOPass;
+  ao: CourtOcclusion;
   arena = new T.Group();
+  rainCourt = new RainCourt();
   decor = new T.Group();
   player: Actor = { root: new T.Group() } as Actor;
   boss: Actor = { root: new T.Group() } as Actor;
   bossIndex = -1;
-  telegraphKey = "";
-  telegraph = new T.Group();
+  bladeTrail = new BladeTrail();
+  private readonly impacts = new BladeImpact();
+  private readonly pendingStrikes: GameEvent[] = [];
+  cinderLights = new CinderLights();
+  private fireVolume?: Awaited<ReturnType<typeof shrineFireVolume>>;
   hazards = new Map<number, T.Group>();
   lock = new T.Group();
   particles: Effect[] = [];
-  trails: Effect[] = [];
   quality = "high";
   reducedMotion = false;
   moving = false;
@@ -203,15 +270,35 @@ export class World {
   orbit = 0;
   cameraInitialized = false;
   loaded = false;
-  moon: T.DirectionalLight;
-  fill: T.PointLight;
+  lighting: CourtLight;
+  environmentTime = { value: 0 };
   clothMeshes: T.Mesh[] = [];
   flames: T.Mesh[] = [];
+  featherTemplate?: T.BufferGeometry;
+  leafTemplate?: T.BufferGeometry;
+  lampPaper = textureCanvas((c) => {
+    const glow = c.createLinearGradient(0, 0, 0, 512);
+    for (const [stop, tint] of [
+      [0, "#3c190c"],
+      [0.17, "#bb6f32"],
+      [0.42, "#ffde8c"],
+      [0.54, "#ffe9af"],
+      [0.85, "#c68736"],
+      [1, "#562810"],
+    ] as const)
+      glow.addColorStop(stop, tint);
+    c.fillStyle = glow;
+    c.fillRect(0, 0, 512, 512);
+    c.fillStyle = "#46241055";
+    for (let x = 0; x < 512; x += 32) c.fillRect(x, 0, 2, 512);
+    for (let y = 0; y < 512; y += 4) c.fillRect(0, y, 512, 1);
+  });
   rain: T.Points;
   rainBase: Float32Array;
   fogSheets: T.Mesh[] = [];
   materials: Record<string, T.MeshStandardMaterial> = {};
   constructor(readonly canvas: HTMLCanvasElement) {
+    this.camera.layers.enable(1);
     this.renderer = new T.WebGLRenderer({
       canvas,
       antialias: true,
@@ -224,29 +311,14 @@ export class World {
     this.renderer.toneMappingExposure = 1.1;
     this.scene.background = new T.Color(0x111d22);
     this.scene.fog = new T.FogExp2(0x19272b, 0.022);
-    this.scene.add(new T.HemisphereLight(0xb7d0da, 0x465146, 1.5));
-    this.moon = new T.DirectionalLight(0xcbddea, 3.2);
-    this.moon.position.set(-12, 20, -15);
-    this.moon.castShadow = true;
-    this.moon.shadow.mapSize.set(2048, 2048);
-    Object.assign(this.moon.shadow.camera, {
-      left: -24,
-      right: 24,
-      top: 24,
-      bottom: -24,
-      near: 1,
-      far: 70,
-    });
-    this.moon.shadow.normalBias = 0.035;
-    this.moon.shadow.bias = -0.00012;
-    this.scene.add(this.moon);
-    this.fill = new T.PointLight(0xffb36d, 26, 18, 2);
-    this.fill.position.set(2, 4, 4);
-    this.scene.add(this.fill);
-    const portraitLight = new T.DirectionalLight(0xffddb5, 1.5);
-    portraitLight.position.set(8, 11, 15);
-    this.scene.add(portraitLight);
-    this.scene.add(this.arena, this.decor, this.telegraph, this.lock);
+    this.scene.add(
+      this.arena,
+      this.rainCourt.floor,
+      this.decor,
+      this.lock,
+      this.bladeTrail,
+      this.impacts,
+    );
     const ring = mesh(
       this.lock,
       new T.TorusGeometry(0.075, 0.008, 6, 24),
@@ -277,12 +349,24 @@ export class World {
     );
     this.scene.add(this.rain);
     this.composer = new EffectComposer(this.renderer);
-    this.composer.addPass(new RenderPass(this.scene, this.camera));
-    this.ao = new SSAOPass(this.scene, this.camera, innerWidth, innerHeight);
+    const gl = this.renderer.getContext() as WebGL2RenderingContext;
+    const samples = courtSamples(
+      gl.getInternalformatParameter(gl.RENDERBUFFER, gl.RGBA16F, gl.SAMPLES),
+      gl.getInternalformatParameter(gl.RENDERBUFFER, gl.DEPTH_COMPONENT24, gl.SAMPLES),
+    );
+    this.composer.addPass(samples ? new CourtBeauty(this.scene, this.camera, samples) : new RenderPass(this.scene, this.camera));
+    this.ao = new CourtOcclusion(this.scene, this.camera, innerWidth, innerHeight);
     this.ao.kernelRadius = 0.7;
     this.ao.minDistance = 0.005;
     this.ao.maxDistance = 0.2;
     this.composer.addPass(this.ao);
+    this.lighting = new CourtLight(
+      this.scene,
+      this.camera,
+      this.ao.normalRenderTarget.depthTexture!,
+      this.environmentTime,
+    );
+    this.composer.addPass(this.lighting.veil);
     this.composer.addPass(
       new UnrealBloomPass(
         new T.Vector2(innerWidth, innerHeight),
@@ -292,14 +376,12 @@ export class World {
       ),
     );
     this.composer.addPass(new OutputPass());
+    if (!samples) this.composer.addPass(new FXAAPass());
     this.ready = this.art.load().then(() => {
-      this.scene.environment = this.art.environment!;
-      this.scene.environmentIntensity = 1.1;
       this.createMaterials();
       this.player = this.actor(-1);
       this.scene.add(this.player.root);
       this.loaded = true;
-      this.setArena(0);
     });
     this.resize();
   }
@@ -311,6 +393,7 @@ export class World {
       wood: this.art.material("wood", 2, 2, 0xb06c55),
       gold: this.art.material("metal", 2, 2, 0xc8af71),
       roof: this.art.material("rock", 3, 2, 0x586062),
+      "censer-bronze": this.art.material("metal", 2, 2, 0x60766b),
       dark: standard(0x171c1b, 0.4, 0.35),
       ivory: standard(0xd1c9ad, 0.2, 0.35),
       fire: emissive(0xffb553, 3),
@@ -322,6 +405,47 @@ export class World {
       }),
       moss: standard(0x44523a, 0, 0.95),
     };
+    for (const name of [
+      "tide-icon",
+      "lacquer-bay",
+      "heron-silk",
+      "cinder-mask",
+      "dragon-mantle",
+    ]) {
+      const map = this.art.textures.get(name)!;
+      this.materials[name] = new T.MeshStandardMaterial({
+        map,
+        bumpMap: map,
+        bumpScale: name.includes("silk") ? 0.012 : 0.055,
+        emissiveMap: map,
+        emissive: 0xffdfa9,
+        color:
+          name === "lacquer-bay"
+            ? 0xac9584
+            : name === "tide-icon"
+              ? 0xb0a392
+              : 0xffffff,
+        emissiveIntensity:
+          name === "lacquer-bay" || name === "tide-icon" ? 0.015 : 0.075,
+        roughness: 0.74,
+        metalness: 0.12,
+        side: T.DoubleSide,
+      });
+    }
+    this.featherTemplate = featherGeometry(
+      this.art.textures.get("heron-quill")!,
+      0.79,
+      1,
+    );
+    const stone = this.materials.stone,
+      flags = this.art.textures.get("rain-stones")!;
+    flags.wrapS = flags.wrapT = T.RepeatWrapping;
+    flags.repeat.set(25, 25);
+    stone.map = stone.bumpMap = flags;
+    stone.bumpScale = 0.055;
+    stone.normalMap = null;
+    stone.roughness = 0.71;
+    this.rainCourt.finishStone(stone);
   }
   resize() {
     this.camera.aspect = innerWidth / innerHeight;
@@ -329,6 +453,13 @@ export class World {
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(innerWidth, innerHeight);
     this.composer.setSize(innerWidth, innerHeight);
+    // Contact shading varies slowly on the pavement. Keep the beauty pass at
+    // native resolution and sample the occlusion pass on a smaller grid.
+    const ratio = this.renderer.getPixelRatio() * 0.65;
+    this.ao.setSize(
+      Math.max(1, Math.round(innerWidth * ratio)),
+      Math.max(1, Math.round(innerHeight * ratio)),
+    );
   }
   setQuality(value: string) {
     this.quality = value;
@@ -360,7 +491,7 @@ export class World {
   actor(kind: number): Actor {
     const height = kind < 0 ? 1.9 : kind === 0 ? 3.9 : kind === 1 ? 3.2 : 3.7;
     const model = this.art.model(
-      kind < 1 ? "pilgrim" : kind === 1 ? "wraith" : "sorcerer",
+      kind < 1 ? "pilgrim" : kind === 1 ? "wraith" : "cinder-ascetic",
       height,
     );
     const root = new T.Group();
@@ -381,16 +512,17 @@ export class World {
           mm.envMapIntensity = kind < 1 ? 1.1 : 0.4;
           if (kind === 0) mm.color.setHex(0x9a8873);
           if (kind === 1) mm.color.setHex(0x8dc9c2);
-          if (kind === 2) mm.color.setHex(0x9b7c68);
-          if (kind > 0) {
-            if (kind === 1) {
-              mm.emissive.setHex(0x4c716c);
-              mm.emissiveIntensity = 0.25;
-            }
+          if (kind === 2) {
+            mm.color.setHex(0xf0e8d9);
+            mm.roughness = 1;
+          }
+          if (kind === 1) {
+            mm.emissive.setHex(0x4c716c);
+            mm.emissiveIntensity = 0.25;
             mm.onBeforeCompile = (shader) => {
               shader.fragmentShader = shader.fragmentShader.replace(
                 "#include <map_fragment>",
-                `#include <map_fragment>\n float lum=dot(diffuseColor.rgb, vec3(.299,.587,.114)); diffuseColor.rgb=${kind === 1 ? 'vec3(.18,.23,.22)+vec3(lum)*.9' : 'mix(vec3(lum),diffuseColor.rgb,.3)'};`,
+                `#include <map_fragment>\n float lum=dot(diffuseColor.rgb, vec3(.299,.587,.114)); diffuseColor.rgb=mix(vec3(lum)*vec3(.72,.88,.90),diffuseColor.rgb,.45)+vec3(.025);`,
               );
             };
           }
@@ -407,167 +539,231 @@ export class World {
       weapon,
       kind,
       height,
+      feet: new Footwork(root, bones, height),
+      stridePhase: 0,
+      gaitWeight: 0,
+      impactAge: 1,
+      impactSide: 0,
+      impactForward: 0,
       rightHand: bones.get("RightHand"),
     };
     if (kind < 1) {
-      const robe = cloth(
+      a.silks = ceremonialSilks(
         root,
-        this.materials.cloth.clone(),
-        kind < 0 ? 0.9 : 1.7,
-        kind < 0 ? 1.15 : 2.8,
-        0,
-        kind < 0 ? 1.18 : 1.7,
-        -0.24,
+        bones,
+        height,
+        this.art.textures.get(kind === 0 ? "warden-brocade" : "dragon-mantle")!,
+        this.materials.gold,
+        this.materials.dark,
+        kind === 0,
       );
-      a.robe = robe;
-      const pos = robe.geometry.attributes.position;
-      const capeHeight = kind < 0 ? 1.15 : 2.8;
-      for (let i = 0; i < pos.count; i++) {
-        const w = pos.getY(i) / capeHeight + 0.5;
-        pos.setX(i, pos.getX(i) * (1 - 0.38 * w));
-        pos.setZ(i, pos.getZ(i) - (1 - w) * 0.18);
-        pos.setY(i, pos.getY(i) + Math.cos(pos.getX(i) * 15) * 0.025 * (1 - w));
-      }
-      robe.userData.base = new Float32Array(pos.array);
-      robe.geometry.computeVertexNormals();
       if (kind < 0) {
         // Woven travel hat and layered lacquered mantle give the pilgrim an original silhouette.
-        const hat = mesh(
-          root,
-          new T.ConeGeometry(0.43, 0.19, 64),
-          this.materials.wood,
-          0,
-          1.97,
-          0,
-        );
-        hat.rotation.x = 0.05;
-        for (let j = 0; j < 9; j++)
-          torus(
-            root,
-            this.materials.wood,
-            0.12 + j * 0.035,
-            0.004,
-            0,
-            2.045 - j * 0.014,
-            0,
-            true,
-          );
-        const sword = this.art.model("sword", 1.65);
-        sword.position.y = -0.32;
-        weapon.add(sword);
-        weapon.rotation.x = -0.9;
+        fitTravelBoots(root, model, bones, this.art.textures.get("pilgrim-brocade-normal")!);
+        const headwear = travelHat();
+        root.add(headwear);
+        bones.get("Head")?.attach(headwear);
+        const scabbard = pilgrimScabbard();
+        scabbard.position.set(0.27, 1.19, -0.03);
+        scabbard.quaternion.setFromUnitVectors(new T.Vector3(0,-1,0),new T.Vector3(0.31,-0.76,-0.63).normalize());
+        root.add(scabbard);
+        bones.get("Hips")!.attach(scabbard);
+        weapon.add(pilgrimJian());
+        const upper = bones.get("RightArm"),
+          fore = bones.get("RightForeArm");
+        if (upper && fore && a.rightHand)
+          a.grip = new WeaponGrip(root, upper, fore, a.rightHand, weapon);
       } else {
-        for (let i = 0; i < 12; i++) {
-          const ang = (i / 12) * Math.PI * 2;
-          const petal = mesh(
-            root,
-            new T.ConeGeometry(0.075, 0.8, 12),
-            this.materials.gold,
-            Math.sin(ang) * 0.4,
-            3.98,
-            Math.cos(ang) * 0.4,
-          );
-          petal.rotation.z = -Math.sin(ang) * 0.25;
-          petal.rotation.x = Math.cos(ang) * 0.25;
+        const face = new T.PlaneGeometry(.49,.65,64,72);
+        const pos = face.attributes.position;
+        const ridge = (x:number,y:number,w:number,h:number) => Math.exp(-((x/w)**2+(y/h)**2));
+        for (let i = 0; i < pos.count; i++) {
+          const x=pos.getX(i), y=pos.getY(i), cheek=Math.abs(x);
+          const temple=x/.245, angle=temple*1.22;
+          const dome=.112*Math.cos(angle)-.066*temple*temple-.055*(y/.33)**2;
+          const brow=ridge(cheek-.092,y-.109-.12*cheek,.063,.029);
+          const socket=ridge(cheek-.090,y-.071,.058,.026);
+          const bridge=ridge(x,y-.011,.031,.095);
+          const nose=ridge(x,y+.055,.037,.030);
+          const nostril=ridge(cheek-.042,y+.062,.019,.015);
+          const jaw=ridge(x,y+.216,.083,.042);
+          const lips=ridge(x,y+.135,.07,.015)-.42*ridge(x,y+.146,.064,.008);
+          const cheekbone=ridge(cheek-.132,y+.018,.058,.069);
+          pos.setXYZ(i,.245*Math.sin(angle)/Math.sin(1.22),y,
+            dome+.033*brow-.021*socket+.045*bridge+.066*nose+.022*nostril
+              +.036*jaw+.026*lips+.030*cheekbone);
         }
+        face.computeVertexNormals();
+        const mask = mesh(
+          root,
+          face,
+          new T.MeshStandardMaterial({
+            map: this.art.textures.get("warden-mask"),
+            alphaTest: 0.52,
+            metalness: 0.43,
+            roughness: 0.51,
+            bumpMap: this.art.textures.get("warden-mask"),
+            bumpScale: 0.012,
+            side: T.DoubleSide,
+          }),
+          0,
+          3.52,
+          0.23,
+        );
+        bones.get("Head")?.attach(mask);
+        // A repoussé aureole with hanging bead strands clears the gaze and weapon.
+        const crown = new T.Group();
+        root.add(crown);
+        const halo = torus(
+          crown,
+          this.materials.gold,
+          0.58,
+          0.043,
+          0,
+          3.58,
+          -0.2,
+        );
+        halo.scale.y = 1.14;
+        torus(crown, this.materials.gold, 0.5, 0.015, 0, 3.58, -0.19).scale.y =
+          1.14;
+        for (const side of [-1, 1])
+          for (let j = 0; j < 4; j++) {
+            const x = side * (0.32 + j * 0.066),
+              top = 3.58 + Math.sqrt(0.58 ** 2 - x * x);
+            const drop = 0.75 + j * 0.085;
+            cylinder(
+              crown,
+              this.materials.gold,
+              x,
+              top - drop / 2,
+              -0.17,
+              0.009,
+              drop,
+            );
+            mesh(
+              crown,
+              new T.SphereGeometry(0.035, 10, 8),
+              this.materials.ivory,
+              x,
+              top - drop,
+              -0.17,
+            );
+          }
+        bones.get("Head")?.attach(crown);
         cylinder(weapon, this.materials.wood, 0, 0.65, 0, 0.07, 2.8);
         this.bell(weapon, 0.64, 0, 1.4, 0);
-        const mantle = mesh(
+        const bronze = this.materials.gold.clone();
+        bronze.color.setHex(0xc7a777);
+        bronze.roughness = .62;
+        bronze.metalness = .57;
+        const lacquer = new T.MeshStandardMaterial({
+          color: 0x68372b, metalness: .24, roughness: .39,
+          normalMap: this.art.textures.get("metal-normal"), normalScale: new T.Vector2(.21,.21),
+        });
+        a.pauldrons = ([-1,1] as const).map(side => new BellPauldron(
+          root,bones.get(side < 0 ? "RightArm" : "LeftArm")!,side,
+          bronze,this.materials.gold,lacquer,this.materials.dark,
+        ));
+        const upper = bones.get("RightArm")!,
+          fore = bones.get("RightForeArm")!;
+        a.grip = new WeaponGrip(
           root,
-          new T.SphereGeometry(1, 32, 20, 0, Math.PI * 2, 0, 1.2),
-          this.materials.gold,
-          0,
-          3.05,
-          0,
+          upper,
+          fore,
+          bones.get("RightHand")!,
+          weapon,
+          bellGuard,
+          [
+            bones.get("LeftArm")!,
+            bones.get("LeftForeArm")!,
+            bones.get("LeftHand")!,
+          ],
         );
-        mantle.scale.set(0.76, 0.32, 0.55);
       }
     }
     if (kind === 1) {
-      a.robe = cloth(
+      // Retain the animated rig and dress it with the Heron's own silhouette.
+      model.traverse(o => { if (isMesh(o)) o.visible = false; });
+      a.sabres = dressHeron(root, bones, this.materials["heron-silk"], this.materials.gold, this.art.textures.get("pilgrim-brocade-normal")!, this.art.textures.get("heron-damask")!);
+      const drape = mesh(
         root,
-        new T.MeshStandardMaterial({
-          color: 0xc4c3b3,
-          side: T.DoubleSide,
-          transparent: true,
-          opacity: 0.72,
-          roughness: 0.95,
-        }),
-        1.5,
-        2.2,
+        mantleGeometry().scale(1.7, 1.6, 1.5),
+        this.materials["heron-silk"],
         0,
-        1.6,
-        -0.3,
+        1.85,
+        -0.1,
       );
+      a.robe = drape;
+      const quill = new T.MeshStandardMaterial({
+        map: this.art.textures.get("heron-quill"),
+        alphaTest: 0.54,
+        side: T.DoubleSide,
+        roughness: 0.68,
+        alphaToCoverage: true,
+      });
+      quill.vertexColors = true;
+      a.pinions = [-1, 1].map(side => new HeronWing(side, this.featherTemplate!, quill));
+      root.add(...a.pinions);
+      const head = bones.get("Head");
+      if (head) {
+        const mask = bridalMask(this.materials.gold, this.materials["heron-silk"],
+          this.art.textures.get("heron-porcelain")!);
+        root.add(mask);
+        head.getWorldPosition(mask.position);
+        root.worldToLocal(mask.position);
+        mask.position.y += 0.17;
+        mask.position.z += 0.03;
+        head.attach(mask);
+      }
     }
     if (kind === 2) {
-      const halo = new T.Group();
-      halo.position.set(0, 3.55, -0.25);
-      root.add(halo);
-      torus(halo, this.materials.gold, 0.72, 0.025);
-      for (let i = 0; i < 12; i++) {
-        const ang = (i / 12) * Math.PI * 2;
-        mesh(
-          halo,
-          new T.SphereGeometry(0.035, 12, 8),
-          this.materials.fire,
-          Math.sin(ang) * 0.72,
-          Math.cos(ang) * 0.72,
-          0,
-        );
+      a.beads = new WristBeads();
+      root.add(a.beads);
+      a.seal = new CinderCast(root, bones.get("LeftArm")!, bones.get("LeftForeArm")!, bones.get("LeftHand")!);
+      model.traverse(o => {
+        if (isMesh(o) && o.morphTargetDictionary?.CastOpen !== undefined) a.castingHand = o;
+      });
+      for (const { side, cap, bracer } of cinderArmour()) {
+        const arm = side < 0 ? "Right" : "Left";
+        root.add(cap, bracer);
+        bones.get(arm + "Arm")!.attach(cap);
+        bones.get(arm + "ForeArm")!.attach(bracer);
       }
+      const { mask, halo, stole, tabs, ember } = cinderIcon(this.art.textures.get("cinder-brocade"));
+      const head = bones.get("Head")!;
+      root.add(mask);
+      head.getWorldPosition(mask.position);
+      root.worldToLocal(mask.position);
+      mask.position.y += 0.13;
+      head.attach(mask);
+      halo.position.set(0, 3.28, -0.42);
+      root.add(halo, stole, tabs);
+      bones.get("Hips")!.attach(tabs);
+      a.votiveEmber = ember;
+      bones.get("Spine")!.attach(stole);
       a.halo = halo;
-      cylinder(weapon, this.materials.gold, 0, 1, 0, 0.045, 3);
-      torus(weapon, this.materials.gold, 0.28, 0.035, 0, 2.4, 0);
+      a.staff = new RingStaff(this.materials.wood, this.materials.gold, this.materials.dark, this.materials.fire);
+      weapon.add(a.staff);
     }
+    if (a.robe) a.clothMotion = new MantleMotion(a.robe);
     return a;
   }
   bell(parent: T.Object3D, r: number, x: number, y: number, z: number) {
-    const points = [
-      new T.Vector2(0.12 * r, 1.5 * r),
-      new T.Vector2(0.55 * r, 1.4 * r),
-      new T.Vector2(0.62 * r, 1.15 * r),
-      new T.Vector2(0.65 * r, 0.55 * r),
-      new T.Vector2(0.85 * r, 0.1 * r),
-      new T.Vector2(r, 0),
-      new T.Vector2(0.95 * r, -0.06 * r),
-    ];
-    const g = new T.Group();
-    g.position.set(x, y, z);
-    parent.add(g);
-    mesh(g, new T.LatheGeometry(points, 64), this.materials.gold);
-    for (const [yy, rr] of [
-      [0.15, 0.83],
-      [0.25, 0.8],
-      [1.15, 0.63],
-      [1.23, 0.62],
-    ] as number[][])
-      torus(g, this.materials.gold, rr * r, 0.018 * r, 0, yy * r, 0, true);
-    for (let i = 0; i < 16; i++) {
-      const angle = (i / 16) * Math.PI * 2;
-      for (let j = 0; j < 3; j++) {
-        const stud = mesh(
-          g,
-          new T.SphereGeometry(0.035 * r, 8, 6),
-          this.materials.gold,
-          Math.sin(angle) * 0.65 * r,
-          (0.45 + j * 0.19) * r,
-          Math.cos(angle) * 0.65 * r,
-        );
-        stud.scale.z = 0.5;
-      }
-    }
-    cylinder(g, this.materials.dark, 0, 0.25 * r, 0, 0.08 * r, 0.65 * r);
-    return g;
+    const casting = this.art.model("tide-bell", 2.03 * r);
+    casting.position.set(x, y - 0.15 * r, z);
+    parent.add(casting);
+    return casting;
   }
   lantern(parent: T.Object3D, x: number, y: number, z: number, red = false) {
     const g = new T.Group();
     g.position.set(x, y, z);
     parent.add(g);
     const mat = new T.MeshStandardMaterial({
-      color: red ? 0x9a2821 : 0xc7a167,
-      emissive: red ? 0x9b2014 : 0xff982f,
-      emissiveIntensity: 1.8,
+      map: this.lampPaper,
+      emissiveMap: this.lampPaper,
+      color: red ? 0xad5430 : 0xb47335,
+      emissive: red ? 0xfc661e : 0xffa941,
+      emissiveIntensity: 0.7,
       roughness: 0.9,
       side: T.DoubleSide,
     });
@@ -596,6 +792,18 @@ export class World {
       0,
     );
     flame.scale.y = 2;
+    if (red) {
+      cylinder(g, this.materials.gold, 0, 0.13, 0, 0.052, 0.16);
+      const tassel = mesh(
+        g,
+        new T.ConeGeometry(0.045, 0.29, 12),
+        this.materials.wood,
+        0,
+        -0.065,
+        0,
+      );
+      tassel.rotation.z = 0.12;
+    }
     this.flames.push(flame);
     return g;
   }
@@ -698,34 +906,129 @@ export class World {
           );
       }
     box(g, this.materials.wood, 0, 4.9, 0, 11, 0.3, 6);
-    box(g, this.materials.wall, 0, 2.8, -2.7, 10, 3.8, 0.4);
+    // The threshold, second lintel and inner shrine have distinct depths.
+    // The dark side returns keep the exterior moon from filling the nave.
+    box(g, this.materials.wood, 0, 2.9, -7.2, 9.9, 4.1, 0.38);
+    box(g, this.materials.wall, 0, 0.66, -4.85, 9.8, 0.86, 5.35);
+    box(g, this.materials.dark, 0, 4.94, -3.3, 10, 0.29, 7.8);
     for (const side of [-1, 1]) {
-      for (let i = 0; i < 14; i++)
+      box(g, this.materials.wood, side * 4.88, 2.96, -3.2, 0.28, 3.88, 8.4);
+      for (const depth of [-0.55, -3.22, -5.88]) {
+        cylinder(g, this.materials.wood, side * 2.05, 2.94, depth, 0.135, 3.7);
+        cylinder(g, this.materials.gold, side * 2.05, 1.24, depth, 0.19, 0.22);
+        if (side === 1)
+          box(g, this.materials.wood, 0, 4.65, depth, 4.36, 0.24, 0.32);
+      }
+      const door = new T.Group();
+      door.position.set(side * 2.45, 1.12, 1.76);
+      door.rotation.y = side * 0.98;
+      g.add(door);
+      const cx = -side * 0.7;
+      box(door, this.materials.wood, cx, 1.75, 0, 1.4, 3.5, 0.16);
+      box(door, this.materials.dark, cx, 2.26, 0.094, 1.16, 1.91, 0.035);
+      for (let j = -2; j <= 2; j++)
         box(
-          g,
+          door,
           this.materials.wood,
-          side * 3.7,
-          2.9,
-          -2.44 + (i % 2) * 0.03,
-          2.3,
-          0.025,
-          0.12,
-        ).position.y = 1.4 + i * 0.2;
-      for (let i = 0; i < 9; i++)
-        box(
-          g,
-          this.materials.wood,
-          side * 3.7 - 1.1 + i * 0.27,
-          2.8,
-          -2.43,
-          0.035,
-          3,
-          0.1,
+          cx + j * 0.225,
+          2.26,
+          0.125,
+          0.047,
+          1.91,
+          0.045,
         );
+      for (let j = -3; j <= 3; j++)
+        box(
+          door,
+          this.materials.wood,
+          cx,
+          2.26 + j * 0.27,
+          0.136,
+          1.17,
+          0.047,
+          0.055,
+        );
+      for (let j = 0; j < 3; j++)
+        box(
+          door,
+          this.materials.gold,
+          cx,
+          0.25 + j * 0.39,
+          0.097,
+          1.18,
+          0.023,
+          0.035,
+        );
+      torus(
+        door,
+        this.materials.gold,
+        0.095,
+        0.018,
+        cx - side * 0.41,
+        1.3,
+        0.16,
+      );
+    }
+    const icon = foldingScreen(
+      this.materials["tide-icon"],
+      this.materials.gold,
+      6.1,
+      3.7,
+      5,
+    );
+    icon.position.set(0, 2.92, -6.95);
+    g.add(icon);
+    for (const side of [-1, 1]) {
+      const bay = foldingScreen(
+        this.materials["lacquer-bay"],
+        this.materials.wood,
+        2.1,
+        3.7,
+        1,
+      );
+      bay.position.set(side * 4.08, 2.92, -2.19);
+      g.add(bay);
     }
     this.roof(g, 14, 8, 5.5);
     // Raised clerestory, carved fascia and fretwork make the hall read at combat distance.
     box(g, this.materials.wood, 0, 7.2, 0, 7.8, 1.5, 3.6);
+    // Recessed paper windows set a lit rhythm below the second eave.
+    const pane = new T.MeshStandardMaterial({
+      color: 0xb98c55,
+      emissive: 0xd69b53,
+      emissiveIntensity: 0.52,
+      roughness: 0.94,
+    });
+    const shaded = pane.clone();
+    shaded.color.setHex(0x5c5447);
+    shaded.emissiveIntensity = 0.055;
+    const shutter = pane.clone();
+    shutter.color.setHex(0x4a4440);
+    shutter.emissiveIntensity = 0.02;
+    for (let i = -3; i <= 3; i++) {
+      const paper =
+        i === -2 || i === -1 ? pane : i === 0 || i === 3 ? shaded : shutter;
+      const x = i * 1.075;
+      box(g, this.materials.dark, x, 7.23, 1.827, 1.01, 1.11, 0.16);
+      box(g, paper, x, 7.23, 1.92, 0.85, 0.93, 0.025);
+      for (const dx of [-0.44, -0.24, 0.24, 0.44])
+        box(g, this.materials.wood, x + dx, 7.23, 1.956, 0.045, 0.97, 0.04);
+      for (const dy of [-0.33, 0.33])
+        box(g, this.materials.wood, x, 7.23 + dy, 1.961, 0.89, 0.04, 0.05);
+      const diamond = box(
+        g,
+        this.materials.dark,
+        x,
+        7.23,
+        1.963,
+        0.38,
+        0.38,
+        0.04,
+      );
+      diamond.rotation.z = Math.PI / 4;
+      const glass = box(g, paper, x, 7.23, 1.992, 0.294, 0.294, 0.02);
+      glass.rotation.z = Math.PI / 4;
+    }
     this.roof(g, 10, 5.5, 7.7);
     for (const side of [-1, 1])
       for (let i = 0; i < 6; i++) {
@@ -748,19 +1051,112 @@ export class World {
         0.075,
       );
     }
-    this.bell(g, 1.1, 0, 2.7, 0);
-    const sign = box(g, this.materials.dark, 0, 4.7, 3.05, 2.6, 0.65, 0.15);
-    for (let i = 0; i < 3; i++)
-      torus(sign, this.materials.gold, 0.14, 0.018, -0.7 + i * 0.7, 0, 0.1);
+    g.add(belfryFront(this.art.textures.get("belfry-dragon-beam")!, this.art.textures.get("belfry-paper")!,
+      this.art.textures.get("wood-color")!, this.art.textures.get("rock-color")!));
+    this.bell(g, 0.94, -0.22, 1.95, -3.37);
+    cylinder(g, this.materials.dark, -0.22, 4.17, -3.37, 0.048, 0.93);
+    for (const side of [-1, 1]) {
+      const x = side * 1.53,
+        z = -3.65;
+      cylinder(g, this.materials.gold, x, 1.25, z, 0.24, 0.23, 0.17);
+      cylinder(g, this.materials.dark, x, 1.79, z, 0.07, 0.92);
+      cylinder(g, this.materials.gold, x, 2.25, z, 0.27, 0.1, 0.35);
+      for (let j = -1; j <= 1; j++) {
+        const height = 0.29 + 0.133 * (1 - Math.abs(j));
+        cylinder(
+          g,
+          this.materials.ivory,
+          x + j * 0.15,
+          2.3 + height * 0.5,
+          z,
+          0.053,
+          height,
+        );
+        mesh(
+          g,
+          new T.SphereGeometry(0.044, 8, 6),
+          this.materials.fire,
+          x + j * 0.15,
+          2.36 + height,
+          z,
+        ).scale.y = 2.45;
+      }
+    }
+    const altarLight = new T.PointLight(0xffba81, 64, 11, 2);
+    altarLight.position.set(1.36, 3.18, -2.57);
+    g.add(altarLight);
+    const sign = box(g, this.materials.wood, 0, 4.88, 3.23, 3.42, 1.06, 0.16);
+    mesh(
+      sign,
+      new T.PlaneGeometry(3.29, 1.0),
+      new T.MeshStandardMaterial({
+        map: this.art.textures.get("belfry-plaque"),
+        bumpMap: this.art.textures.get("belfry-plaque"),
+        bumpScale: 0.014,
+        roughness: 0.57,
+        metalness: 0.27,
+        emissiveMap: this.art.textures.get("belfry-plaque"),
+        emissive: 0xffe2ac,
+        emissiveIntensity: 0.24,
+      }),
+      0,
+      0,
+      0.082,
+    );
     for (const xx of [-4, -1.5, 1.5, 4]) {
       cylinder(g, this.materials.dark, xx, 4.4, 3, 0.015, 0.8);
       this.lantern(g, xx, 3.2, 3.05, true);
     }
   }
+  private courtEnvironments: (T.DataTexture | undefined)[] = [];
+
+  async prepareCourt(index: number, captureEnvironment = false) {
+    const scans =
+      index === 2
+        ? ["rock_face_01", "chinese_chandelier", "cinder-relief", "cinder-ascetic"]
+        : index === 1
+          ? ["rock_face_01"]
+          : [];
+    const name = ["belfry","garden","shrine"][index];
+    const [seal, environment, fire] = await Promise.all([
+      this.art.courtSeal(["belfry", "heron", "cinder"][index]),
+      this.art.environment(captureEnvironment ? "moonlight" : name+"-court"),
+      index === 2 && !captureEnvironment ? this.fireVolume ?? shrineFireVolume() : undefined,
+      index === 0 ? this.art.loadBelfryFrieze() : undefined,
+      index === 1 ? this.art.loadCraneFresco() : undefined,
+      index === 2 ? this.art.loadCinderBrocade() : undefined,
+      ...scans.map((name) => this.art.loadLandmark(name)),
+    ]);
+    if (fire) this.fireVolume = fire;
+    this.courtEnvironments[index] = environment;
+    seal.color.setHex(index === 0 ? 0xf1eee2 : 0xf5f1e7);
+    this.rainCourt.finishStone(seal, true);
+
+    this.materials[`seal-${index}`] = seal;
+  }
+  async prepareOpening(game: Combat) {
+    this.impacts.clearBursts();
+    this.pendingStrikes.length = 0;
+    this.moving = false;
+    this.shake = 0;
+    // Clear short-lived effects from the previous attempt, including a retry in
+    // the same arena. The new opening must not inherit a frozen swing or sparks.
+    for (const effect of this.particles) {
+      effect.mesh.removeFromParent();
+      effect.mesh.geometry.dispose();
+      (effect.mesh.material as T.Material).dispose();
+    }
+    this.particles.length = 0;
+    this.update(game, 0, true);
+    await waitForOpeningDraw(this.renderer.getContext() as WebGL2RenderingContext);
+  }
+
   setArena(index: number) {
     if (!this.loaded || this.bossIndex === index) return;
     this.bossIndex = index;
     this.clear(this.arena);
+    this.clear(this.rainCourt.floor);
+    this.rainCourt.setArena(index);
     this.clear(this.decor);
     this.clothMeshes = [];
     this.flames = [];
@@ -774,90 +1170,163 @@ export class World {
       this.clear(g);
     });
     this.hazards.clear();
-    this.telegraphKey = "";
     this.cameraInitialized = false;
-    const colors = [0x23383b, 0x213737, 0x332a29];
-    this.scene.fog = new T.FogExp2(colors[index], 0.023);
-    this.scene.background = new T.Color(colors[index]);
+    if (index === 2) this.arena.add(this.cinderLights);
+    this.lighting.setCourt(index);
+    this.scene.environment = this.courtEnvironments[index]!;
+    this.scene.environmentIntensity = [2.35,1.55,2.45][index];
+    this.arena.add(vigilLamp(index, this.materials));
     this.materials.stone.color.setHex([0xffffff, 0xbdd0bd, 0xaaa398][index]);
     const ground = mesh(
-      this.arena,
-      new T.PlaneGeometry(120, 120, 128, 128),
+      this.rainCourt.floor,
+      new T.CircleGeometry(43, 128),
       this.materials.stone,
       0,
       -0.06,
       0,
     );
+    // CircleGeometry uses the disc extent for UVs.
     ground.rotation.x = -Math.PI / 2;
-    const ringMat = this.materials.gold.clone();
-    ringMat.color.setHex(0x8e7f58);
-    torus(this.arena, ringMat, 12.2, 0.025, 0, 0.04, 0, true);
-    torus(this.arena, ringMat, 5.3, 0.018, 0, 0.04, 0, true);
-    // Hand-laid raised perimeter, with a traversable central court and no chessboard tiling.
-    for (let i = 0; i < 48; i++) {
-      const a = (i / 48) * Math.PI * 2;
-      const block = box(
-        this.arena,
-        this.materials.wall,
-        Math.sin(a) * 13,
-        -0.03,
-        Math.cos(a) * 13,
-        1.8,
-        0.35,
-        0.6,
-      );
-      block.rotation.y = a;
+    const seal = mesh(
+      this.rainCourt.floor,
+      flagstoneSeal(random(1901 + index)),
+      this.materials[`seal-${index}`],
+    );
+    seal.name = "Engraved court seal";
+    seal.castShadow = false;
+    const slabs = new T.MeshStandardMaterial({
+      color: [0x6c797b, 0x788681, 0x776b61][index],
+      vertexColors: true,
+      roughness: 0.82,
+      map: this.art.textures.get("rock-color"),
+      normalMap: this.art.textures.get("rock-normal"),
+      roughnessMap: this.art.textures.get("rock-rough"),
+      normalScale: new T.Vector2(0.48, 0.48),
+    });
+    this.rainCourt.finishStone(slabs);
+    const paving = mesh(
+      this.rainCourt.floor,
+      courtPaving(random(2137 + index)),
+      slabs,
+    );
+    paving.name = "Fitted apron stones";
+    paving.castShadow = false;
+    this.arena.add(runoffChannel(this.materials.gold, this.materials.rock));
+    if (index === 0) this.temple(this.arena, 0, -24, 1.7);
+    else if (index === 1) {
+      this.arena.add(heronGarden(this.art, this.materials, random(1729)));
+      const garden = lotusGarden(this.rainCourt.gardenWater(), this.materials.rock, this.art.textures.get("karst-limestone")!, random(9017));
+      this.arena.add(garden.banks);
+      // Exclude the pool surface from its own shared planar reflection.
+      this.rainCourt.floor.add(garden.pools);
     }
-    this.temple(this.arena, 0, -23, 1.5);
+    else this.arena.add(cinderReliquary(this.art, this.materials));
+    if (index === 2) {
+      const carving = this.art.model("cinder-relief", 7.8);
+      carving.position.set(0, 0.30, -24.85);
+      this.arena.add(carving);
+    }
+    for (const [i, [x, z]] of [
+      [-6.7, -9.5],
+      [7.4, -8.3],
+      [-8.8, 5.6],
+      [9.2, 3.4],
+    ].entries()) {
+      const vessel = incenseVessel(this.materials);
+      vessel.position.set(x, 0, z);
+      vessel.rotation.y = 0.48 * i - 0.37;
+      this.arena.add(vessel);
+      const plume = incenseSmoke(this.environmentTime, i * 3.7 + index * 1.9);
+      plume.position.set(x, 1.7, z);
+      this.decor.add(plume);
+    }
     for (const side of [-1, 1]) {
-      const corridor = new T.Group();
-      corridor.position.set(side * 18, 0, -1);
-      corridor.rotation.y = Math.PI / 2;
-      this.arena.add(corridor);
-      for (let i = 0; i < 7; i++) {
-        const x = -15 + i * 5;
-        cylinder(corridor, this.materials.wood, x, 2.9, 0, 0.22, 5.8);
-        box(corridor, this.materials.wood, x, 5.2, 0, 1.2, 0.22, 2);
-        if (i % 2 === 0) this.lantern(corridor, x, 3.6, 1.5, true);
+      if (index === 0) {
+        const corridor = belfryGallery(side > 0, this.art.textures.get("wood-color")!,
+          this.art.textures.get("rock-color")!, this.art.textures.get("belfry-dragon-beam")!,
+          this.art.textures.get("river-procession")!, this.materials.gold);
+        corridor.position.set(side * 18, 0, -1);
+        corridor.rotation.y = (-side * Math.PI) / 2;
+        this.arena.add(corridor);
+        for(const x of [-15,-5,5,15])this.lantern(corridor,x,3.72,1.66,true);
+        this.roof(corridor, 34, 4.5, 5.7);
       }
-      this.roof(corridor, 34, 4.5, 5.7);
       for (let i = 0; i < 5; i++) {
         const z = -13 + i * 6;
         const pillar = new T.Group();
         pillar.position.set(side * 13.8, 0, z);
         this.arena.add(pillar);
-        box(pillar, this.materials.wall, 0, 0.3, 0, 1.3, 0.6, 1.3);
+        const foot = mesh(
+          pillar,
+          new T.LatheGeometry(
+            [
+              new T.Vector2(0.62, 0),
+              new T.Vector2(0.64, 0.17),
+              new T.Vector2(0.52, 0.22),
+              new T.Vector2(0.5, 0.3),
+              new T.Vector2(0.41, 0.46),
+              new T.Vector2(0.36, 0.62),
+            ],
+            8,
+          ),
+          this.materials.rock,
+        );
+        foot.rotation.y = Math.PI / 8;
         cylinder(pillar, this.materials.wall, 0, 1.2, 0, 0.25, 1.3);
         this.lantern(pillar, 0, 1.7, 0);
-        box(pillar, this.materials.roof, 0, 2.85, 0, 0.85, 0.12, 0.85);
+        mesh(
+          pillar,
+          new T.LatheGeometry(
+            [
+              new T.Vector2(0.22, 0),
+              new T.Vector2(0.5, 0.09),
+              new T.Vector2(0.55, 0.14),
+              new T.Vector2(0.35, 0.2),
+              new T.Vector2(0.13, 0.38),
+              new T.Vector2(0.09, 0.47),
+              new T.Vector2(0.12, 0.54),
+              new T.Vector2(0, 0.71),
+            ],
+            8,
+          ),
+          this.materials.roof,
+          0,
+          2.63,
+          0,
+        );
       }
     }
     const rng = random(772 + index);
-    const mountainMaterial = this.materials.rock.clone();
-    mountainMaterial.color.setHex(0x3b5350);
-    for (let i = 0; i < 18; i++) {
-      const a = (i / 18) * Math.PI * 2,
-        r = 65 + rng() * 20;
-      const cliff = mesh(
-        this.decor,
-        new T.IcosahedronGeometry(1, 3),
-        mountainMaterial,
-        Math.sin(a) * r,
-        3,
-        Math.cos(a) * r,
-      );
-      cliff.scale.set(10 + rng() * 8, 10 + rng() * 20, 10 + rng() * 10);
-      cliff.castShadow = false;
-    }
-    const moon = mesh(
-      this.decor,
-      new T.SphereGeometry(3.5, 48, 32),
-      new T.MeshBasicMaterial({ color: 0xd7e3da, fog: false }),
-      -32,
-      40,
-      -90,
+    this.arena.add(leafDrifts(random(3248 + index), index === 1));
+    this.decor.add(
+      valleyHorizon(this.art.textures.get("karst-valley")!, this.art.textures.get("clearing-clouds")!, index),
+      karstSpurs(index, this.art.textures.get("ridge-faces")!),
     );
-    moon.castShadow = moon.receiveShadow = false;
+    for (const [x, z, scale] of [
+      [-12.8, -13.5, 1.3],
+      [15, -9, 1.5],
+      [-16, 5, 0.96],
+      [12.5, -21, 1.4],
+      [15.7, 10, 1.22],
+      [-10, -26, 1.34],
+    ]) {
+      const leaf = this.art.textures.get("maple-leaf")!;
+      this.leafTemplate ??= mapleLeaf(leaf);
+      const tree = courtyardMaple(
+        rng,
+        this.materials.wood,
+        index !== 1,
+        this.leafTemplate,
+        leaf,
+        this.environmentTime,
+      );
+      // Leave the outer chase-camera path inside the two foreground crowns.
+      const clearance = index === 1 && z > 0 ? Math.max(1, 24 / Math.hypot(x, z)) : 1;
+      tree.position.set(x * clearance, 0, z * clearance);
+      tree.scale.setScalar(scale);
+      tree.rotation.y = rng() * 6;
+      this.decor.add(tree);
+    }
     const rockGeo = new T.IcosahedronGeometry(1, 4);
     const rp = rockGeo.attributes.position;
     for (let i = 0; i < rp.count; i++) {
@@ -907,7 +1376,7 @@ export class World {
     grassGeo.setAttribute(
       "position",
       new T.Float32BufferAttribute(
-        [-0.025, 0, 0, 0.025, 0, 0, 0.012, 0.43, 0.02],
+        [-0.016, 0, 0, 0.016, 0, 0, 0.045, 0.22, 0.04],
         3,
       ),
     );
@@ -930,24 +1399,50 @@ export class World {
       g.position.set(i % 2 ? -16 : 16, 0, -18 + Math.floor(i / 2) * 6);
       this.arena.add(g);
       cylinder(g, this.materials.wood, 0, 3.2, 0, 0.045, 6.4);
-      const c = cloth(g, this.materials.cloth, 0.65, 2.4, 0.35, 4.7, 0);
+      const c = cloth(
+        g,
+        this.materials[index === 1 ? "heron-silk" : "dragon-mantle"],
+        1.02,
+        3.4,
+        0.51,
+        4.35,
+        0,
+      );
       this.clothMeshes.push(c);
     }
-    // Warm lantern light against cold moonlit stone; the spaces stay legible in play.
+    if (index === 1) {
+      // The open water gallery faces east. Its three lanterns share one warm
+      // bounce, confined to the seats, colonnade and the water immediately below.
+      const galleryGlow = new T.PointLight(0xffbf82, 60, 8, 2);
+      galleryGlow.position.set(-19.2, 2.82, -3.4);
+      this.arena.add(galleryGlow);
+    }
+    // Low pools of light at the outer stations leave dark intervals in the gallery.
     for (const [x, z] of [
-      [-10, -8],
-      [10, -8],
-      [-10, 8],
-      [10, 8],
+      [-13.8, -7],
+      [13.8, 5],
       [0, -20],
     ]) {
       const light = new T.PointLight(
         index === 1 ? 0xb6d5ab : 0xffa951,
-        42,
-        15,
+        x === 0 ? 32 : 38,
+        11,
         2,
       );
       light.position.set(x, 2.7, z);
+      if (index === 0 && x === 0) {
+        light.position.set(-2.55, 7.00, -17.3);
+        light.color.setHex(0xffcd95);
+        light.intensity = 57;
+        light.distance = 15;
+      }
+      if (index === 1 && x === 0) {
+        light.position.copy(porchLamp);
+        light.position.z += -19.09;
+        light.color.setHex(0xffbb82);
+        light.power = 820;
+        light.distance = 13;
+      }
       this.arena.add(light);
     }
     const fogTexture = textureCanvas((c) => {
@@ -981,47 +1476,21 @@ export class World {
       this.fogSheets.push(sheet);
     }
     // A large carved reliquary silhouette behind the belfry, seen through mist.
-    const guardian = this.art.model("pilgrim", 12);
-    guardian.position.set(0, 1, -40);
-    guardian.traverse((o) => {
-      if (isMesh(o)) {
-        for (const m of Array.isArray(o.material) ? o.material : [o.material])
-          m.dispose();
-        o.material = this.materials.wall;
-      }
-    });
-    this.decor.add(guardian);
-    if (index === 1) {
-      for (let i = 0; i < 70; i++) {
-        const a = rng() * 6.28,
-          r = 13 + rng() * 15;
-        const stalk = cylinder(
-          this.arena,
-          this.materials.moss,
-          Math.sin(a) * r,
-          3,
-          Math.cos(a) * r,
-          0.045,
-          6,
-        );
-        stalk.rotation.z = (rng() - 0.5) * 0.15;
-      }
+    if (index === 0) {
+      const guardian = this.art.model("pilgrim", 12);
+      guardian.position.set(0, 1, -40);
+      guardian.traverse((o) => {
+        if (isMesh(o)) {
+          for (const m of Array.isArray(o.material) ? o.material : [o.material])
+            m.dispose();
+          o.material = this.materials.wall;
+        }
+      });
+      this.decor.add(guardian);
     }
-    if (index === 2) {
-      for (let i = 0; i < 16; i++) {
-        const a = (i / 16) * Math.PI * 2,
-          r = 14 + rng() * 3;
-        const fire = mesh(
-          this.arena,
-          new T.ConeGeometry(0.12, 0.9, 12),
-          this.materials.fire,
-          Math.sin(a) * r,
-          0.65,
-          Math.cos(a) * r,
-        );
-        this.flames.push(fire);
-      }
-    }
+    this.decor.traverse(classifyCourtSurface);
+    markNonOccluding(this.bladeTrail);
+    batchCourt(this.arena, new Set([...this.clothMeshes, ...this.flames]));
   }
   aim(clientX: number, clientY: number): Vec | undefined {
     this.ray.setFromCamera(
@@ -1050,11 +1519,21 @@ export class World {
     moving: boolean,
     action: string,
     progress: number,
+    dt: number,
+    shape?: Attack["shape"],
+    dodgeDirection?: Vec,
   ) {
     const t = this.time;
     const root = a.root;
+    const travelled = Math.hypot(x - root.position.x, z - root.position.z);
+    const locomotion = action === "idle" || action === "approach";
+    const stride = Math.min(travelled, 7 * dt);
+    if (locomotion) a.stridePhase += stride * 2.15;
+    a.gaitWeight = T.MathUtils.damp(a.gaitWeight,
+      locomotion && (moving || stride > .001) ? Math.min(1, stride / Math.max(.001, dt * 4.5)) : 0, 11, dt);
     root.position.set(x, 0, z);
-    root.rotation.y += angleDiff(facing, root.rotation.y) * 0.2;
+    root.rotation.y +=
+      angleDiff(facing, root.rotation.y) * (1 - Math.exp(-dt * 13.4));
     root.rotation.z = 0;
     root.rotation.x = 0;
     for (const [name, b] of a.bones) b.quaternion.copy(a.rest.get(name)!);
@@ -1065,20 +1544,50 @@ export class World {
           new T.Quaternion().setFromEuler(new T.Euler(x, y, z)),
         );
     };
-    const walk = moving ? Math.sin(t * 10) : 0;
-    rotate("LeftUpLeg", walk * 0.37);
-    rotate("RightUpLeg", -walk * 0.37);
-    rotate("LeftLeg", Math.max(0, -walk) * 0.55);
-    rotate("RightLeg", Math.max(0, walk) * 0.55);
-    rotate("Spine", Math.sin(t * 1.8) * 0.015);
+    const walk = Math.sin(a.stridePhase) * a.gaitWeight;
+    rotate("Spine", Math.sin(t * 1.8) * 0.015, walk * 0.068, walk * 0.024);
     rotate("LeftArm", -0.12 + walk * 0.12, 0, 0.1);
     rotate("RightArm", -0.15 - walk * 0.12, 0, -0.08);
     rotate("RightForeArm", -0.12);
-    if (action === "light" || action === "heavy" || action === "active") {
+    if (
+      a.kind === 0 &&
+      (action === "windup" || action === "active" || action === "recover")
+    ) {
+      const ease = (v: number) => T.MathUtils.smoothstep(v, 0, 1);
+      const load =
+        action === "windup"
+          ? ease(progress / 0.62) * (1 - ease((progress - 0.76) / 0.24))
+          : 0;
+      const release =
+        action === "windup"
+          ? ease((progress - 0.76) / 0.24)
+          : action === "active"
+            ? 1
+            : 1 - ease(progress);
+      const sweep = shape === "sector",
+        overhead = shape === "circle";
+      rotate(
+        "Spine",
+        -0.16 * load + (0.22 + (overhead ? 0.24 : 0)) * release,
+        (sweep ? -0.76 : -0.3) * load + (sweep ? 0.64 : 0.1) * release,
+        -0.1 * load + 0.09 * release,
+      );
+      rotate(
+        "Head",
+        0.08 * load - 0.12 * release,
+        0.24 * load - 0.19 * release,
+      );
+      root.position.y = -0.12 * load - 0.17 * release;
+    } else if (
+      action === "light" ||
+      action === "heavy" ||
+      action === "active"
+    ) {
       const swing = Math.sin(Math.min(1, progress) * Math.PI);
-      rotate("Spine", 0, -0.5 + swing * 0.85);
-      rotate("RightArm", -0.8 - swing * 0.65, 0, -0.55 + swing * 1.2);
-      rotate("RightForeArm", -0.3 - swing * 0.4);
+      const blend = Math.min(1, progress * 9, (1 - Math.min(1,progress)) * 7);
+      rotate("Spine", 0, (-0.5 + swing * 0.85) * blend);
+      rotate("RightArm", (-0.8 - swing * 0.65) * blend, 0, (-0.55 + swing * 1.2) * blend);
+      rotate("RightForeArm", (-0.3 - swing * 0.4) * blend);
     } else if (action === "windup") {
       rotate("RightArm", -progress * 1.8, 0, -0.5);
       rotate("Spine", 0, -progress * 0.4);
@@ -1089,8 +1598,10 @@ export class World {
       rotate("LeftArm", -1.3);
       rotate("LeftForeArm", -1);
     } else if (action === "dodge") {
-      root.rotation.x = -Math.sin(progress * Math.PI) * 1.3;
-      root.position.y = -0.18;
+      const tuck = Math.sin(Math.PI * progress);
+      rotate("Spine", 0.21 * tuck, -0.25 * tuck);
+      rotate("LeftArm", -0.46 * tuck, 0, 0.32 * tuck);
+      rotate("LeftForeArm", -0.74 * tuck);
     } else if (action === "stagger") {
       rotate("Spine", 0.7);
       root.position.y = -0.25;
@@ -1098,23 +1609,60 @@ export class World {
       root.rotation.z = -Math.PI / 2;
       root.position.y = 0.2;
     }
-    if (a.robe) {
-      const pos = a.robe.geometry.attributes.position,
-        base = a.robe.userData.base as Float32Array;
-      for (let i = 0; i < pos.count; i++) {
-        const yy = base[i * 3 + 1],
-          weight = 1 - (yy / (a.kind < 0 ? 1.15 : 2.8) + 0.5);
-        pos.setZ(
-          i,
-          base[i * 3 + 2] -
-            (moving ? 0.2 : 0) * weight +
-            Math.sin(t * 3 + base[i * 3] * 8 + yy * 2) * 0.07 * weight,
-        );
-      }
-      pos.needsUpdate = true;
-      a.robe.geometry.computeVertexNormals();
+    a.impactAge += dt;
+    if (action !== "dead" && a.impactAge < 0.42) {
+      const phase = a.impactAge / 0.42;
+      const recoil = Math.sin(phase * Math.PI * 2.3) * Math.exp(-phase * 3.4);
+      rotate(
+        "Spine",
+        -a.impactForward * 0.44 * recoil,
+        a.impactSide * 0.24 * recoil,
+        -a.impactSide * 0.38 * recoil,
+      );
+      rotate(
+        "Head",
+        -a.impactForward * 0.19 * recoil,
+        a.impactSide * 0.32 * recoil,
+      );
+      root.position.y -= a.height * 0.038 * Math.abs(recoil);
     }
+    let landing: T.Vector3 | undefined;
+    if (action === "dodge" && dodgeDirection) {
+      landing = a.feet.evade(progress, dodgeDirection);
+    } else if (action === "dead") {
+      a.feet.reset();
+    } else {
+      landing = a.feet.pose(dt);
+    }
+    if (landing) {
+      this.rainCourt.contact(landing.x, landing.z, action === "dodge" ? 2.1 : a.kind < 0 ? 1 : 1.55);
+      if (a.kind < 0) this.onPlayerStep?.(landing.x, landing.z);
+    }
+    a.pinions?.forEach(wing => wing.pose(t, action, progress));
+    a.clothMotion?.step(
+      x,
+      z,
+      root.rotation.y,
+      dt,
+      t,
+      action === "dodge" ? Math.sin(progress * Math.PI) : 0,
+    );
     root.updateMatrixWorld(true);
+    if (a.sabres) {
+      for (const hand of ["Right","Left"] as const)
+        a.sabres.grips[hand].poseKeys(heronStroke(shape, action, hand), progress);
+      for(const silk of a.sabres.skirts)
+        silk.step(x,z,root.rotation.y,dt,t,0);
+      return;
+    }
+    if (a.grip) {
+      if (a.kind === 0 && shape)
+        a.grip.poseKeys(bellStroke(shape, action), progress);
+      else a.grip.pose(action, progress);
+      a.pauldrons?.forEach(guard => guard.pose());
+      a.silks?.forEach((panel) => panel.update(dt, t));
+      return;
+    }
     if (a.rightHand) {
       const world = a.rightHand.getWorldPosition(new T.Vector3());
       root.worldToLocal(world);
@@ -1128,34 +1676,30 @@ export class World {
         -0.3,
       );
     if (action === "windup") a.weapon.rotation.x = -2.5 * progress;
-    if (a.halo) a.halo.rotation.z = t * 0.13;
+    a.staff?.update(a.weapon.rotation.x, dt);
+    if (a.halo) a.halo.rotation.z = 0.045 * Math.sin(t * 0.7);
   }
   burst(e: GameEvent) {
-    if (e.kind === "swing" || e.kind === "slam") {
-      const actor = e.kind === "swing" ? this.player : this.boss;
-      const r = e.kind === "swing" ? (e.value === 2 ? 3 : 2.5) : 3.9;
-      const m = mesh(
-        this.scene,
-        new T.RingGeometry(r - 0.18, r, 64, 1, -Math.PI / 2 - 1.1, 2.2),
-        new T.MeshBasicMaterial({
-          color: e.kind === "swing" ? 0xc3dad5 : 0xd5a86c,
-          transparent: true,
-          opacity: 0.35,
-          side: T.DoubleSide,
-          depthWrite: false,
-        }),
-        e.x,
-        1,
-        e.z,
-      );
-      m.rotation.set(-Math.PI / 2, 0, -actor.root.rotation.y);
-      this.trails.push({
-        mesh: m,
-        velocity: new T.Vector3(),
-        life: 0.18,
-        max: 0.18,
-        spin: 0,
-      });
+    if (e.kind === "swing" || e.kind === "dodge") return;
+    if (e.kind === "hit" || e.kind === "hurt") {
+      const victim = e.kind === "hit" ? this.boss : this.player;
+      const attacker = e.kind === "hit" ? this.player : this.boss;
+      const direction =
+        Math.atan2(
+          attacker.root.position.x - e.x,
+          attacker.root.position.z - e.z,
+        ) - victim.root.rotation.y;
+      victim.impactAge = 0;
+      victim.impactSide = Math.sin(direction);
+      victim.impactForward = Math.cos(direction);
+    }
+    if (e.kind === "hit" || e.kind === "parry") {
+      this.pendingStrikes.push(e);
+      if (!this.reducedMotion) this.shake = Math.max(this.shake, 0.045);
+      return;
+    }
+    if (e.kind === "slam") {
+      this.rainCourt.impact(e.x, e.z, this.boss.root.rotation.y, e.value === 1);
       return;
     }
     const color =
@@ -1171,6 +1715,7 @@ export class World {
         e.z,
       );
       const a = Math.random() * 6.28;
+      markNonOccluding(m);
       this.particles.push({
         mesh: m,
         velocity: new T.Vector3(
@@ -1193,6 +1738,7 @@ export class World {
     if (!this.loaded) return;
     this.setArena(game.bossIndex);
     this.time += dt;
+    this.environmentTime.value = this.time;
     const p = game.player,
       b = game.boss;
     this.animateActor(
@@ -1202,7 +1748,16 @@ export class World {
       p.facing,
       this.moving && p.action === "idle",
       game.mode === "dead" ? "dead" : p.action,
+      p.duration ? p.timer / p.duration : 0,
+      dt,
+      undefined,
+      p.dodgeDir,
+    );
+    this.bladeTrail.sample(
+      this.player.weapon,
+      game.mode === "combat" ? p.action : "idle",
       p.timer / p.duration,
+      this.time,
     );
     this.animateActor(
       this.boss,
@@ -1211,8 +1766,38 @@ export class World {
       b.facing,
       b.state === "approach" && game.mode === "combat",
       game.mode === "won" ? "dead" : b.state,
-      b.timer / b.duration,
+      b.duration ? b.timer / b.duration : 0,
+      dt,
+      game.attack.shape,
     );
+    const seal = this.boss.seal ? sealTime(game.mode === "won" ? "dead" : b.state,
+      game.attack.shape === "eruption", b.timer / Math.max(.001, b.duration), game.hazards) : 0;
+    this.boss.seal?.pose(seal, dt);
+    this.boss.beads?.follow(this.boss.bones.get("LeftHand")!, this.boss.bones.get("LeftForeArm")!, this.boss.root, dt);
+    const fingers = this.boss.castingHand;
+    if (fingers?.morphTargetInfluences && fingers.morphTargetDictionary) {
+      const weights = fingers.morphTargetInfluences, names = fingers.morphTargetDictionary;
+      const progress = T.MathUtils.clamp(b.timer / Math.max(.001, b.duration), 0, 1);
+      const handSeal = seal > 0 ? castFingers(seal) : undefined;
+      const open = handSeal ? handSeal.open : game.mode === "won" ? .35 : b.state === "windup" ? .35 + .65 * progress :
+        b.state === "recover" ? .28 * (1 - progress) : 0;
+      const close = handSeal ? handSeal.closed : game.mode === "combat" && (b.state === "active" || b.state === "stagger") ? 1 : 0;
+      weights[names.CastOpen] = T.MathUtils.damp(weights[names.CastOpen], open, 13, dt);
+      weights[names.CastClench] = T.MathUtils.damp(weights[names.CastClench], close, 17, dt);
+    }
+    if (this.boss.votiveEmber) {
+      const breath = b.state === "windup" ? Math.min(1, b.timer / b.duration) : 0;
+      const glow = game.mode === "won" ? 0.08 : (b.phase === 2 ? 2.8 : 0.62) + breath;
+      this.boss.votiveEmber.emissiveIntensity = T.MathUtils.damp(
+        this.boss.votiveEmber.emissiveIntensity, glow, 3, dt,
+      );
+    }
+    this.impacts.track(this.player.weapon);
+    for (const event of this.pendingStrikes) {
+      this.impacts.strike(this.player.weapon, this.boss.root.position, this.boss.height,
+        game.bossIndex, event.value ?? 0, event.kind === "parry", this.reducedMotion);
+    }
+    this.pendingStrikes.length = 0;
     this.player.root.visible = true;
     // A close chase camera frames the combatants rather than displaying a tabletop.
     const dx = b.x - p.x,
@@ -1220,48 +1805,64 @@ export class World {
       d = Math.hypot(dx, dz);
     const desired = locked ? Math.atan2(-dx, -dz) : this.orbit;
     this.yaw += angleDiff(desired, this.yaw) * (1 - Math.exp(-dt * 1.8));
-    const distance = 7.4 + Math.min(d, 13) * 0.1;
+    const distance = 3.92 + Math.min(d, 13) * 0.18;
+    // Offset the eye towards the sword shoulder at melee range. Keep the
+    // farther opening and unlocked orbit on their established camera track.
+    const close = locked ? 1 - T.MathUtils.smoothstep(d, 2.4, 5.8) : 0;
+    const widthFactor = T.MathUtils.smoothstep(this.camera.aspect, 0.65, 1.45);
+    const shoulder = 0.85 + (1.48 + 0.83 * widthFactor) * close;
+    const focus = 0.30 + 0.31 * close;
+    // Give the locked fighter room to the left of the weapon silhouette.
+    // Narrow screens keep the two actors closer to the centre.
+    const framing = close * widthFactor * 0.46;
     const target = new T.Vector3(
-      p.x + Math.sin(this.yaw) * distance + Math.cos(this.yaw) * 0.85,
-      3.6 + Math.min(d, 12) * 0.055,
-      p.z + Math.cos(this.yaw) * distance - Math.sin(this.yaw) * 0.85,
+      p.x + Math.sin(this.yaw) * distance + Math.cos(this.yaw) * shoulder,
+      2.15 + Math.min(d, 12) * 0.09 + 0.24 * close,
+      p.z + Math.cos(this.yaw) * distance - Math.sin(this.yaw) * shoulder,
     );
     const look = new T.Vector3(
-      p.x + (b.x - p.x) * 0.3,
+      p.x + (b.x - p.x) * focus + Math.cos(this.yaw) * framing,
       1.75,
-      p.z + (b.z - p.z) * 0.3,
+      p.z + (b.z - p.z) * focus - Math.sin(this.yaw) * framing,
     );
     if (!this.cameraInitialized) {
       this.camera.position.copy(target);
       this.cameraInitialized = true;
-    } else this.camera.position.lerp(target, 1 - Math.exp(-dt * 5));
+    } else {
+      // A retreat covers several metres before the ordinary chase camera can
+      // follow. Track its radial component while preserving lateral parallax.
+      const retreat = p.action === "dodge"
+        ? Math.max(0, p.dodgeDir.x * Math.sin(this.yaw) + p.dodgeDir.z * Math.cos(this.yaw))
+        : 0;
+      this.camera.position.lerp(target, 1 - Math.exp(-dt * (5 + 17 * retreat)));
+    }
     this.shake = Math.max(0, this.shake - dt * 0.8);
     if (!this.reducedMotion) {
       this.camera.position.x += (Math.random() - 0.5) * this.shake;
       this.camera.position.y += (Math.random() - 0.5) * this.shake;
     }
     this.camera.lookAt(look);
-    this.fill.position.set(p.x + 2, 3, p.z + 2);
+    this.impacts.advance(dt, this.camera.position);
+
     this.lock.visible = locked && game.mode === "combat";
     this.lock.position.set(b.x, this.boss.height * 0.7, b.z);
     this.lock.lookAt(this.camera.position);
-    this.drawTelegraph(game);
+    this.rainCourt.rite.update(game);
     this.drawHazards(game);
-    for (const list of [this.particles, this.trails])
-      for (let i = list.length - 1; i >= 0; i--) {
-        const e = list[i];
-        e.life -= dt;
-        e.velocity.y -= dt * 7;
-        e.mesh.position.addScaledVector(e.velocity, dt);
-        (e.mesh.material as T.MeshBasicMaterial).opacity =
-          Math.max(0, e.life / e.max) * 0.7;
-        if (e.life <= 0) {
-          this.scene.remove(e.mesh);
-          e.mesh.geometry.dispose();
-          (e.mesh.material as T.Material).dispose();
-          list.splice(i, 1);
-        }
+    for (let i = this.particles.length - 1; i >= 0; i--) {
+      const e = this.particles[i];
+      e.life -= dt;
+      e.velocity.y -= dt * 7;
+      e.mesh.position.addScaledVector(e.velocity, dt);
+      (e.mesh.material as T.MeshBasicMaterial).opacity =
+        Math.max(0, e.life / e.max) * 0.7;
+      if (e.life <= 0) {
+        this.scene.remove(e.mesh);
+        e.mesh.geometry.dispose();
+        (e.mesh.material as T.Material).dispose();
+        this.particles.splice(i, 1);
       }
+    }
     for (const c of this.clothMeshes) {
       const pos = c.geometry.attributes.position,
         base = c.userData.base as Float32Array;
@@ -1285,63 +1886,32 @@ export class World {
     for (let i = 0; i < rain.count; i++)
       rain.setY(i, (this.rainBase[i * 3 + 1] - this.time * 2.2 + 10000) % 25);
     rain.needsUpdate = true;
+    for (const [i, actor] of [this.player, this.boss].entries()) {
+      this.rainCourt.sole(
+        i * 2,
+        actor.bones.get("LeftFoot"),
+        actor.bones.get("LeftToeBase"),
+        actor.height,
+      );
+      this.rainCourt.sole(
+        i * 2 + 1,
+        actor.bones.get("RightFoot"),
+        actor.bones.get("RightToeBase"),
+        actor.height,
+      );
+    }
+    this.rainCourt.capture(
+      this.renderer,
+      this.scene,
+      this.camera,
+      this.time,
+      this.quality,
+    );
     if (this.quality === "low") this.renderer.render(this.scene, this.camera);
     else this.composer.render();
   }
-  drawTelegraph(game: Combat) {
-    const b = game.boss,
-      a = game.attack;
-    this.telegraph.visible =
-      (b.state === "windup" || b.state === "active") && game.mode === "combat";
-    if (!this.telegraph.visible) return;
-    const key = `${game.bossIndex}-${b.attack}`;
-    if (key !== this.telegraphKey) {
-      this.telegraph.traverse((o) => {
-        if (isMesh(o)) {
-          o.geometry.dispose();
-          (o.material as T.Material).dispose();
-        }
-      });
-      this.telegraph.clear();
-      this.telegraphKey = key;
-      const m = new T.MeshBasicMaterial({
-        color: a.parryable ? 0xe7bc74 : 0xc25f49,
-        transparent: true,
-        opacity: 0.2,
-        side: T.DoubleSide,
-        depthWrite: false,
-      });
-      if (a.shape === "sector") {
-        const o = mesh(
-          this.telegraph,
-          new T.RingGeometry(
-            0.7,
-            a.range,
-            64,
-            1,
-            -Math.PI / 2 - a.arc / 2,
-            a.arc,
-          ),
-          m,
-        );
-        o.rotation.x = -Math.PI / 2;
-      } else if (a.shape === "dash")
-        box(this.telegraph, m, 0, 0, a.range / 2, 1.4, 0.01, a.range);
-      else {
-        const r = a.shape === "circle" ? a.range : 2;
-        const o = mesh(this.telegraph, new T.RingGeometry(r - 0.04, r, 80), m);
-        o.rotation.x = -Math.PI / 2;
-      }
-    }
-    this.telegraph.position.set(b.x, 0.025, b.z);
-    this.telegraph.rotation.y = b.facing;
-    this.telegraph.traverse((o) => {
-      if (isMesh(o))
-        (o.material as T.MeshBasicMaterial).opacity =
-          b.state === "active" ? 0.45 : 0.06 + (0.23 * b.timer) / b.duration;
-    });
-  }
   drawHazards(game: Combat) {
+    if (game.bossIndex === 2) this.cinderLights.update(game.hazards);
     const ids = new Set(game.hazards.map((h) => h.id));
     for (const [id, g] of this.hazards)
       if (!ids.has(id)) {
@@ -1368,23 +1938,29 @@ export class World {
           depthWrite: false,
         });
         if (h.type === "feather") {
-          const o = mesh(g, new T.ConeGeometry(0.07, 0.8, 8), m);
-          o.rotation.x = Math.PI / 2;
+          m.map = this.art.textures.get("heron-quill")!;
+          m.alphaTest = 0.45;
+          m.opacity = 1;
+          const vanes = [0, Math.PI / 2].map((angle) =>
+            this.featherTemplate!.clone()
+              .scale(0.95, 1.08, 1)
+              .rotateY(angle)
+              .rotateX(Math.PI / 2),
+          );
+          mesh(g, mergeGeometries(vanes), m);
+          vanes.forEach((v) => v.dispose());
         } else {
           const o = mesh(g, new T.RingGeometry(0.98, 1, 96), m);
           o.rotation.x = -Math.PI / 2;
           if (h.type === "eruption") {
-            const fire = mesh(
-              g,
-              new T.ConeGeometry(0.7, 3, 24),
-              m.clone(),
-              0,
-              1.5,
-              0,
-            );
-            fire.name = "eruption";
+            const fire = new CinderFire(h.id, this.fireVolume!);
+            // Carry the hot column away from its summoner. The footprint stays
+            // at the original impact and the independent camera sees the same drift.
+            fire.drift(h.x - game.boss.x, h.z - game.boss.z);
+            g.add(fire);
           }
         }
+        g.traverse(classifyCourtSurface);
       }
       g.position.set(h.x, h.type === "feather" ? 1 : 0.03, h.z);
       g.visible = h.type !== "ring" || h.age >= h.delay;
@@ -1392,7 +1968,7 @@ export class World {
       else {
         g.scale.set(h.radius, 1, h.radius);
         if (h.type === "eruption")
-          g.getObjectByName("eruption")!.visible = h.age >= h.delay;
+          (g.getObjectByName("eruption") as CinderFire).burn(h.age - h.delay, h.life - h.delay);
       }
     }
   }

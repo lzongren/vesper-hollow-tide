@@ -1,0 +1,59 @@
+{
+  "results": [
+    {
+      "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5080 (0x00002C02) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "boss": "The Bellwarden",
+      "mode": "PILGRIM",
+      "timing": {
+        "samples": 1649,
+        "median": 16.7,
+        "p95": 16.8,
+        "max": 2202.2
+      },
+      "title": "Vigil released",
+      "stats": "0:26TIME3PARRIES0HITS TAKEN",
+      "bossHealth": "0%",
+      "playerHealth": 100,
+      "awakened": true,
+      "elapsed": 29.142199999987636,
+      "terminal": true
+    },
+    {
+      "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5080 (0x00002C02) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "boss": "The Veiled Heron",
+      "mode": "PILGRIM",
+      "timing": {
+        "samples": 1671,
+        "median": 16.7,
+        "p95": 16.8,
+        "max": 1685.1
+      },
+      "title": "Vigil released",
+      "stats": "0:26TIME5PARRIES0HITS TAKEN",
+      "bossHealth": "0%",
+      "playerHealth": 100,
+      "awakened": true,
+      "elapsed": 28.890199999987864,
+      "terminal": true
+    },
+    {
+      "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 5080 (0x00002C02) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "boss": "Saint of Cinders",
+      "mode": "PILGRIM",
+      "timing": {
+        "samples": 2249,
+        "median": 16.7,
+        "p95": 16.8,
+        "max": 2168.8
+      },
+      "title": "The last bell fades",
+      "stats": "0:37TIME4PARRIES4HITS TAKEN",
+      "bossHealth": "0%",
+      "playerHealth": 80,
+      "awakened": true,
+      "elapsed": 40.03700000001255,
+      "terminal": true
+    }
+  ],
+  "errors": []
+}

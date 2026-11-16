@@ -9,6 +9,7 @@ export class Soundscape {
   volume = 0.55;
   muted = false;
   enabled = false;
+  private fireTakes: AudioBuffer[] = [];
   nextBeat = 0;
   beat = 0;
   boss = 0;
@@ -137,6 +138,41 @@ export class Soundscape {
     src.start(time);
     src.stop(time + duration);
   }
+  /** A low gust with a dry paper crackle. The three takes are generated once
+   * and reused for the staggered ignitions, including the awakened cast. */
+  ignition(id: number, pan: number, distance: number) {
+    const c=this.context;
+    if (!c || !this.running || !this.effects) return;
+    const take=id%3;
+    let buffer=this.fireTakes[take];
+    if (!buffer) {
+      buffer=c.createBuffer(1,Math.ceil(.73*c.sampleRate),c.sampleRate);
+      const samples=buffer.getChannelData(0);
+      let state=7823+take*5303, bass=0, body=0, crackle=0;
+      for (let i=0;i<samples.length;i++) {
+        const t=i/c.sampleRate;
+        state=(Math.imul(state,1664525)+1013904223)>>>0;
+        const random=state/4294967296, white=2*random-1;
+        bass+=(white-bass)*(1-Math.exp(-690/c.sampleRate));
+        body+=(white-body)*(1-Math.exp(-4500/c.sampleRate));
+        crackle*=Math.exp(-245/c.sampleRate);
+        if (random<27/c.sampleRate) crackle=.55+take*.1;
+        const swell=(1-Math.exp(-58*t))*Math.exp(-5.8*t)*(1+.18*Math.sin(26*t+take));
+        samples[i]=swell*(3.1*bass+1.15*body)+crackle*white*Math.exp(-3*t)*Math.min(1,80*t);
+      }
+      this.fireTakes[take]=buffer;
+    }
+    const source=c.createBufferSource(), gain=c.createGain(), stereo=c.createStereoPanner();
+    source.buffer=buffer;
+    source.playbackRate.value=.91+.048*(id%5);
+    gain.gain.value=.44/(1+.19*distance);
+    stereo.pan.value=pan;
+    source.connect(gain); gain.connect(stereo); stereo.connect(this.effects);
+    if (this.reverb) stereo.connect(this.reverb);
+    source.onended=()=>{source.disconnect();gain.disconnect();stereo.disconnect();};
+    source.start();
+  }
+
   bell(freq: number, t: number, amp = 0.15) {
     [1, 2.76, 5.4, 8.93].forEach((ratio, i) =>
       this.tone(
@@ -221,11 +257,24 @@ export class Soundscape {
         this.noise(t, 0.2, 0.15, 1000);
         this.tone(160, t, 0.18, 0.045, "triangle", pan);
         break;
-      case "hit":
-        this.noise(t, 0.15, 0.38, 850);
-        this.tone(78, t, 0.17, 0.26, "triangle", pan);
-        this.tone(740, t, 0.15, 0.07, "sine", pan);
+      case "hit": {
+        const weight = (e.value ?? 24) >= 47 ? 1.25 : 1;
+        this.tone(82, t, 0.11, 0.19 * weight, "triangle", pan);
+        if (this.boss === 0) {
+          this.noise(t, 0.055, 0.19, 1700);
+          this.tone(534, t, 0.22, 0.09 * weight, "sine", pan);
+          this.tone(1378, t + 0.004, 0.12, 0.047, "sine", pan);
+        } else if (this.boss === 1) {
+          this.noise(t, 0.038, 0.14, 3800);
+          this.tone(1435, t, 0.11, 0.083, "sine", pan);
+          this.tone(2218, t + 0.014, 0.065, 0.042, "sine", pan);
+        } else {
+          this.noise(t, 0.12, 0.27 * weight, 930);
+          this.noise(t + 0.028, 0.065, 0.074, 2900);
+          this.tone(186, t, 0.14, 0.08, "triangle", pan);
+        }
         break;
+      }
       case "hurt":
         this.tone(44, t, 0.5, 0.3, "triangle");
         this.noise(t, 0.32, 0.26, 240);
@@ -246,6 +295,17 @@ export class Soundscape {
         this.tone(e.value ? 440 : 146.8, t, 0.38, 0.055, "sine", pan);
         break;
       case "slam":
+        if (this.boss === 0) {
+          // The heavy casting rings past the much shorter sound of the haft impact.
+          this.bell(e.value === 1 ? 109.9 : 73.4, t + 0.018, 0.19);
+          this.noise(t, 0.055, 0.15, 1840);
+        } else if (this.boss === 2) {
+          // Bronze rings strike the two rails on release and on the rebound.
+          for (const [delay, pitch, gain] of [[.012, 764, .045], [.068, 911, .032], [.143, 812, .023]]) {
+            this.tone(pitch, t + delay, .32, gain, "sine", pan);
+            this.tone(pitch * 2.68, t + delay, .12, gain * .47, "sine", pan);
+          }
+        }
         this.tone(36, t, 0.65, 0.3);
         this.noise(t, 0.4, 0.22, 130);
         break;

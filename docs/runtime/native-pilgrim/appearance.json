@@ -1,0 +1,23 @@
+{
+  "pawn": "/Game/Vesper/Pilgrim/BP_Wayfarer.BP_Wayfarer_C",
+  "skeletal_mesh": "/Game/Vesper/Pilgrim/Outfit/Wayfarer/SkeletalMeshes/Wayfarer.Wayfarer",
+  "animation": "/Game/Characters/Mannequins/Anims/Unarmed/ABP_Unarmed.ABP_Unarmed_C",
+  "acceleration_cm_s2": 1600.0,
+  "braking_cm_s2": 1450.0,
+  "yaw_rate_deg_s": 440.0,
+  "slots": [
+    "Pilgrim_0",
+    "Bamboo_0",
+    "Bamboo_1",
+    "Bamboo_2",
+    "Bamboo_3",
+    "Bamboo_4",
+    "SwordCase_0",
+    "SwordCase_1",
+    "SwordCase_2",
+    "SwordCase_3",
+    "SwordCase_4",
+    "Mantle_0",
+    "Mantle_1"
+  ]
+}

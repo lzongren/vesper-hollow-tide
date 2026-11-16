@@ -1,0 +1,25 @@
+{
+  "status": "not_achieved",
+  "objective": "Actual playable visuals must be better than Bloodborne, with three soulslike boss fights and public source code.",
+  "reference_direction": "Lavish, convincing dark fantasy materials and architecture; Wuchang-like material richness and Bloodborne-like composition and combat readability.",
+  "prior_browser_build": "Rejected by the user for insufficient visual quality. Retained only as a combat simulation reference.",
+  "review_dimensions": [
+    "Coherent authored architecture and composition at gameplay camera height, rather than exposed primitive assemblies",
+    "Believable hero anatomy, layered costume, hair or headwear, hands, face and weapon grip at close distance",
+    "Authored locomotion, attack transitions, impact reactions and recoveries with planted feet and coherent weapon motion",
+    "Physically plausible stone, carved wood, patinated metal and fabric, with varied wear and contact detail",
+    "Stable lighting, shadows, reflections, fog and antialiasing during camera motion",
+    "Readable attack anticipation and contact effects without overexposure or particle clutter",
+    "Three visually distinct boss encounters, each playable through victory and defeat"
+  ],
+  "required_evidence": [
+    "Packaged runtime build from the published source revision",
+    "Unretouched gameplay captures from the same runtime build at 2560x1440 or higher",
+    "Near, middle and wide views plus camera movement and a full combat sequence",
+    "Frame-time capture including combat effects on the RTX 5080 reference machine",
+    "Side-by-side visual review against real Bloodborne gameplay, covering all review dimensions",
+    "User acceptance of the visual quality; engine configuration and asset import tests alone cannot pass this gate"
+  ],
+  "performance_target": {"resolution": [2560, 1440], "target_fps": 60, "frame_generation": false},
+  "evidence": []
+}

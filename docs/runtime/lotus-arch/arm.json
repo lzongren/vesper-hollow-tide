@@ -1,0 +1,157 @@
+{
+  "results": [
+    {
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+      "boss": "Saint of Cinders",
+      "mode": "PILGRIM",
+      "timing": {
+        "samples": 2536,
+        "median": 16.7,
+        "p95": 16.7,
+        "max": 16.8
+      },
+      "title": "Vigil released",
+      "stats": "0:40TIME4PARRIES5HITS TAKEN",
+      "bossHealth": "0%",
+      "playerHealth": 75,
+      "awakened": true,
+      "elapsed": 42.25810000000024,
+      "terminal": true,
+      "frames": [
+        {
+          "start": 417.9,
+          "duration": 1090.2,
+          "blocking": 1023.9,
+          "render": 1507.7,
+          "intro": "1",
+          "tell": "Observe. Endure. Answer.",
+          "scripts": [
+            {
+              "duration": 1072.7,
+              "fn": "",
+              "source": "scene-DCLoEkxQ.js",
+              "char": 237538,
+              "invoker": "resolve-promise"
+            }
+          ]
+        },
+        {
+          "start": 1516.9,
+          "duration": 194.2,
+          "blocking": 140.3,
+          "render": 1698.3,
+          "intro": "1",
+          "tell": "Observe. Endure. Answer.",
+          "scripts": [
+            {
+              "duration": 177.5,
+              "fn": "",
+              "source": "",
+              "char": -1,
+              "invoker": "user-callback"
+            },
+            {
+              "duration": 9.4,
+              "fn": "",
+              "source": "",
+              "char": -1,
+              "invoker": "user-callback"
+            }
+          ]
+        },
+        {
+          "start": 335.6,
+          "duration": 61,
+          "blocking": 0,
+          "render": 396.5,
+          "intro": "",
+          "tell": "Observe. Endure. Answer.",
+          "scripts": [
+            {
+              "duration": 47.4,
+              "fn": "",
+              "source": "scene-DCLoEkxQ.js",
+              "char": 237538,
+              "invoker": "resolve-promise"
+            }
+          ]
+        }
+      ],
+      "timer": {
+        "available": true,
+        "disjoints": 0,
+        "samples": 2412,
+        "median": {
+          "start": 24099.3,
+          "ms": 21.96,
+          "calls": 625,
+          "cpu": 4.8
+        },
+        "p95": {
+          "start": 5917.1,
+          "ms": 26.32,
+          "calls": 755,
+          "cpu": 5.9
+        },
+        "slowest": [
+          {
+            "start": 36249.4,
+            "ms": 32.77,
+            "calls": 696,
+            "cpu": 5.5
+          },
+          {
+            "start": 40315.8,
+            "ms": 33.32,
+            "calls": 789,
+            "cpu": 5.3
+          },
+          {
+            "start": 36332.9,
+            "ms": 33.69,
+            "calls": 592,
+            "cpu": 4.7
+          },
+          {
+            "start": 36316.2,
+            "ms": 33.8,
+            "calls": 720,
+            "cpu": 5.2
+          },
+          {
+            "start": 36266.5,
+            "ms": 34.14,
+            "calls": 581,
+            "cpu": 4.6
+          },
+          {
+            "start": 40466.1,
+            "ms": 34.45,
+            "calls": 631,
+            "cpu": 4.3
+          },
+          {
+            "start": 36399,
+            "ms": 34.8,
+            "calls": 576,
+            "cpu": 4.7
+          },
+          {
+            "start": 36383.2,
+            "ms": 36.07,
+            "calls": 708,
+            "cpu": 5.5
+          }
+        ],
+        "framesAtStalls": [
+          {
+            "start": 417.9,
+            "duration": 1090.2,
+            "samples": []
+          }
+        ]
+      }
+    }
+  ],
+  "errors": []
+}

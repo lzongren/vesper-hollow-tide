@@ -1,0 +1,248 @@
+[
+  {
+    "view": "concept",
+    "image_size": [
+      1254,
+      1254
+    ],
+    "pupils_px": [
+      [
+        488.25,
+        546.94
+      ],
+      [
+        770.11,
+        547.21
+      ]
+    ],
+    "station_offsets_D": [
+      -0.55,
+      -0.4,
+      -0.3,
+      0,
+      0.3,
+      0.4,
+      0.55
+    ],
+    "jaw_edge_y_px": [
+      971.0,
+      1001.9,
+      1021.2,
+      1044.0,
+      1026.2,
+      1008.3,
+      977.7
+    ],
+    "lip_seam_to_chin_D": 0.626,
+    "rise_at_0.40D": 0.138,
+    "rise_at_0.55D": 0.247,
+    "eye_line_to_nasal_base_D": 0.804,
+    "eye_line_to_lip_seam_D": 1.137,
+    "mouth_corner_width_D": 0.715
+  },
+  {
+    "view": "starting mesh",
+    "image_size": [
+      2560,
+      1440
+    ],
+    "pupils_px": [
+      [
+        1116.12,
+        720.35
+      ],
+      [
+        1446.7,
+        722.62
+      ]
+    ],
+    "station_offsets_D": [
+      -0.55,
+      -0.4,
+      -0.3,
+      0,
+      0.3,
+      0.4,
+      0.55
+    ],
+    "jaw_edge_y_px": [
+      1219.0,
+      1252.2,
+      1263.4,
+      1266.1,
+      1250.0,
+      1240.3,
+      1218.5
+    ],
+    "lip_seam_to_chin_D": 0.548,
+    "rise_at_0.40D": 0.06,
+    "rise_at_0.55D": 0.143,
+    "eye_line_to_nasal_base_D": 0.757,
+    "eye_line_to_lip_seam_D": 1.1,
+    "mouth_corner_width_D": 0.637
+  },
+  {
+    "view": "iteration 1",
+    "image_size": [
+      2560,
+      1440
+    ],
+    "pupils_px": [
+      [
+        1117.42,
+        720.54
+      ],
+      [
+        1447.57,
+        721.99
+      ]
+    ],
+    "station_offsets_D": [
+      -0.55,
+      -0.4,
+      -0.3,
+      0,
+      0.3,
+      0.4,
+      0.55
+    ],
+    "jaw_edge_y_px": [
+      1212.9,
+      1251.4,
+      1276.4,
+      1281.2,
+      1250.6,
+      1238.0,
+      1213.1
+    ],
+    "lip_seam_to_chin_D": 0.589,
+    "rise_at_0.40D": 0.111,
+    "rise_at_0.55D": 0.207,
+    "eye_line_to_nasal_base_D": 0.766,
+    "eye_line_to_lip_seam_D": 1.107,
+    "mouth_corner_width_D": 0.645
+  },
+  {
+    "view": "iteration 2",
+    "image_size": [
+      2560,
+      1440
+    ],
+    "pupils_px": [
+      [
+        1116.98,
+        719.73
+      ],
+      [
+        1446.41,
+        722.01
+      ]
+    ],
+    "station_offsets_D": [
+      -0.55,
+      -0.4,
+      -0.3,
+      0,
+      0.3,
+      0.4,
+      0.55
+    ],
+    "jaw_edge_y_px": [
+      1212.2,
+      1248.9,
+      1272.2,
+      1302.0,
+      1270.2,
+      1247.2,
+      1213.5
+    ],
+    "lip_seam_to_chin_D": 0.656,
+    "rise_at_0.40D": 0.164,
+    "rise_at_0.55D": 0.271,
+    "eye_line_to_nasal_base_D": 0.766,
+    "eye_line_to_lip_seam_D": 1.108,
+    "mouth_corner_width_D": 0.64
+  },
+  {
+    "view": "iteration 3",
+    "image_size": [
+      2560,
+      1440
+    ],
+    "pupils_px": [
+      [
+        1118.06,
+        719.34
+      ],
+      [
+        1445.4,
+        720.35
+      ]
+    ],
+    "station_offsets_D": [
+      -0.55,
+      -0.4,
+      -0.3,
+      0,
+      0.3,
+      0.4,
+      0.55
+    ],
+    "jaw_edge_y_px": [
+      1213.2,
+      1250.8,
+      1273.6,
+      1301.0,
+      1274.3,
+      1250.0,
+      1215.3
+    ],
+    "lip_seam_to_chin_D": 0.632,
+    "rise_at_0.40D": 0.155,
+    "rise_at_0.55D": 0.265,
+    "eye_line_to_nasal_base_D": 0.812,
+    "eye_line_to_lip_seam_D": 1.143,
+    "mouth_corner_width_D": 0.725
+  },
+  {
+    "view": "iteration 4",
+    "image_size": [
+      2560,
+      1440
+    ],
+    "pupils_px": [
+      [
+        1117.49,
+        721.32
+      ],
+      [
+        1445.76,
+        722.97
+      ]
+    ],
+    "station_offsets_D": [
+      -0.55,
+      -0.4,
+      -0.3,
+      0,
+      0.3,
+      0.4,
+      0.55
+    ],
+    "jaw_edge_y_px": [
+      1215.4,
+      1253.0,
+      1276.0,
+      1303.0,
+      1274.6,
+      1249.5,
+      1215.3
+    ],
+    "lip_seam_to_chin_D": 0.632,
+    "rise_at_0.40D": 0.158,
+    "rise_at_0.55D": 0.267,
+    "eye_line_to_nasal_base_D": 0.798,
+    "eye_line_to_lip_seam_D": 1.138,
+    "mouth_corner_width_D": 0.705
+  }
+]

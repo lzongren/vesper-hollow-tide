@@ -294,3 +294,35 @@ for (const difficulty of ["pilgrim", "penitent"] as const)
         `boss=${bossIndex}, state=${g.mode}, hp=${g.player.hp}, bossHP=${g.boss.hp}, time=${elapsed}`,
       );
     });
+
+test("running accelerates from rest and settles quickly after release", () => {
+  const g = ready();
+  const forward = { ...neutral, move: { x: 1, z: 0 } };
+  const start = g.player.x;
+  g.step(1 / 120, forward);
+  const first = g.player.x - start;
+  advance(g, 0.3, forward);
+  const before = g.player.x;
+  g.step(1 / 120, forward);
+  const stride = g.player.x - before;
+  assert.ok(first > 0 && first < stride / 5);
+  assert.ok(stride > 5 / 120);
+  const release = g.player.x;
+  advance(g, 0.5);
+  assert.ok(g.player.x - release > 0.15 && g.player.x - release < 0.23);
+  const stopped = g.player.x;
+  advance(g, 0.25);
+  assert.ok(g.player.x - stopped < 0.00001);
+});
+
+test("roll covers the same distance across tick rates with a gentle takeoff", () => {
+  for (const hz of [60, 120]) {
+    const g = ready();
+    const start = g.player.x;
+    assert.ok(g.startAction("dodge", { x: 1, z: 0 }));
+    g.step(1 / hz, neutral);
+    assert.ok(g.player.x - start < 0.01);
+    for (let i = 1; i < hz / 2; i++) g.step(1 / hz, neutral);
+    assert.ok(Math.abs(g.player.x - start - 4.48) < 1e-6);
+  }
+});

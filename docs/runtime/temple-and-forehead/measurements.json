@@ -1,0 +1,3569 @@
+{
+  "previous_mesh": 52,
+  "current_mesh": 55,
+  "forehead": {
+    "reference": "native/Art/Wayfarer/sculpt-profile.jpg",
+    "camera": "88° shrine close-up",
+    "units": "pixels in the original 1254x1254 side art after pupil-to-mouth-corner similarity registration; increasing x is anterior",
+    "reference_anchors_px": {
+      "pupil": [
+        956,
+        521
+      ],
+      "mouth_corner": [
+        960,
+        828
+      ]
+    },
+    "region": "visible skin outline from reference y=300 through 450, inclusive, every 5 px",
+    "previous_mesh": 52,
+    "current_mesh": 55,
+    "columns": [
+      "guide_y",
+      "guide_x",
+      "previous_image_x",
+      "current_image_x",
+      "previous_skin_mesh_x",
+      "current_skin_mesh_x"
+    ],
+    "rows": [
+      [
+        300,
+        995.5,
+        1000,
+        993,
+        1001.04,
+        992.51
+      ],
+      [
+        305,
+        998.5,
+        1002,
+        995,
+        1002.06,
+        994.02
+      ],
+      [
+        310,
+        998.5,
+        1002,
+        996,
+        1003.07,
+        995.52
+      ],
+      [
+        315,
+        1000.5,
+        1004,
+        998,
+        1004.08,
+        997.02
+      ],
+      [
+        320,
+        1001.5,
+        1004,
+        999,
+        1004.88,
+        998.42
+      ],
+      [
+        325,
+        1002.5,
+        1005,
+        1000,
+        1005.65,
+        999.82
+      ],
+      [
+        330,
+        1004.5,
+        1006,
+        1002,
+        1006.41,
+        1001.22
+      ],
+      [
+        335,
+        1005.5,
+        1007,
+        1003,
+        1007.35,
+        1002.9
+      ],
+      [
+        340,
+        1007.5,
+        1008,
+        1006,
+        1008.37,
+        1004.61
+      ],
+      [
+        345,
+        1008.5,
+        1009,
+        1007,
+        1009.39,
+        1006.32
+      ],
+      [
+        350,
+        1010.5,
+        1010,
+        1009,
+        1010.29,
+        1007.82
+      ],
+      [
+        355,
+        1010.5,
+        1010,
+        1009,
+        1010.92,
+        1009.15
+      ],
+      [
+        360,
+        1012.5,
+        1012,
+        1012,
+        1011.54,
+        1010.48
+      ],
+      [
+        365,
+        1012.5,
+        1012,
+        1012,
+        1012.16,
+        1011.75
+      ],
+      [
+        370,
+        1014.5,
+        1012,
+        1014,
+        1012.57,
+        1012.83
+      ],
+      [
+        375,
+        1016.5,
+        1013,
+        1015,
+        1012.98,
+        1013.91
+      ],
+      [
+        380,
+        1017.5,
+        1013,
+        1016,
+        1013.38,
+        1014.99
+      ],
+      [
+        385,
+        1017.5,
+        1013,
+        1017,
+        1013.56,
+        1015.65
+      ],
+      [
+        390,
+        1017.5,
+        1013,
+        1017,
+        1013.62,
+        1016.24
+      ],
+      [
+        395,
+        1018.5,
+        1013,
+        1018,
+        1013.67,
+        1016.83
+      ],
+      [
+        400,
+        1019.5,
+        1013,
+        1018,
+        1013.71,
+        1017.26
+      ],
+      [
+        405,
+        1019.5,
+        1013,
+        1018,
+        1013.74,
+        1017.54
+      ],
+      [
+        410,
+        1020.5,
+        1014,
+        1019,
+        1013.77,
+        1017.87
+      ],
+      [
+        415,
+        1020.5,
+        1014,
+        1019,
+        1013.9,
+        1018.13
+      ],
+      [
+        420,
+        1020.5,
+        1014,
+        1019,
+        1014.03,
+        1018.17
+      ],
+      [
+        425,
+        1020.5,
+        1014,
+        1019,
+        1014.16,
+        1018.2
+      ],
+      [
+        430,
+        1020.5,
+        1014,
+        1019,
+        1014.23,
+        1017.88
+      ],
+      [
+        435,
+        1020.5,
+        1014,
+        1018,
+        1014.06,
+        1017.0
+      ],
+      [
+        440,
+        1020.5,
+        1013,
+        1017,
+        1013.88,
+        1016.11
+      ],
+      [
+        445,
+        1020.5,
+        1013,
+        1016,
+        1013.63,
+        1014.77
+      ],
+      [
+        450,
+        1019.5,
+        1013,
+        1014,
+        1013.3,
+        1013.24
+      ]
+    ],
+    "median_absolute_error_px": {
+      "previous_image": 4.5,
+      "current_image": 1.5,
+      "previous_mesh": 3.94,
+      "current_mesh": 2.6
+    },
+    "temple_pigment": {
+      "comparison": "52 and 53 use the previous guide projection; revisions 54 onward exclude sampled hair from the skin pigment at the two temples. 53 isolates the subsequent pigment fix on the exposed forehead. At covered positions the dressed render includes real hair, shadows and lighting.",
+      "units": "8-bit sRGB. Albedo is the median of 3x3 texels from the embedded WayfarerSkin material in each generated GLB after a skin-only raycast; raw frame colour is the median of 7x7 pixels after two-point camera registration.",
+      "mesh_files": [
+        "HaitangPortrait52.glb",
+        "HaitangPortrait53.glb",
+        "HaitangPortrait55.glb"
+      ],
+      "raw_captures": {
+        "52": {
+          "open": "c01cf420fcba5d81a1d846f97e77cce5599cb27e24bffec61aec18394fb0159d",
+          "turn": "d9651385d905aa09ebf40372e8e2180573253fc31efa25fd0d35b454a4e4fe48",
+          "profile": "92f45f288929ee5d0808be751589f101b63c646c3121628e93f5707af3b3a68c"
+        },
+        "53": {
+          "open": "b3e16860402e9631d3109d80f57cc4794b169d6b0fff16cef23b34e97f389da8",
+          "turn": "a8b9273e612c1998fbfe3fa532f1c0cbe016d286e9e5b50c1d999a8a67455651",
+          "profile": "db0642b9ca0831da37f2862130a70e022f1eae1b8586bdfd0e7b1716f78cd153"
+        },
+        "55": {
+          "open": "bfc331e060f1c5c047dbb8977e1642482718490f88f41ac214a816dce97311a3",
+          "turn": "fab931621e3f53cc9524ccc71cf34c2f017365a6c9e1e43842eb57d455b80b2a",
+          "profile": "1600e0c7679de5746d0f6981388efa47510ab9c72f939df1f0441332c189a682"
+        }
+      },
+      "art_hair_examples": [
+        {
+          "angle_deg": 0,
+          "guide_xy": [
+            358,
+            363
+          ],
+          "guide_rgb": [
+            69,
+            52,
+            44
+          ]
+        },
+        {
+          "angle_deg": 38,
+          "guide_xy": [
+            359,
+            334
+          ],
+          "guide_rgb": [
+            54,
+            43,
+            41
+          ]
+        }
+      ],
+      "camera_registration_raw_px": {
+        "open": {
+          "52": {
+            "points_xy": [
+              [
+                1105,
+                718
+              ],
+              [
+                1448,
+                721
+              ]
+            ],
+            "template_ncc": [
+              0.9966,
+              0.9959
+            ]
+          },
+          "53": {
+            "points_xy": [
+              [
+                1095,
+                733
+              ],
+              [
+                1439,
+                733
+              ]
+            ],
+            "template_ncc": [
+              0.9963,
+              0.996
+            ]
+          },
+          "55": {
+            "points_xy": [
+              [
+                1100,
+                719
+              ],
+              [
+                1443,
+                721
+              ]
+            ],
+            "template_ncc": [
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "turn": {
+          "52": {
+            "points_xy": [
+              [
+                1222,
+                719
+              ],
+              [
+                1480,
+                719
+              ]
+            ],
+            "template_ncc": [
+              0.9949,
+              0.9968
+            ]
+          },
+          "53": {
+            "points_xy": [
+              [
+                1221,
+                719
+              ],
+              [
+                1480,
+                720
+              ]
+            ],
+            "template_ncc": [
+              0.9978,
+              0.9955
+            ]
+          },
+          "55": {
+            "points_xy": [
+              [
+                1220,
+                719
+              ],
+              [
+                1479,
+                719
+              ]
+            ],
+            "template_ncc": [
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "profile": {
+          "52": {
+            "points_xy": [
+              [
+                1390,
+                719
+              ],
+              [
+                1409,
+                1090
+              ]
+            ],
+            "template_ncc": [
+              0.991,
+              0.9983
+            ]
+          },
+          "53": {
+            "points_xy": [
+              [
+                1389,
+                719
+              ],
+              [
+                1409,
+                1090
+              ]
+            ],
+            "template_ncc": [
+              0.9927,
+              0.998
+            ]
+          },
+          "55": {
+            "points_xy": [
+              [
+                1391,
+                720
+              ],
+              [
+                1410,
+                1091
+              ]
+            ],
+            "template_ncc": [
+              1.0,
+              1.0
+            ]
+          }
+        }
+      },
+      "samples": [
+        {
+          "name": "left_temporal_shadow",
+          "camera_degrees": 0,
+          "mesh55_uv": [
+            0.32689,
+            0.25865
+          ],
+          "albedo_rgb_52_53_55": [
+            [
+              117,
+              86,
+              81
+            ],
+            [
+              117,
+              86,
+              81
+            ],
+            [
+              187,
+              132,
+              129
+            ]
+          ],
+          "frame_52_53_55": [
+            {
+              "xy": [
+                995,
+                526
+              ],
+              "rgb": [
+                10,
+                6,
+                4
+              ]
+            },
+            {
+              "xy": [
+                983,
+                541
+              ],
+              "rgb": [
+                142,
+                105,
+                85
+              ]
+            },
+            {
+              "xy": [
+                989,
+                527
+              ],
+              "rgb": [
+                208,
+                166,
+                148
+              ]
+            }
+          ]
+        },
+        {
+          "name": "left_three_quarter_temporal_shadow",
+          "camera_degrees": 38,
+          "mesh55_uv": [
+            0.3266,
+            0.24258
+          ],
+          "albedo_rgb_52_53_55": [
+            [
+              120,
+              89,
+              86
+            ],
+            [
+              120,
+              89,
+              86
+            ],
+            [
+              188,
+              133,
+              126
+            ]
+          ],
+          "frame_52_53_55": [
+            {
+              "xy": [
+                1051,
+                493
+              ],
+              "rgb": [
+                50,
+                42,
+                33
+              ]
+            },
+            {
+              "xy": [
+                1050,
+                491
+              ],
+              "rgb": [
+                150,
+                117,
+                99
+              ]
+            },
+            {
+              "xy": [
+                1048,
+                492
+              ],
+              "rgb": [
+                211,
+                171,
+                153
+              ]
+            }
+          ]
+        },
+        {
+          "name": "right_temporal_shadow",
+          "camera_degrees": 0,
+          "mesh55_uv": [
+            0.66975,
+            0.25876
+          ],
+          "albedo_rgb_52_53_55": [
+            [
+              121,
+              89,
+              84
+            ],
+            [
+              121,
+              89,
+              84
+            ],
+            [
+              186,
+              132,
+              128
+            ]
+          ],
+          "frame_52_53_55": [
+            {
+              "xy": [
+                1574,
+                526
+              ],
+              "rgb": [
+                70,
+                51,
+                51
+              ]
+            },
+            {
+              "xy": [
+                1563,
+                537
+              ],
+              "rgb": [
+                80,
+                60,
+                58
+              ]
+            },
+            {
+              "xy": [
+                1568,
+                526
+              ],
+              "rgb": [
+                150,
+                113,
+                115
+              ]
+            }
+          ]
+        },
+        {
+          "name": "left_outer_brow",
+          "camera_degrees": 0,
+          "mesh55_uv": [
+            0.36687,
+            0.2898
+          ],
+          "albedo_rgb_52_53_55": [
+            [
+              109,
+              80,
+              77
+            ],
+            [
+              109,
+              80,
+              77
+            ],
+            [
+              109,
+              80,
+              77
+            ]
+          ],
+          "frame_52_53_55": [
+            {
+              "xy": [
+                1050,
+                595
+              ],
+              "rgb": [
+                129,
+                102,
+                88
+              ]
+            },
+            {
+              "xy": [
+                1039,
+                610
+              ],
+              "rgb": [
+                126,
+                100,
+                87
+              ]
+            },
+            {
+              "xy": [
+                1045,
+                596
+              ],
+              "rgb": [
+                127,
+                101,
+                86
+              ]
+            }
+          ]
+        },
+        {
+          "name": "right_outer_brow",
+          "camera_degrees": 0,
+          "mesh55_uv": [
+            0.61574,
+            0.29407
+          ],
+          "albedo_rgb_52_53_55": [
+            [
+              139,
+              102,
+              97
+            ],
+            [
+              139,
+              102,
+              97
+            ],
+            [
+              139,
+              102,
+              97
+            ]
+          ],
+          "frame_52_53_55": [
+            {
+              "xy": [
+                1494,
+                606
+              ],
+              "rgb": [
+                119,
+                88,
+                84
+              ]
+            },
+            {
+              "xy": [
+                1484,
+                617
+              ],
+              "rgb": [
+                110,
+                79,
+                73
+              ]
+            },
+            {
+              "xy": [
+                1489,
+                606
+              ],
+              "rgb": [
+                117,
+                85,
+                82
+              ]
+            }
+          ]
+        },
+        {
+          "name": "left_upper_lid",
+          "camera_degrees": 0,
+          "mesh55_uv": [
+            0.03174,
+            0.09791
+          ],
+          "albedo_rgb_52_53_55": [
+            [
+              43,
+              29,
+              26
+            ],
+            [
+              43,
+              29,
+              26
+            ],
+            [
+              43,
+              29,
+              26
+            ]
+          ],
+          "frame_52_53_55": [
+            {
+              "xy": [
+                1105,
+                703
+              ],
+              "rgb": [
+                47,
+                24,
+                16
+              ]
+            },
+            {
+              "xy": [
+                1095,
+                718
+              ],
+              "rgb": [
+                47,
+                24,
+                17
+              ]
+            },
+            {
+              "xy": [
+                1100,
+                704
+              ],
+              "rgb": [
+                48,
+                26,
+                17
+              ]
+            }
+          ]
+        },
+        {
+          "name": "right_upper_lid",
+          "camera_degrees": 0,
+          "mesh55_uv": [
+            0.96761,
+            0.10825
+          ],
+          "albedo_rgb_52_53_55": [
+            [
+              42,
+              28,
+              25
+            ],
+            [
+              42,
+              28,
+              25
+            ],
+            [
+              42,
+              28,
+              25
+            ]
+          ],
+          "frame_52_53_55": [
+            {
+              "xy": [
+                1442,
+                704
+              ],
+              "rgb": [
+                30,
+                17,
+                14
+              ]
+            },
+            {
+              "xy": [
+                1433,
+                716
+              ],
+              "rgb": [
+                30,
+                18,
+                15
+              ]
+            },
+            {
+              "xy": [
+                1437,
+                704
+              ],
+              "rgb": [
+                32,
+                20,
+                16
+              ]
+            }
+          ]
+        },
+        {
+          "name": "central_forehead",
+          "camera_degrees": 0,
+          "mesh55_uv": [
+            0.49843,
+            0.27726
+          ],
+          "albedo_rgb_52_53_55": [
+            [
+              197,
+              141,
+              140
+            ],
+            [
+              197,
+              143,
+              141
+            ],
+            [
+              197,
+              143,
+              141
+            ]
+          ],
+          "frame_52_53_55": [
+            {
+              "xy": [
+                1282,
+                573
+              ],
+              "rgb": [
+                188,
+                145,
+                137
+              ]
+            },
+            {
+              "xy": [
+                1272,
+                586
+              ],
+              "rgb": [
+                191,
+                146,
+                140
+              ]
+            },
+            {
+              "xy": [
+                1277,
+                573
+              ],
+              "rgb": [
+                190,
+                146,
+                138
+              ]
+            }
+          ]
+        },
+        {
+          "name": "left_cheek",
+          "camera_degrees": 0,
+          "mesh55_uv": [
+            0.35668,
+            0.47282
+          ],
+          "albedo_rgb_52_53_55": [
+            [
+              205,
+              137,
+              138
+            ],
+            [
+              205,
+              137,
+              138
+            ],
+            [
+              205,
+              137,
+              138
+            ]
+          ],
+          "frame_52_53_55": [
+            {
+              "xy": [
+                1075,
+                879
+              ],
+              "rgb": [
+                207,
+                155,
+                145
+              ]
+            },
+            {
+              "xy": [
+                1066,
+                895
+              ],
+              "rgb": [
+                207,
+                155,
+                145
+              ]
+            },
+            {
+              "xy": [
+                1070,
+                880
+              ],
+              "rgb": [
+                207,
+                155,
+                144
+              ]
+            }
+          ]
+        },
+        {
+          "name": "helix_skin",
+          "camera_degrees": 88,
+          "mesh55_uv": [
+            0.15715,
+            0.39444
+          ],
+          "albedo_rgb_52_53_55": [
+            [
+              193,
+              135,
+              131
+            ],
+            [
+              193,
+              135,
+              131
+            ],
+            [
+              193,
+              135,
+              131
+            ]
+          ],
+          "frame_52_53_55": [
+            {
+              "xy": [
+                913,
+                703
+              ],
+              "rgb": [
+                172,
+                117,
+                98
+              ]
+            },
+            {
+              "xy": [
+                912,
+                704
+              ],
+              "rgb": [
+                184,
+                129,
+                111
+              ]
+            },
+            {
+              "xy": [
+                914,
+                704
+              ],
+              "rgb": [
+                202,
+                150,
+                130
+              ]
+            }
+          ]
+        }
+      ],
+      "iris_and_lash_images_identical_all_three": true,
+      "eye_lash_sha256": {
+        "WetIris": "758e05452229dc3d07e26a8e444d88d42e98c1d3b076dd24f2b0670c0db31433",
+        "LashFringe": "7bec0bffea726ddfbad30a0f4aa775dba182a808c02cd20b1769401701782fb2"
+      },
+      "verification_54_to_55": {
+        "identical_embedded_albedo_and_skin_mesh": true,
+        "embedded_skin_sha256": "ab0e41b709c85a60d4f092469b08af90db3b3a7ef26cce94ca908a5909efc70e",
+        "skin_mesh_position_uv_tri_sha256": "8d082c93912484833a522bce685f18db2e0b805dadc5dcfe5d37725735c9e016"
+      },
+      "bare_skin_control": {
+        "camera_degrees": 90,
+        "source": "Pinned idle pose, identical camera, native skin material, all hair and costume sections hidden; median of 9x9 raw pixels in sRGB.",
+        "reference_png_sha256": {
+          "old": "aa62b1d1dd1f98283e9ce7124df885009d32df919393d17082e18148786ae7f5",
+          "new": "d4e57ad5a93b7a88bbb36e9683c5c411e1e85c18264aba74c281ed17ad0d6f4b"
+        },
+        "samples": {
+          "temple_root": {
+            "xy": [
+              1284,
+              489
+            ],
+            "rgb_52_54": [
+              [
+                144,
+                105,
+                88
+              ],
+              [
+                211,
+                167,
+                147
+              ]
+            ]
+          },
+          "temple_transition": {
+            "xy": [
+              1255,
+              539
+            ],
+            "rgb_52_54": [
+              [
+                178,
+                131,
+                110
+              ],
+              [
+                212,
+                167,
+                147
+              ]
+            ]
+          },
+          "brow_guard": {
+            "xy": [
+              1350,
+              620
+            ],
+            "rgb_52_54": [
+              [
+                198,
+                158,
+                141
+              ],
+              [
+                198,
+                158,
+                141
+              ]
+            ]
+          },
+          "eye_guard": {
+            "xy": [
+              1400,
+              716
+            ],
+            "rgb_52_54": [
+              [
+                46,
+                25,
+                14
+              ],
+              [
+                46,
+                25,
+                14
+              ]
+            ]
+          },
+          "above_ear": {
+            "xy": [
+              954,
+              692
+            ],
+            "rgb_52_54": [
+              [
+                204,
+                163,
+                143
+              ],
+              [
+                204,
+                163,
+                143
+              ]
+            ]
+          }
+        }
+      }
+    },
+    "profile_frame_anchors_px": {
+      "52": {
+        "pupil": [
+          1391,
+          720
+        ],
+        "mouth_corner": [
+          1411,
+          1091
+        ]
+      },
+      "55": {
+        "pupil": [
+          1393,
+          721
+        ],
+        "mouth_corner": [
+          1411,
+          1092
+        ]
+      }
+    },
+    "mesh_projection_uncertainty": "Each frame uses its own 2-point registration. The 54 and 55 head position/UV/index buffers are byte-identical. Their registered median mesh errors (0.81 and 2.60 reference px) differ because the detected pupil and mouth corner move by 1–2 raw pixels; both raw-image medians are 1.50 px."
+  },
+  "hairline_and_camera": {
+    "reference_size_px": [
+      1254,
+      1254
+    ],
+    "coordinates": "top-left origin, x right, y down; measurements from registered 88-degree crop",
+    "projection_limit": "A similarity transform alone cannot compensate 88-degree perspective or unknown guide lens; crown/bun are not cranial bone.",
+    "registration": "near pupil and mouth corner; one scale, rotation and translation; no local warp or relighting",
+    "hairline_y_method": "at fixed x, average five columns; first 8/9 samples with R>125, R-G>14, R-B>28, G>80; measures optically exposed skin, not exact follicles",
+    "bare_forehead_x_method": "at fixed y, average five rows; last registered skin-to-background transition in x=975..1039, R>140, R-G>15, R-B>26, G-B<22; validate against diagnostic markers",
+    "preauricular_contrast_method": "x585..730, 5 rows; luminance drop vs 15px median neighborhood; local fine-dark contrast only, includes ear detail",
+    "origins": {
+      "art": {
+        "path": "work/face-review/native/Art/Wayfarer/sculpt-profile.jpg",
+        "sha256": "df42ddd8d8d4be4d44e3329ad5f6e705219f0c9cca69fbcde1839f1386cd14a9"
+      },
+      "MulberryBase": {
+        "path": "work/patina/MulberryBase/profile.png",
+        "sha256": "92f45f288929ee5d0808be751589f101b63c646c3121628e93f5707af3b3a68c",
+        "mesh": "HaitangPortrait52"
+      },
+      "Gardenia": {
+        "path": "work/patina/Gardenia/profile.png",
+        "sha256": "1600e0c7679de5746d0f6981388efa47510ab9c72f939df1f0441332c189a682",
+        "mesh": "HaitangPortrait55"
+      }
+    },
+    "registrations": {
+      "art": {
+        "pupil": [
+          956,
+          521
+        ],
+        "mouth_corner": [
+          960,
+          828
+        ]
+      },
+      "MulberryBase": {
+        "pupil": [
+          1391.0,
+          720.0
+        ],
+        "mouth_corner": [
+          1411.0,
+          1091.0
+        ],
+        "reference_to_source_affine": [
+          1.209112608072986,
+          0.049392669601654914,
+          209.35476581976332,
+          -0.049392669601654914,
+          1.209112608072986,
+          137.2717233331564
+        ]
+      },
+      "Gardenia": {
+        "pupil": [
+          1393.0,
+          721.0
+        ],
+        "mouth_corner": [
+          1411.0,
+          1092.0
+        ],
+        "reference_to_source_affine": [
+          1.209027740943086,
+          0.04287911738184905,
+          214.8294595024663,
+          -0.04287911738184905,
+          1.209027740943086,
+          132.08898318569982
+        ]
+      }
+    },
+    "metrics": {
+      "art": {
+        "hairline_y": {
+          "740": 436,
+          "780": 383,
+          "800": 336,
+          "825": 306,
+          "850": 266,
+          "875": 234,
+          "900": 215,
+          "925": 206,
+          "950": 214
+        },
+        "bare_forehead_x": {
+          "300": 995,
+          "325": 1001,
+          "350": 1009,
+          "375": 1015,
+          "400": 1018,
+          "425": 1019,
+          "450": 1017,
+          "475": 1013
+        },
+        "preauricular_fine_contrast": {
+          "575": {
+            "p95_luma_drop": 20.0,
+            "fraction_darker_by_12": 0.1712
+          },
+          "625": {
+            "p95_luma_drop": 20.0,
+            "fraction_darker_by_12": 0.1438
+          },
+          "675": {
+            "p95_luma_drop": 18.0,
+            "fraction_darker_by_12": 0.1027
+          },
+          "725": {
+            "p95_luma_drop": 17.0,
+            "fraction_darker_by_12": 0.1027
+          },
+          "775": {
+            "p95_luma_drop": 8.0,
+            "fraction_darker_by_12": 0.026
+          },
+          "825": {
+            "p95_luma_drop": 7.5,
+            "fraction_darker_by_12": 0.0342
+          }
+        }
+      },
+      "MulberryBase": {
+        "hairline_y": {
+          "740": 416,
+          "780": 411,
+          "800": 407,
+          "825": 414,
+          "850": 415,
+          "875": 400,
+          "900": 385,
+          "925": 372,
+          "950": 351
+        },
+        "bare_forehead_x": {
+          "300": 1000,
+          "325": 1005,
+          "350": 1009,
+          "375": 1012,
+          "400": 1013,
+          "425": 1013,
+          "450": 1012,
+          "475": 1007
+        },
+        "preauricular_fine_contrast": {
+          "575": {
+            "p95_luma_drop": 25.0,
+            "fraction_darker_by_12": 0.0904
+          },
+          "625": {
+            "p95_luma_drop": 13.0,
+            "fraction_darker_by_12": 0.0589
+          },
+          "675": {
+            "p95_luma_drop": 53.2,
+            "fraction_darker_by_12": 0.0603
+          },
+          "725": {
+            "p95_luma_drop": 2.0,
+            "fraction_darker_by_12": 0.0
+          },
+          "775": {
+            "p95_luma_drop": 2.0,
+            "fraction_darker_by_12": 0.0
+          },
+          "825": {
+            "p95_luma_drop": 2.0,
+            "fraction_darker_by_12": 0.0
+          }
+        }
+      },
+      "Gardenia": {
+        "hairline_y": {
+          "740": 436,
+          "780": 377,
+          "800": 339,
+          "825": 308,
+          "850": 267,
+          "875": 233,
+          "900": 212,
+          "925": 208,
+          "950": 213
+        },
+        "bare_forehead_x": {
+          "300": 993,
+          "325": 1000,
+          "350": 1008,
+          "375": 1014,
+          "400": 1018,
+          "425": 1019,
+          "450": 1013,
+          "475": 1006
+        },
+        "preauricular_fine_contrast": {
+          "575": {
+            "p95_luma_drop": 20.5,
+            "fraction_darker_by_12": 0.1068
+          },
+          "625": {
+            "p95_luma_drop": 14.5,
+            "fraction_darker_by_12": 0.0767
+          },
+          "675": {
+            "p95_luma_drop": 57.6,
+            "fraction_darker_by_12": 0.0904
+          },
+          "725": {
+            "p95_luma_drop": 4.5,
+            "fraction_darker_by_12": 0.0137
+          },
+          "775": {
+            "p95_luma_drop": 2.0,
+            "fraction_darker_by_12": 0.0
+          },
+          "825": {
+            "p95_luma_drop": 2.0,
+            "fraction_darker_by_12": 0.0
+          }
+        }
+      }
+    },
+    "raw_capture_sha256": {
+      "MulberryBase": {
+        "open": "c01cf420fcba5d81a1d846f97e77cce5599cb27e24bffec61aec18394fb0159d",
+        "oblique": "ae818cad5532d880a8ad077feb29a456827430b512f335e4c75d9fe456a6a9a7",
+        "turn": "d9651385d905aa09ebf40372e8e2180573253fc31efa25fd0d35b454a4e4fe48",
+        "threequarter": "c2e382dc52454ab405fdb4d6259dcafb9c17a3f03d6100f8f6865982b2646907",
+        "profile": "92f45f288929ee5d0808be751589f101b63c646c3121628e93f5707af3b3a68c",
+        "sideskull": "679d0e64977d5e1cf5700a8535329a0fd4ef71d8b47e421cf146961625f7e4c8",
+        "frontskull": "e96396f551b4c7db1bfec7cd773cb088aada838c5fdeb7e4accd884eb63ebebb"
+      },
+      "Gardenia": {
+        "open": "bfc331e060f1c5c047dbb8977e1642482718490f88f41ac214a816dce97311a3",
+        "oblique": "2523fa67c8b863a62e977f5b4462b29151ec70550bbcafa552f617451782ccbb",
+        "turn": "fab931621e3f53cc9524ccc71cf34c2f017365a6c9e1e43842eb57d455b80b2a",
+        "threequarter": "4ba4bd04202fd51131d790c0cefe7f396495d77c78b8be0dd88cf76a745b7c28",
+        "profile": "1600e0c7679de5746d0f6981388efa47510ab9c72f939df1f0441332c189a682",
+        "sideskull": "03c891e88f60ecaaf44362697a9e8106be51ec1801c21670e1d58ae54a9c09f5",
+        "frontskull": "77379b012f7cb796e2c77688f886654f323739a624806e0fa589d6028e51ee84"
+      }
+    },
+    "front_xy_pupils": {
+      "art": [
+        [
+          488.2540898323059,
+          546.9382470846176
+        ],
+        [
+          770.1078336238861,
+          547.2147259712219
+        ]
+      ],
+      "MulberryBase": [
+        [
+          1118.9568481445312,
+          719.547830581665
+        ],
+        [
+          1448.1853637695312,
+          722.0038032531738
+        ]
+      ],
+      "Gardenia": [
+        [
+          1113.9568481445312,
+          719.547830581665
+        ],
+        [
+          1443.1853637695312,
+          722.0038032531738
+        ]
+      ]
+    },
+    "delta_to_guide_px": {
+      "hairline_y": {
+        "MulberryBase": {
+          "740": -20,
+          "780": 28,
+          "800": 71,
+          "825": 108,
+          "850": 149,
+          "875": 166,
+          "900": 170,
+          "925": 166,
+          "950": 137
+        },
+        "Gardenia": {
+          "740": 0,
+          "780": -6,
+          "800": 3,
+          "825": 2,
+          "850": 1,
+          "875": -1,
+          "900": -3,
+          "925": 2,
+          "950": -1
+        }
+      },
+      "bare_forehead_x": {
+        "MulberryBase": {
+          "300": 5,
+          "325": 4,
+          "350": 0,
+          "375": -3,
+          "400": -5,
+          "425": -6,
+          "450": -5,
+          "475": -6
+        },
+        "Gardenia": {
+          "300": -2,
+          "325": -1,
+          "350": -1,
+          "375": -1,
+          "400": 0,
+          "425": 0,
+          "450": -4,
+          "475": -7
+        }
+      }
+    },
+    "full_head_90_registration": {
+      "MulberryBase": {
+        "xy_pupil": [
+          1349.0,
+          813.0
+        ],
+        "xy_mouth": [
+          1362.0,
+          1041.0
+        ],
+        "pupil_ncc_to_baseline": 1.0,
+        "mouth_ncc_to_baseline": 1.0,
+        "reference_to_source_affine": [
+          0.7430965894022172,
+          0.032663236620166555,
+          621.5821142523736,
+          -0.032663236620166555,
+          0.7430965894022172,
+          457.07273113032403
+        ]
+      },
+      "Gardenia": {
+        "xy_pupil": [
+          1350.0,
+          813.0
+        ],
+        "xy_mouth": [
+          1362.0,
+          1041.0
+        ],
+        "pupil_ncc_to_baseline": 0.989,
+        "mouth_ncc_to_baseline": 0.998,
+        "reference_to_source_affine": [
+          0.7430541558372673,
+          0.029406460510263622,
+          624.3194610937251,
+          -0.029406460510263622,
+          0.7430541558372673,
+          453.98136105659574
+        ]
+      }
+    },
+    "controlled_90_degree_cameras": {
+      "revision": "Gardenia",
+      "capture_log": "work/tress/Gardenia/control.txt",
+      "rows": {
+        "close": {
+          "old": {
+            "mesh": "HaitangPortrait52",
+            "skin_material": "M_NeutralClay",
+            "camera": "(<Struct 'Vector' (address) {x: 17484.055136, y: -964.638434, z: 173.962408}>, <Struct 'Rotator' (address) {pitch: 2.057311, yaw: 59.707037, roll: 11.059603}>, 14.0)",
+            "source_frame": "oldclose.png",
+            "native_crop": [
+              900,
+              110,
+              1600,
+              960
+            ],
+            "sha256": "482a4c478a9bc74f3c0bfdb946a3513a6e43b5b6720aae653ee079d4a79bffc9"
+          },
+          "new": {
+            "mesh": "HaitangPortrait55",
+            "skin_material": "M_NeutralClay",
+            "camera": "(<Struct 'Vector' (address) {x: 17484.055136, y: -964.638434, z: 173.962408}>, <Struct 'Rotator' (address) {pitch: 2.057311, yaw: 59.707037, roll: 11.059603}>, 14.0)",
+            "source_frame": "newclose.png",
+            "native_crop": [
+              900,
+              110,
+              1600,
+              960
+            ],
+            "sha256": "7afa849569a9f6af0ada70db9b29cc47ee13c0924ac8480a5a0936db6c0ba9ca"
+          }
+        },
+        "clay": {
+          "old": {
+            "mesh": "HaitangPortrait52",
+            "skin_material": "M_NeutralClay",
+            "camera": "(<Struct 'Vector' (address) {x: 17483.504909, y: -964.439410, z: 176.904794}>, <Struct 'Rotator' (address) {pitch: 2.057311, yaw: 59.707037, roll: 11.059603}>, 23.0)",
+            "source_frame": "oldclay.png",
+            "native_crop": [
+              530,
+              105,
+              1455,
+              1250
+            ],
+            "sha256": "2d2f2b6948d76ea5e976e8d6bcd0d19d566dec9593482b13da98530001e9946d"
+          },
+          "new": {
+            "mesh": "HaitangPortrait55",
+            "skin_material": "M_NeutralClay",
+            "camera": "(<Struct 'Vector' (address) {x: 17483.504909, y: -964.439410, z: 176.904794}>, <Struct 'Rotator' (address) {pitch: 2.057311, yaw: 59.707037, roll: 11.059603}>, 23.0)",
+            "source_frame": "newclay.png",
+            "native_crop": [
+              530,
+              105,
+              1455,
+              1250
+            ],
+            "sha256": "4629a27ef35f273910d18de5cbcfdcd0fb29ff527dd05e2cd51cbfc0f22d90b7"
+          }
+        },
+        "hair": {
+          "old": {
+            "mesh": "HaitangPortrait52",
+            "skin_material": "M_NeutralClay",
+            "camera": "(<Struct 'Vector' (address) {x: 17483.504909, y: -964.439410, z: 176.904794}>, <Struct 'Rotator' (address) {pitch: 2.057311, yaw: 59.707037, roll: 11.059603}>, 23.0)",
+            "source_frame": "oldhair.png",
+            "native_crop": [
+              340,
+              105,
+              1455,
+              1250
+            ],
+            "sha256": "ebd460667ef7f2f0e304a0233d58f4bbe509d8562c15bc6b46d81e8aab25054b"
+          },
+          "new": {
+            "mesh": "HaitangPortrait55",
+            "skin_material": "M_NeutralClay",
+            "camera": "(<Struct 'Vector' (address) {x: 17483.504909, y: -964.439410, z: 176.904794}>, <Struct 'Rotator' (address) {pitch: 2.057311, yaw: 59.707037, roll: 11.059603}>, 23.0)",
+            "source_frame": "newhair.png",
+            "native_crop": [
+              340,
+              105,
+              1455,
+              1250
+            ],
+            "sha256": "f913064eeaa216dd6021796fa8d45f28ad38d68505b9caed1e7662fdcc2a43bb"
+          }
+        }
+      }
+    }
+  },
+  "recording": {
+    "baseline": "Cassia",
+    "candidate": "Gardenia",
+    "source": "Native Windows Unreal standalone window. Registered by edge patterns on frames from the same returning orbit.",
+    "capture": {
+      "Cassia": {
+        "container_fps": 60,
+        "encoded_frames": 1072,
+        "duration": "00:00:17.81",
+        "repeated_output_frames": 541,
+        "dropped_input_frames": 0
+      },
+      "Gardenia": {
+        "container_fps": 60,
+        "encoded_frames": 1079,
+        "duration": "00:00:17.93",
+        "repeated_output_frames": 570,
+        "dropped_input_frames": 0
+      }
+    },
+    "output": {
+      "frames": 360,
+      "seconds": 12.0,
+      "fps": 30,
+      "portrait_resolution": [
+        1792,
+        856
+      ],
+      "temple_crop_resolution": [
+        1000,
+        594
+      ],
+      "reused_aligned_frame_pairs": 18,
+      "largest_stride_in_aligned_stream": 2
+    },
+    "temple_detail_motion": {
+      "description": "Framewise motion-compensated residual in skin-toned, textured areas of the close temple, covering both outward and returning sweeps from 15 to 99 degrees. Excludes duplicate/near-still pairs. Gray pixel levels, 0 to 255. Lower values indicate less high-frequency variation after optical flow. Includes camera rendering and video encoding.",
+      "Cassia": {
+        "measured": 163,
+        "median": 2.901,
+        "p95": 5.558,
+        "worst": [
+          [
+            295,
+            11.966
+          ],
+          [
+            258,
+            11.677
+          ],
+          [
+            275,
+            11.634
+          ],
+          [
+            265,
+            9.202
+          ],
+          [
+            249,
+            8.388
+          ],
+          [
+            60,
+            6.921
+          ]
+        ]
+      },
+      "Gardenia": {
+        "measured": 155,
+        "median": 1.52,
+        "p95": 3.258,
+        "worst": [
+          [
+            306,
+            4.045
+          ],
+          [
+            57,
+            3.987
+          ],
+          [
+            270,
+            3.753
+          ],
+          [
+            65,
+            3.519
+          ],
+          [
+            267,
+            3.51
+          ],
+          [
+            62,
+            3.422
+          ]
+        ]
+      }
+    }
+  },
+  "temple_fibers": {
+    "candidate": "Gardenia",
+    "scene": "Shrine portrait, 2560x1440 raw Unreal still, 88-degree camera yaw.",
+    "reference_alignment": "Side illustration aligned by pupil and mouth-corner landmarks. Fiber placement may differ.",
+    "method": {
+      "sample_lines": [
+        {
+          "y": 700,
+          "x_start": 1038,
+          "x_end_exclusive": 1180
+        },
+        {
+          "y": 720,
+          "x_start": 1025,
+          "x_end_exclusive": 1165
+        },
+        {
+          "y": 740,
+          "x_start": 1010,
+          "x_end_exclusive": 1155
+        },
+        {
+          "y": 760,
+          "x_start": 1000,
+          "x_end_exclusive": 1145
+        },
+        {
+          "y": 780,
+          "x_start": 988,
+          "x_end_exclusive": 1135
+        },
+        {
+          "y": 800,
+          "x_start": 978,
+          "x_end_exclusive": 1118
+        },
+        {
+          "y": 820,
+          "x_start": 968,
+          "x_end_exclusive": 1105
+        }
+      ],
+      "total_length_px": 996,
+      "lightness": "D65 CIELAB L* from sRGB; trough depth relative to adjacent exposed skin.",
+      "soft_range": "2 <= L* deficit < 20",
+      "hard_range": "L* deficit >= 20",
+      "directional_support": "Nine-pixel continuous line with four-pixel transverse flanks; strongest median bound across nine slopes.",
+      "bare_cheek_control_offset_px": [
+        155,
+        175
+      ],
+      "count_unit": "Crossings of the sampling lines. A long fiber can cross more than one line."
+    },
+    "profile_samples": {
+      "art_reference": {
+        "direction_supported": {
+          "temple": {
+            "soft_crossings": 66,
+            "hard_crossings": 0,
+            "peak_lightness_deficit": 14.0
+          },
+          "bare_cheek_control": {
+            "soft_crossings": 1,
+            "hard_crossings": 0,
+            "peak_lightness_deficit": 2.1
+          }
+        },
+        "horizontal_contrast": {
+          "hard": 1,
+          "soft": 93,
+          "total_sample_width": 996,
+          "peak_L_deficit": 22.4
+        }
+      },
+      "revision_52": {
+        "direction_supported": {
+          "temple": {
+            "soft_crossings": 29,
+            "hard_crossings": 15,
+            "peak_lightness_deficit": 35.6
+          },
+          "bare_cheek_control": {
+            "soft_crossings": 0,
+            "hard_crossings": 0,
+            "peak_lightness_deficit": 0.0
+          }
+        },
+        "horizontal_contrast": {
+          "hard": 16,
+          "soft": 30,
+          "total_sample_width": 996,
+          "peak_L_deficit": 47.0
+        }
+      },
+      "revision_53": {
+        "direction_supported": {
+          "temple": {
+            "soft_crossings": 35,
+            "hard_crossings": 2,
+            "peak_lightness_deficit": 22.5
+          },
+          "bare_cheek_control": {
+            "soft_crossings": 0,
+            "hard_crossings": 0,
+            "peak_lightness_deficit": 0.0
+          }
+        },
+        "horizontal_contrast": {
+          "hard": 4,
+          "soft": 44,
+          "total_sample_width": 996,
+          "peak_L_deficit": 24.8
+        }
+      },
+      "revision_54": {
+        "direction_supported": {
+          "temple": {
+            "soft_crossings": 25,
+            "hard_crossings": 2,
+            "peak_lightness_deficit": 24.2
+          },
+          "bare_cheek_control": {
+            "soft_crossings": 0,
+            "hard_crossings": 0,
+            "peak_lightness_deficit": 0.0
+          }
+        },
+        "horizontal_contrast": {
+          "hard": 5,
+          "soft": 34,
+          "total_sample_width": 996,
+          "peak_L_deficit": 28.4
+        }
+      },
+      "candidate": {
+        "direction_supported": {
+          "temple": {
+            "soft_crossings": 40,
+            "hard_crossings": 0,
+            "peak_lightness_deficit": 18.7
+          },
+          "bare_cheek_control": {
+            "soft_crossings": 0,
+            "hard_crossings": 0,
+            "peak_lightness_deficit": 0.0
+          }
+        },
+        "horizontal_contrast": {
+          "hard": 3,
+          "soft": 55,
+          "total_sample_width": 996,
+          "peak_L_deficit": 23.8
+        }
+      }
+    },
+    "leading_fiber_lane_spacing": {
+      "description": "88-degree view in native pixels. Up to two actual dark troughs paired to the two projected material lanes within +/-6 px. Each of 12 horizontal sections covers y=720 through 830, spaced 10 px apart. A zero gap means both predictions select the same visible trough.",
+      "revision_53": {
+        "projected_median_gap_px": 2.0,
+        "optical_median_gap_px": 0.0,
+        "paired_sections": 12,
+        "merged_sections": 9,
+        "rows": [
+          {
+            "y": 720,
+            "lane_x": [
+              1038,
+              1033
+            ],
+            "projected_gap": 5,
+            "observed_trough_x": [
+              1038,
+              1033
+            ],
+            "observed_gap": 5
+          },
+          {
+            "y": 730,
+            "lane_x": [
+              1035,
+              1031
+            ],
+            "projected_gap": 4,
+            "observed_trough_x": [
+              1035,
+              1033
+            ],
+            "observed_gap": 2
+          },
+          {
+            "y": 740,
+            "lane_x": [
+              1033,
+              1029
+            ],
+            "projected_gap": 4,
+            "observed_trough_x": [
+              1033,
+              1030
+            ],
+            "observed_gap": 3
+          },
+          {
+            "y": 750,
+            "lane_x": [
+              1030,
+              1028
+            ],
+            "projected_gap": 2,
+            "observed_trough_x": [
+              1029,
+              1029
+            ],
+            "observed_gap": 0
+          },
+          {
+            "y": 760,
+            "lane_x": [
+              1028,
+              1026
+            ],
+            "projected_gap": 2,
+            "observed_trough_x": [
+              1028,
+              1028
+            ],
+            "observed_gap": 0
+          },
+          {
+            "y": 770,
+            "lane_x": [
+              1025,
+              1025
+            ],
+            "projected_gap": 0,
+            "observed_trough_x": [
+              1026,
+              1026
+            ],
+            "observed_gap": 0
+          },
+          {
+            "y": 780,
+            "lane_x": [
+              1023,
+              1023
+            ],
+            "projected_gap": 0,
+            "observed_trough_x": [
+              1023,
+              1023
+            ],
+            "observed_gap": 0
+          },
+          {
+            "y": 790,
+            "lane_x": [
+              1022,
+              1022
+            ],
+            "projected_gap": 0,
+            "observed_trough_x": [
+              1022,
+              1022
+            ],
+            "observed_gap": 0
+          },
+          {
+            "y": 800,
+            "lane_x": [
+              1020,
+              1021
+            ],
+            "projected_gap": 1,
+            "observed_trough_x": [
+              1020,
+              1020
+            ],
+            "observed_gap": 0
+          },
+          {
+            "y": 810,
+            "lane_x": [
+              1019,
+              1020
+            ],
+            "projected_gap": 1,
+            "observed_trough_x": [
+              1019,
+              1019
+            ],
+            "observed_gap": 0
+          },
+          {
+            "y": 820,
+            "lane_x": [
+              1017,
+              1019
+            ],
+            "projected_gap": 2,
+            "observed_trough_x": [
+              1018,
+              1018
+            ],
+            "observed_gap": 0
+          },
+          {
+            "y": 830,
+            "lane_x": [
+              1016,
+              1018
+            ],
+            "projected_gap": 2,
+            "observed_trough_x": [
+              1017,
+              1017
+            ],
+            "observed_gap": 0
+          }
+        ]
+      },
+      "revision_54": {
+        "projected_median_gap_px": 104.0,
+        "optical_median_gap_px": 103.0,
+        "paired_sections": 12,
+        "merged_sections": 0,
+        "rows": [
+          {
+            "y": 720,
+            "lane_x": [
+              1093,
+              997
+            ],
+            "projected_gap": 96,
+            "observed_trough_x": [
+              1093,
+              993
+            ],
+            "observed_gap": 100
+          },
+          {
+            "y": 730,
+            "lane_x": [
+              1091,
+              994
+            ],
+            "projected_gap": 97,
+            "observed_trough_x": [
+              1091,
+              996
+            ],
+            "observed_gap": 95
+          },
+          {
+            "y": 740,
+            "lane_x": [
+              1089,
+              990
+            ],
+            "projected_gap": 99,
+            "observed_trough_x": [
+              1089,
+              990
+            ],
+            "observed_gap": 99
+          },
+          {
+            "y": 750,
+            "lane_x": [
+              1088,
+              987
+            ],
+            "projected_gap": 101,
+            "observed_trough_x": [
+              1088,
+              986
+            ],
+            "observed_gap": 102
+          },
+          {
+            "y": 760,
+            "lane_x": [
+              1086,
+              984
+            ],
+            "projected_gap": 102,
+            "observed_trough_x": [
+              1086,
+              984
+            ],
+            "observed_gap": 102
+          },
+          {
+            "y": 770,
+            "lane_x": [
+              1085,
+              981
+            ],
+            "projected_gap": 104,
+            "observed_trough_x": [
+              1085,
+              982
+            ],
+            "observed_gap": 103
+          },
+          {
+            "y": 780,
+            "lane_x": [
+              1083,
+              979
+            ],
+            "projected_gap": 104,
+            "observed_trough_x": [
+              1083,
+              980
+            ],
+            "observed_gap": 103
+          },
+          {
+            "y": 790,
+            "lane_x": [
+              1082,
+              977
+            ],
+            "projected_gap": 105,
+            "observed_trough_x": [
+              1082,
+              978
+            ],
+            "observed_gap": 104
+          },
+          {
+            "y": 800,
+            "lane_x": [
+              1081,
+              974
+            ],
+            "projected_gap": 107,
+            "observed_trough_x": [
+              1081,
+              973
+            ],
+            "observed_gap": 108
+          },
+          {
+            "y": 810,
+            "lane_x": [
+              1079,
+              973
+            ],
+            "projected_gap": 106,
+            "observed_trough_x": [
+              1079,
+              974
+            ],
+            "observed_gap": 105
+          },
+          {
+            "y": 820,
+            "lane_x": [
+              1078,
+              971
+            ],
+            "projected_gap": 107,
+            "observed_trough_x": [
+              1078,
+              972
+            ],
+            "observed_gap": 106
+          },
+          {
+            "y": 830,
+            "lane_x": [
+              1076,
+              969
+            ],
+            "projected_gap": 107,
+            "observed_trough_x": [
+              1077,
+              971
+            ],
+            "observed_gap": 106
+          }
+        ]
+      },
+      "candidate": {
+        "projected_median_gap_px": 39.0,
+        "optical_median_gap_px": 41.0,
+        "paired_sections": 12,
+        "merged_sections": 0,
+        "rows": [
+          {
+            "y": 720,
+            "lane_x": [
+              1054,
+              1016
+            ],
+            "projected_gap": 38,
+            "observed_trough_x": [
+              1057,
+              1014
+            ],
+            "observed_gap": 43
+          },
+          {
+            "y": 730,
+            "lane_x": [
+              1051,
+              1013
+            ],
+            "projected_gap": 38,
+            "observed_trough_x": [
+              1053,
+              1012
+            ],
+            "observed_gap": 41
+          },
+          {
+            "y": 740,
+            "lane_x": [
+              1048,
+              1010
+            ],
+            "projected_gap": 38,
+            "observed_trough_x": [
+              1047,
+              1010
+            ],
+            "observed_gap": 37
+          },
+          {
+            "y": 750,
+            "lane_x": [
+              1045,
+              1007
+            ],
+            "projected_gap": 38,
+            "observed_trough_x": [
+              1047,
+              1007
+            ],
+            "observed_gap": 40
+          },
+          {
+            "y": 760,
+            "lane_x": [
+              1043,
+              1005
+            ],
+            "projected_gap": 38,
+            "observed_trough_x": [
+              1042,
+              1007
+            ],
+            "observed_gap": 35
+          },
+          {
+            "y": 770,
+            "lane_x": [
+              1041,
+              1002
+            ],
+            "projected_gap": 39,
+            "observed_trough_x": [
+              1043,
+              1001
+            ],
+            "observed_gap": 42
+          },
+          {
+            "y": 780,
+            "lane_x": [
+              1039,
+              1000
+            ],
+            "projected_gap": 39,
+            "observed_trough_x": [
+              1041,
+              999
+            ],
+            "observed_gap": 42
+          },
+          {
+            "y": 790,
+            "lane_x": [
+              1037,
+              998
+            ],
+            "projected_gap": 39,
+            "observed_trough_x": [
+              1039,
+              997
+            ],
+            "observed_gap": 42
+          },
+          {
+            "y": 800,
+            "lane_x": [
+              1035,
+              996
+            ],
+            "projected_gap": 39,
+            "observed_trough_x": [
+              1037,
+              996
+            ],
+            "observed_gap": 41
+          },
+          {
+            "y": 810,
+            "lane_x": [
+              1034,
+              994
+            ],
+            "projected_gap": 40,
+            "observed_trough_x": [
+              1036,
+              995
+            ],
+            "observed_gap": 41
+          },
+          {
+            "y": 820,
+            "lane_x": [
+              1033,
+              993
+            ],
+            "projected_gap": 40,
+            "observed_trough_x": [
+              1035,
+              996
+            ],
+            "observed_gap": 39
+          },
+          {
+            "y": 830,
+            "lane_x": [
+              1032,
+              991
+            ],
+            "projected_gap": 41,
+            "observed_trough_x": [
+              1035,
+              990
+            ],
+            "observed_gap": 45
+          }
+        ]
+      }
+    },
+    "interior_between_candidate_lanes": {
+      "description": "Horizontal region between the candidate material lanes, excluding six pixels at either edge. Identical image-space sample positions in all four panels.",
+      "samples": {
+        "art_reference": {
+          "rows_with_soft_fibers": 0,
+          "median_soft_crossings_per_row": 0.0,
+          "tested_rows": 12,
+          "rows": [
+            {
+              "y": 720,
+              "soft": 0,
+              "hard": 0
+            },
+            {
+              "y": 730,
+              "soft": 0,
+              "hard": 0
+            },
+            {
+              "y": 740,
+              "soft": 0,
+              "hard": 0
+            },
+            {
+              "y": 750,
+              "soft": 0,
+              "hard": 0
+            },
+            {
+              "y": 760,
+              "soft": 0,
+              "hard": 0
+            },
+            {
+              "y": 770,
+              "soft": 0,
+              "hard": 0
+            },
+            {
+              "y": 780,
+              "soft": 0,
+              "hard": 0
+            },
+            {
+              "y": 790,
+              "soft": 0,
+              "hard": 0
+            },
+            {
+              "y": 800,
+              "soft": 0,
+              "hard": 0
+            },
+            {
+              "y": 810,
+              "soft": 0,
+              "hard": 0
+            },
+            {
+              "y": 820,
+              "soft": 0,
+              "hard": 0
+            },
+            {
+              "y": 830,
+              "soft": 0,
+              "hard": 0
+            }
+          ]
+        },
+        "revision_52": {
+          "rows_with_soft_fibers": 10,
+          "median_soft_crossings_per_row": 1.0,
+          "tested_rows": 12,
+          "rows": [
+            {
+              "y": 720,
+              "soft": 1,
+              "hard": 1
+            },
+            {
+              "y": 730,
+              "soft": 0,
+              "hard": 1
+            },
+            {
+              "y": 740,
+              "soft": 0,
+              "hard": 1
+            },
+            {
+              "y": 750,
+              "soft": 1,
+              "hard": 0
+            },
+            {
+              "y": 760,
+              "soft": 1,
+              "hard": 0
+            },
+            {
+              "y": 770,
+              "soft": 1,
+              "hard": 0
+            },
+            {
+              "y": 780,
+              "soft": 1,
+              "hard": 0
+            },
+            {
+              "y": 790,
+              "soft": 1,
+              "hard": 0
+            },
+            {
+              "y": 800,
+              "soft": 1,
+              "hard": 0
+            },
+            {
+              "y": 810,
+              "soft": 1,
+              "hard": 0
+            },
+            {
+              "y": 820,
+              "soft": 1,
+              "hard": 0
+            },
+            {
+              "y": 830,
+              "soft": 1,
+              "hard": 0
+            }
+          ]
+        },
+        "revision_53": {
+          "rows_with_soft_fibers": 12,
+          "median_soft_crossings_per_row": 2.0,
+          "tested_rows": 12,
+          "rows": [
+            {
+              "y": 720,
+              "soft": 3,
+              "hard": 0
+            },
+            {
+              "y": 730,
+              "soft": 3,
+              "hard": 0
+            },
+            {
+              "y": 740,
+              "soft": 2,
+              "hard": 0
+            },
+            {
+              "y": 750,
+              "soft": 3,
+              "hard": 0
+            },
+            {
+              "y": 760,
+              "soft": 3,
+              "hard": 0
+            },
+            {
+              "y": 770,
+              "soft": 5,
+              "hard": 0
+            },
+            {
+              "y": 780,
+              "soft": 1,
+              "hard": 1
+            },
+            {
+              "y": 790,
+              "soft": 1,
+              "hard": 0
+            },
+            {
+              "y": 800,
+              "soft": 2,
+              "hard": 0
+            },
+            {
+              "y": 810,
+              "soft": 2,
+              "hard": 0
+            },
+            {
+              "y": 820,
+              "soft": 1,
+              "hard": 1
+            },
+            {
+              "y": 830,
+              "soft": 2,
+              "hard": 0
+            }
+          ]
+        },
+        "revision_54": {
+          "rows_with_soft_fibers": 0,
+          "median_soft_crossings_per_row": 0.0,
+          "tested_rows": 12,
+          "rows": [
+            {
+              "y": 720,
+              "soft": 0,
+              "hard": 0
+            },
+            {
+              "y": 730,
+              "soft": 0,
+              "hard": 0
+            },
+            {
+              "y": 740,
+              "soft": 0,
+              "hard": 0
+            },
+            {
+              "y": 750,
+              "soft": 0,
+              "hard": 0
+            },
+            {
+              "y": 760,
+              "soft": 0,
+              "hard": 0
+            },
+            {
+              "y": 770,
+              "soft": 0,
+              "hard": 0
+            },
+            {
+              "y": 780,
+              "soft": 0,
+              "hard": 0
+            },
+            {
+              "y": 790,
+              "soft": 0,
+              "hard": 0
+            },
+            {
+              "y": 800,
+              "soft": 0,
+              "hard": 0
+            },
+            {
+              "y": 810,
+              "soft": 0,
+              "hard": 0
+            },
+            {
+              "y": 820,
+              "soft": 0,
+              "hard": 0
+            },
+            {
+              "y": 830,
+              "soft": 0,
+              "hard": 0
+            }
+          ]
+        },
+        "candidate": {
+          "rows_with_soft_fibers": 12,
+          "median_soft_crossings_per_row": 1.0,
+          "tested_rows": 12,
+          "rows": [
+            {
+              "y": 720,
+              "soft": 1,
+              "hard": 0
+            },
+            {
+              "y": 730,
+              "soft": 1,
+              "hard": 0
+            },
+            {
+              "y": 740,
+              "soft": 1,
+              "hard": 0
+            },
+            {
+              "y": 750,
+              "soft": 1,
+              "hard": 0
+            },
+            {
+              "y": 760,
+              "soft": 1,
+              "hard": 0
+            },
+            {
+              "y": 770,
+              "soft": 1,
+              "hard": 0
+            },
+            {
+              "y": 780,
+              "soft": 1,
+              "hard": 0
+            },
+            {
+              "y": 790,
+              "soft": 1,
+              "hard": 0
+            },
+            {
+              "y": 800,
+              "soft": 2,
+              "hard": 0
+            },
+            {
+              "y": 810,
+              "soft": 2,
+              "hard": 0
+            },
+            {
+              "y": 820,
+              "soft": 2,
+              "hard": 0
+            },
+            {
+              "y": 830,
+              "soft": 1,
+              "hard": 0
+            }
+          ]
+        }
+      }
+    },
+    "interior_between_revision_54_lanes": {
+      "description": "Same broad interval left bare by the widely separated 54 guides, applied to ALL panels, with six pixels omitted at each edge.",
+      "samples": {
+        "art_reference": {
+          "rows_with_soft_fibers": 11,
+          "tested_rows": 12,
+          "median_soft_crossings_per_row": 2.0
+        },
+        "revision_52": {
+          "rows_with_soft_fibers": 12,
+          "tested_rows": 12,
+          "median_soft_crossings_per_row": 3.0
+        },
+        "revision_53": {
+          "rows_with_soft_fibers": 12,
+          "tested_rows": 12,
+          "median_soft_crossings_per_row": 6.0
+        },
+        "revision_54": {
+          "rows_with_soft_fibers": 3,
+          "tested_rows": 12,
+          "median_soft_crossings_per_row": 0.0
+        },
+        "candidate": {
+          "rows_with_soft_fibers": 12,
+          "tested_rows": 12,
+          "median_soft_crossings_per_row": 7.0
+        }
+      }
+    },
+    "root_to_tip_earlobe": {
+      "description": "88-degree native image coordinates. Measured against a +/-6 px corridor around each mesh-projected material lane. Dark troughs must persist along nine pixels, exceed 2 CIELAB L*, and recur in at least three of four neighboring scanlines at four-pixel spacing. Bare skin, earring and cap are excluded. Tabulated RGB is mean sRGB flank minus core in 8-bit channel steps. Late numerical matches in intersecting strands are an optical neighborhood measurement, not an identity claim.",
+      "anatomical_lower_lobe_y_px": {
+        "game_approx_range": [
+          972,
+          980
+        ],
+        "aligned_art_approx_range": [
+          1013,
+          1022
+        ]
+      },
+      "interpretation": "The two original opaque wire families and the two replacement translucent material lanes are separate geometries in the same preauricular region. Fractions index each geometry independently. A geometry extending below the lobe may fade out above it.",
+      "revision_52": {
+        "wire5": {
+          "mesh_start_y": 581.4,
+          "mesh_end_y": 889.0,
+          "deepest_supported_visible_y": 882,
+          "passes_lower_earlobe_980": false,
+          "color_by_arc_fraction": {
+            "root": {
+              "samples": 6,
+              "visible_samples": 6,
+              "median_Lstar_deficit_all": 38.46,
+              "median_RGB_deficit_of_visible_samples": [
+                115.2,
+                84.2,
+                73.1
+              ]
+            },
+            "body": {
+              "samples": 26,
+              "visible_samples": 25,
+              "median_Lstar_deficit_all": 30.45,
+              "median_RGB_deficit_of_visible_samples": [
+                85.6,
+                75.6,
+                70.3
+              ]
+            },
+            "falloff": {
+              "samples": 19,
+              "visible_samples": 0,
+              "median_Lstar_deficit_all": 0.12,
+              "median_RGB_deficit_of_visible_samples": null
+            },
+            "tip": {
+              "samples": 10,
+              "visible_samples": 8,
+              "median_Lstar_deficit_all": 4.95,
+              "median_RGB_deficit_of_visible_samples": [
+                11.4,
+                14.6,
+                14.6
+              ]
+            }
+          },
+          "earlobe_near_y958_995": {
+            "samples": 0
+          },
+          "parallel_late_skin_control": {
+            "samples": 29,
+            "visible_samples": 0,
+            "median_Lstar_deficit_all": 0.21,
+            "median_RGB_deficit_of_visible_samples": null
+          },
+          "deepest_last_continuous_samples": [
+            {
+              "v": 0.925,
+              "y": 866,
+              "x": 1025,
+              "L": 4.79,
+              "flank": 67.5,
+              "RGB_flank_minus_center": [
+                11.1,
+                13.5,
+                13.8
+              ],
+              "valid": true
+            },
+            {
+              "v": 0.938,
+              "y": 870,
+              "x": 1022,
+              "L": 5.02,
+              "flank": 67.9,
+              "RGB_flank_minus_center": [
+                11.2,
+                14.4,
+                14.2
+              ],
+              "valid": true
+            },
+            {
+              "v": 0.951,
+              "y": 874,
+              "x": 1019,
+              "L": 5.19,
+              "flank": 67.9,
+              "RGB_flank_minus_center": [
+                12.6,
+                14.8,
+                15.1
+              ],
+              "valid": true
+            },
+            {
+              "v": 0.964,
+              "y": 878,
+              "x": 1016,
+              "L": 5.2,
+              "flank": 68.0,
+              "RGB_flank_minus_center": [
+                12.2,
+                15.2,
+                14.9
+              ],
+              "valid": true
+            },
+            {
+              "v": 0.977,
+              "y": 882,
+              "x": 1013,
+              "L": 5.29,
+              "flank": 68.3,
+              "RGB_flank_minus_center": [
+                11.5,
+                15.5,
+                14.9
+              ],
+              "valid": true
+            }
+          ]
+        },
+        "wire7": {
+          "mesh_start_y": 607.8,
+          "mesh_end_y": 942.3,
+          "deepest_supported_visible_y": 904,
+          "passes_lower_earlobe_980": false,
+          "color_by_arc_fraction": {
+            "root": {
+              "samples": 9,
+              "visible_samples": 9,
+              "median_Lstar_deficit_all": 40.5,
+              "median_RGB_deficit_of_visible_samples": [
+                122.8,
+                92.0,
+                80.7
+              ]
+            },
+            "body": {
+              "samples": 28,
+              "visible_samples": 28,
+              "median_Lstar_deficit_all": 28.86,
+              "median_RGB_deficit_of_visible_samples": [
+                82.6,
+                69.9,
+                65.4
+              ]
+            },
+            "falloff": {
+              "samples": 21,
+              "visible_samples": 12,
+              "median_Lstar_deficit_all": 2.16,
+              "median_RGB_deficit_of_visible_samples": [
+                12.6,
+                14.2,
+                14.2
+              ]
+            },
+            "tip": {
+              "samples": 6,
+              "visible_samples": 3,
+              "median_Lstar_deficit_all": 1.92,
+              "median_RGB_deficit_of_visible_samples": [
+                6.9,
+                8.8,
+                9.7
+              ]
+            }
+          },
+          "earlobe_near_y958_995": {
+            "samples": 0
+          },
+          "parallel_late_skin_control": {
+            "samples": 32,
+            "visible_samples": 0,
+            "median_Lstar_deficit_all": 0.17,
+            "median_RGB_deficit_of_visible_samples": null
+          },
+          "deepest_last_continuous_samples": [
+            {
+              "v": 0.837,
+              "y": 888,
+              "x": 997,
+              "L": 2.69,
+              "flank": 67.1,
+              "RGB_flank_minus_center": [
+                6.5,
+                7.4,
+                8.2
+              ],
+              "valid": true
+            },
+            {
+              "v": 0.849,
+              "y": 892,
+              "x": 995,
+              "L": 2.8,
+              "flank": 67.1,
+              "RGB_flank_minus_center": [
+                6.2,
+                8.2,
+                9.6
+              ],
+              "valid": true
+            },
+            {
+              "v": 0.861,
+              "y": 896,
+              "x": 993,
+              "L": 3.09,
+              "flank": 67.1,
+              "RGB_flank_minus_center": [
+                6.9,
+                8.8,
+                9.7
+              ],
+              "valid": true
+            },
+            {
+              "v": 0.873,
+              "y": 900,
+              "x": 991,
+              "L": 3.42,
+              "flank": 67.1,
+              "RGB_flank_minus_center": [
+                8.4,
+                9.6,
+                10.0
+              ],
+              "valid": true
+            },
+            {
+              "v": 0.885,
+              "y": 904,
+              "x": 989,
+              "L": 2.12,
+              "flank": 67.4,
+              "RGB_flank_minus_center": [
+                5.8,
+                6.2,
+                6.4
+              ],
+              "valid": true
+            }
+          ]
+        }
+      },
+      "candidate": {
+        "3": {
+          "mesh_start_y": 609.2,
+          "mesh_end_y": 1098.7,
+          "deepest_supported_visible_y": 934,
+          "passes_lower_earlobe_980": false,
+          "color_by_arc_fraction": {
+            "root": {
+              "samples": 11,
+              "visible_samples": 11,
+              "median_Lstar_deficit_all": 18.18,
+              "median_RGB_deficit_of_visible_samples": [
+                51.3,
+                45.9,
+                43.3
+              ]
+            },
+            "body": {
+              "samples": 40,
+              "visible_samples": 40,
+              "median_Lstar_deficit_all": 16.5,
+              "median_RGB_deficit_of_visible_samples": [
+                43.3,
+                43.8,
+                41.5
+              ]
+            },
+            "falloff": {
+              "samples": 33,
+              "visible_samples": 14,
+              "median_Lstar_deficit_all": 0.66,
+              "median_RGB_deficit_of_visible_samples": [
+                17.8,
+                20.2,
+                22.0
+              ]
+            },
+            "tip": {
+              "samples": 20,
+              "visible_samples": 0,
+              "median_Lstar_deficit_all": 0.26,
+              "median_RGB_deficit_of_visible_samples": null
+            }
+          },
+          "earlobe_near_y958_995": {
+            "samples": 10,
+            "visible_samples": 0,
+            "median_Lstar_deficit_all": 0.12,
+            "median_RGB_deficit_of_visible_samples": null
+          },
+          "parallel_late_skin_control": {
+            "samples": 53,
+            "visible_samples": 0,
+            "median_Lstar_deficit_all": 0.3,
+            "median_RGB_deficit_of_visible_samples": null
+          },
+          "deepest_last_continuous_samples": [
+            {
+              "v": 0.674,
+              "y": 918,
+              "x": 1037,
+              "L": 3.81,
+              "flank": 66.8,
+              "RGB_flank_minus_center": [
+                11.3,
+                12.6,
+                12.5
+              ],
+              "valid": true
+            },
+            {
+              "v": 0.681,
+              "y": 922,
+              "x": 1037,
+              "L": 3.81,
+              "flank": 67.1,
+              "RGB_flank_minus_center": [
+                12.1,
+                13.4,
+                12.8
+              ],
+              "valid": true
+            },
+            {
+              "v": 0.689,
+              "y": 926,
+              "x": 1038,
+              "L": 5.5,
+              "flank": 67.3,
+              "RGB_flank_minus_center": [
+                13.8,
+                16.2,
+                16.5
+              ],
+              "valid": true
+            },
+            {
+              "v": 0.697,
+              "y": 930,
+              "x": 1038,
+              "L": 4.14,
+              "flank": 67.3,
+              "RGB_flank_minus_center": [
+                11.0,
+                13.1,
+                14.2
+              ],
+              "valid": true
+            },
+            {
+              "v": 0.704,
+              "y": 934,
+              "x": 1038,
+              "L": 2.2,
+              "flank": 67.2,
+              "RGB_flank_minus_center": [
+                5.6,
+                6.6,
+                7.3
+              ],
+              "valid": true
+            }
+          ]
+        },
+        "4": {
+          "mesh_start_y": 635.0,
+          "mesh_end_y": 1218.7,
+          "deepest_supported_visible_y": 1096,
+          "passes_lower_earlobe_980": true,
+          "color_by_arc_fraction": {
+            "root": {
+              "samples": 20,
+              "visible_samples": 14,
+              "median_Lstar_deficit_all": 7.9,
+              "median_RGB_deficit_of_visible_samples": [
+                27.8,
+                25.5,
+                23.4
+              ]
+            },
+            "body": {
+              "samples": 47,
+              "visible_samples": 46,
+              "median_Lstar_deficit_all": 9.77,
+              "median_RGB_deficit_of_visible_samples": [
+                24.8,
+                27.6,
+                25.8
+              ]
+            },
+            "falloff": {
+              "samples": 39,
+              "visible_samples": 35,
+              "median_Lstar_deficit_all": 3.52,
+              "median_RGB_deficit_of_visible_samples": [
+                9.4,
+                10.8,
+                10.4
+              ]
+            },
+            "tip": {
+              "samples": 25,
+              "visible_samples": 0,
+              "median_Lstar_deficit_all": 0.5,
+              "median_RGB_deficit_of_visible_samples": null
+            }
+          },
+          "earlobe_near_y958_995": {
+            "samples": 9,
+            "visible_samples": 9,
+            "median_Lstar_deficit_all": 6.25,
+            "median_RGB_deficit_of_visible_samples": [
+              16.1,
+              17.3,
+              14.3
+            ]
+          },
+          "parallel_late_skin_control": {
+            "samples": 64,
+            "visible_samples": 0,
+            "median_Lstar_deficit_all": 0.16,
+            "median_RGB_deficit_of_visible_samples": null
+          },
+          "deepest_last_continuous_samples": [
+            {
+              "v": 0.795,
+              "y": 1080,
+              "x": 1000,
+              "L": 2.77,
+              "flank": 65.4,
+              "RGB_flank_minus_center": [
+                8.4,
+                7.0,
+                7.1
+              ],
+              "valid": true
+            },
+            {
+              "v": 0.801,
+              "y": 1084,
+              "x": 1000,
+              "L": 2.57,
+              "flank": 64.8,
+              "RGB_flank_minus_center": [
+                7.7,
+                6.8,
+                7.2
+              ],
+              "valid": true
+            },
+            {
+              "v": 0.808,
+              "y": 1088,
+              "x": 1001,
+              "L": 2.13,
+              "flank": 64.6,
+              "RGB_flank_minus_center": [
+                5.6,
+                5.7,
+                6.5
+              ],
+              "valid": true
+            },
+            {
+              "v": 0.814,
+              "y": 1092,
+              "x": 1002,
+              "L": 2.22,
+              "flank": 64.8,
+              "RGB_flank_minus_center": [
+                5.8,
+                6.0,
+                5.6
+              ],
+              "valid": true
+            },
+            {
+              "v": 0.82,
+              "y": 1096,
+              "x": 1002,
+              "L": 2.03,
+              "flank": 64.9,
+              "RGB_flank_minus_center": [
+                5.7,
+                5.7,
+                4.8
+              ],
+              "valid": true
+            }
+          ]
+        }
+      },
+      "reference_visible_lock": {
+        "manually_traced_neighborhood": true,
+        "visible_at_least_to_y": 1301,
+        "anatomical_lower_lobe_approx_y": 1018,
+        "trace_stopped_at_y": 1307
+      },
+      "lower_strand_sweep": {
+        "description": "Direction-supported lines across x960..1169 in the exposed region immediately anterior to the earring. Y measured in common registered image coordinates. The game lobe ends near y976; the aligned art lobe ends near y1018.",
+        "y_positions": [
+          985,
+          1000,
+          1020,
+          1040,
+          1060,
+          1080,
+          1100,
+          1150,
+          1200
+        ],
+        "values": {
+          "art_reference": {
+            "985": {
+              "count": 9,
+              "peak_Lstar_deficit": 13.3
+            },
+            "1000": {
+              "count": 9,
+              "peak_Lstar_deficit": 8.2
+            },
+            "1020": {
+              "count": 9,
+              "peak_Lstar_deficit": 10.0
+            },
+            "1040": {
+              "count": 6,
+              "peak_Lstar_deficit": 10.2
+            },
+            "1060": {
+              "count": 5,
+              "peak_Lstar_deficit": 11.5
+            },
+            "1080": {
+              "count": 6,
+              "peak_Lstar_deficit": 14.6
+            },
+            "1100": {
+              "count": 6,
+              "peak_Lstar_deficit": 17.7
+            },
+            "1150": {
+              "count": 4,
+              "peak_Lstar_deficit": 10.1
+            },
+            "1200": {
+              "count": 4,
+              "peak_Lstar_deficit": 9.1
+            }
+          },
+          "revision_52": {
+            "985": {
+              "count": 0,
+              "peak_Lstar_deficit": 0.0
+            },
+            "1000": {
+              "count": 0,
+              "peak_Lstar_deficit": 0.0
+            },
+            "1020": {
+              "count": 0,
+              "peak_Lstar_deficit": 0.0
+            },
+            "1040": {
+              "count": 0,
+              "peak_Lstar_deficit": 0.0
+            },
+            "1060": {
+              "count": 0,
+              "peak_Lstar_deficit": 0.0
+            },
+            "1080": {
+              "count": 0,
+              "peak_Lstar_deficit": 0.0
+            },
+            "1100": {
+              "count": 0,
+              "peak_Lstar_deficit": 0.0
+            },
+            "1150": {
+              "count": 0,
+              "peak_Lstar_deficit": 0.0
+            },
+            "1200": {
+              "count": 0,
+              "peak_Lstar_deficit": 0.0
+            }
+          },
+          "revision_53": {
+            "985": {
+              "count": 2,
+              "peak_Lstar_deficit": 4.3
+            },
+            "1000": {
+              "count": 2,
+              "peak_Lstar_deficit": 3.5
+            },
+            "1020": {
+              "count": 2,
+              "peak_Lstar_deficit": 2.2
+            },
+            "1040": {
+              "count": 1,
+              "peak_Lstar_deficit": 2.2
+            },
+            "1060": {
+              "count": 0,
+              "peak_Lstar_deficit": 0.0
+            },
+            "1080": {
+              "count": 0,
+              "peak_Lstar_deficit": 0.0
+            },
+            "1100": {
+              "count": 0,
+              "peak_Lstar_deficit": 0.0
+            },
+            "1150": {
+              "count": 0,
+              "peak_Lstar_deficit": 0.0
+            },
+            "1200": {
+              "count": 0,
+              "peak_Lstar_deficit": 0.0
+            }
+          },
+          "revision_54": {
+            "985": {
+              "count": 1,
+              "peak_Lstar_deficit": 4.1
+            },
+            "1000": {
+              "count": 1,
+              "peak_Lstar_deficit": 4.0
+            },
+            "1020": {
+              "count": 1,
+              "peak_Lstar_deficit": 3.4
+            },
+            "1040": {
+              "count": 1,
+              "peak_Lstar_deficit": 3.2
+            },
+            "1060": {
+              "count": 1,
+              "peak_Lstar_deficit": 2.9
+            },
+            "1080": {
+              "count": 0,
+              "peak_Lstar_deficit": 0.0
+            },
+            "1100": {
+              "count": 0,
+              "peak_Lstar_deficit": 0.0
+            },
+            "1150": {
+              "count": 0,
+              "peak_Lstar_deficit": 0.0
+            },
+            "1200": {
+              "count": 0,
+              "peak_Lstar_deficit": 0.0
+            }
+          },
+          "candidate": {
+            "985": {
+              "count": 2,
+              "peak_Lstar_deficit": 5.4
+            },
+            "1000": {
+              "count": 2,
+              "peak_Lstar_deficit": 5.8
+            },
+            "1020": {
+              "count": 2,
+              "peak_Lstar_deficit": 4.2
+            },
+            "1040": {
+              "count": 2,
+              "peak_Lstar_deficit": 3.5
+            },
+            "1060": {
+              "count": 2,
+              "peak_Lstar_deficit": 3.1
+            },
+            "1080": {
+              "count": 1,
+              "peak_Lstar_deficit": 2.7
+            },
+            "1100": {
+              "count": 0,
+              "peak_Lstar_deficit": 0.0
+            },
+            "1150": {
+              "count": 0,
+              "peak_Lstar_deficit": 0.0
+            },
+            "1200": {
+              "count": 0,
+              "peak_Lstar_deficit": 0.0
+            }
+          }
+        }
+      }
+    }
+  },
+  "dressed_anterior_vault": {
+    "mesh": 55,
+    "region": "visible front hair silhouette from y=10 to 80 in the cropped 1254 px side guide; does not measure anatomical skull height",
+    "units": "reference pixels after pupil/commissure registration",
+    "edge_x": {
+      "art": {
+        "10": 815,
+        "20": 824,
+        "30": 852,
+        "40": 861,
+        "50": 879,
+        "60": 889,
+        "70": 900,
+        "80": 906
+      },
+      "MulberryBase": {
+        "10": 775,
+        "20": 801,
+        "30": 822,
+        "40": 841,
+        "50": 858,
+        "60": 874,
+        "70": 889,
+        "80": 903
+      },
+      "Gardenia": {
+        "10": 817,
+        "20": 833,
+        "30": 848,
+        "40": 862,
+        "50": 874,
+        "60": 887,
+        "70": 898,
+        "80": 909
+      }
+    },
+    "median_absolute_error_px": {
+      "MulberryBase": 20.5,
+      "Gardenia": 2.5
+    }
+  }
+}

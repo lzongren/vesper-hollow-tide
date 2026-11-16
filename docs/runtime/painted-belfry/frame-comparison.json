@@ -1,0 +1,78 @@
+{
+  "before": {
+    "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+    "boss": "The Bellwarden",
+    "mode": "PILGRIM",
+    "timing": {
+      "samples": 1744,
+      "median": 16.7,
+      "p95": 16.7,
+      "max": 16.8
+    },
+    "title": "Vigil released",
+    "stats": "0:27TIME3PARRIES0HITS TAKEN",
+    "bossHealth": "0%",
+    "playerHealth": 100,
+    "awakened": true,
+    "elapsed": 29.052599999856582,
+    "terminal": true,
+    "entry": {
+      "loadMs": 1656,
+      "firstCallbackAfterReadyMs": 0,
+      "toCombatMs": 4043,
+      "intro": {
+        "count": 143,
+        "p95": 18,
+        "max": 20.7
+      },
+      "load": {
+        "count": 13,
+        "p95": 1255.7,
+        "max": 1255.7
+      },
+      "fight": {
+        "count": 1620,
+        "p95": 18.2,
+        "max": 18.9
+      }
+    }
+  },
+  "after": {
+    "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1 Max, Unspecified Version)",
+    "boss": "The Bellwarden",
+    "mode": "PILGRIM",
+    "timing": {
+      "samples": 1745,
+      "median": 16.7,
+      "p95": 16.7,
+      "max": 16.8
+    },
+    "title": "Vigil released",
+    "stats": "0:27TIME3PARRIES0HITS TAKEN",
+    "bossHealth": "0%",
+    "playerHealth": 100,
+    "awakened": true,
+    "elapsed": 29.06749999999959,
+    "terminal": true,
+    "entry": {
+      "loadMs": 1684,
+      "firstCallbackAfterReadyMs": 3,
+      "toCombatMs": 4074,
+      "intro": {
+        "count": 144,
+        "p95": 18.1,
+        "max": 18.6
+      },
+      "load": {
+        "count": 12,
+        "p95": 1278.2,
+        "max": 1278.2
+      },
+      "fight": {
+        "count": 1620,
+        "p95": 18.2,
+        "max": 18.8
+      }
+    }
+  }
+}

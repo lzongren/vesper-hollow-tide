@@ -1,0 +1,39 @@
+{
+  "reference_size": [
+    1254,
+    1254
+  ],
+  "reference_outer_eye_span_px": 420.46,
+  "held_out": [
+    1,
+    13,
+    14,
+    61,
+    70,
+    93,
+    98,
+    107,
+    152,
+    234,
+    291,
+    300,
+    323,
+    327,
+    336,
+    454
+  ],
+  "results": {
+    "before": {
+      "mean_percent_of_outer_eye_span": 6.463,
+      "nose_vertical_px": 33.85,
+      "lip_vertical_px": 43.64,
+      "chin_vertical_px": 19.16
+    },
+    "after": {
+      "mean_percent_of_outer_eye_span": 1.52,
+      "nose_vertical_px": -10.12,
+      "lip_vertical_px": -10.06,
+      "chin_vertical_px": -20.65
+    }
+  }
+}
