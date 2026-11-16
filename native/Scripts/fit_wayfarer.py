@@ -13,7 +13,7 @@ from sash_material import silk_motion
 from digital_skin import digital_finish
 from camellia_materials import hair_roots, temple_fibers
 
-mesh = mesh_for("HaitangPortrait55", "pilgrim.glb", armed=True, wayfarer=True)
+mesh = mesh_for("HaitangPortrait58", "pilgrim.glb", armed=True, wayfarer=True)
 if not any(
     str(name).lower().endswith("blink") for name in mesh.get_all_morph_target_names()
 ):
@@ -109,6 +109,10 @@ for slot in slots:
         slot.material_interface = temple_fibers(root, name)
     elif name == "TempleStrands":
         slot.material_interface = hair_roots(root)
+    elif name == "CrownSilk":
+        slot.material_interface = surface(
+            root, "DressedCrown", name, 0, 0.65, specular=0.17
+        )
     elif name == "InkHair":
         slot.material_interface = surface(
             root, "BrushedInk", name, 0, 0.59, specular=0.21
@@ -163,7 +167,7 @@ fit("BP_CombatCharacter", "BP_BelfryPilgrim", mesh, {})
     json.dumps(
         {
             "mesh": mesh.get_path_name(),
-            "revision": 55,
+            "revision": 58,
             "surface_revision": 1,
             "lod_vertices": lod_vertices,
             "morphs": [str(n) for n in mesh.get_all_morph_target_names()],

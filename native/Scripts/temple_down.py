@@ -28,20 +28,31 @@ def dress_temples(patch, material, combed, edge_row, scalp, smooth):
 
             patch(material, 5, 14, down)
 
-        # Root azimuth, arc toward the ear, drop (m), strip width and lateral bend (rad).
-        # Short down follows the temple; only two families drop past the tragus.
+        # Root azimuth, sweep, drop in metres, root width, body bow and tip return.
+        # One long family turns back beneath the lobe. The neighboring families
+        # break away at the ear notch, the lobe and the upper neck respectively.
         guides = (
-            (0.62, 0.23, 0.039, 0.124, 0.0),
-            (0.78, 0.20, 0.052, 0.142, 0.0),
-            (0.95, 0.17, 0.039, 0.145, 0.0),
-            (1.034, 0.196, 0.091, 0.142, -0.025),
-            (1.178, 0.080, 0.117, 0.148, 0.034),
-            (1.23, 0.04, 0.048, 0.114, 0.0),
-            (1.095, 0.167, 0.079, 0.158, 0.012),
-            (0.978, 0.222, 0.061, 0.131, 0.024),
+            (0.62, 0.23, 0.039, 0.124, 0.0, 0.0),
+            (0.78, 0.20, 0.052, 0.142, 0.0, 0.0),
+            (0.95, 0.17, 0.039, 0.145, 0.0, 0.0),
+            (1.034, 0.196, 0.111, 0.142, -0.025, -0.040),
+            (1.174, 0.084, 0.156, 0.148, 0.034, -0.035),
+            (1.23, 0.04, 0.048, 0.114, 0.0, 0.0),
+            (1.086, 0.143, 0.097, 0.158, -0.009, 0.074),
+            (0.978, 0.222, 0.067, 0.131, 0.024, -0.022),
+            (1.110, 0.098, 0.138, 0.121, 0.018, 0.036),
         )
-        for i, (root, arc, drop, width, bend) in enumerate(guides):
+        for i, (root, arc, drop, width, bend, tip_return) in enumerate(guides):
             phase = 2.399 * i + 0.48 * side
+            atlas_strip = 2 if i == 8 else i % 4
+            # These three guides cross the same exposed patch above the ear.
+            # In that patch sample the thinner portion of their own fibers.
+            shaft_advance = {3: 0.15, 6: 0.13, 8: 0.20}.get(i, 0.0)
+            # The two companion wisps part below the lobe, one toward the
+            # neck and the shorter one toward the jaw. Their tips ease back.
+            curl_start, curl_angle = {4: (0.62, 0.035), 6: (0.73, -0.031)}.get(
+                i, (0.62, 0.0)
+            )
 
             def tendril(u, v):
                 across = (u - 0.5) * width
@@ -51,14 +62,29 @@ def dress_temples(patch, material, combed, edge_row, scalp, smooth):
                 root_radius = hypot(x, z - axis_z)
                 # The guide leaves the swept roots tangentially, then turns
                 # downwards. Thin the geometry without pinching all tips together.
+                # The ends fan in opposite directions after clearing the pinna,
+                # while their roots still follow the original swept hairline.
+                loose = smooth((drop - 0.060) / 0.060)
+                turn = smooth((v - 0.38) / 0.62)
+                curl_t = max(0.0, (v - curl_start) / (1 - curl_start))
+                lower_curl = curl_angle * sin(pi * curl_t) ** 2
                 angle = root_angle + side * (
                     arc * sin(0.60 * pi * v)
                     + 0.038 * sin(1.75 * pi * v) * sin(phase)
                     + bend * sin(pi * v)
                     + 0.050 * smooth((drop - 0.060) / 0.040) * v * sin(1.50 * pi * v)
+                    + tip_return * turn
+                    + lower_curl
+                    + 0.38 * across * loose * turn * sin(phase)
                     - 0.52 * across * v
                 )
-                y -= drop * (0.96 + 0.04 * cos(phase)) * (0.80 * v + 0.20 * v * v)
+                side_length = 1 + 0.055 * loose * (2 * u - 1) * sin(phase)
+                y -= (
+                    drop
+                    * side_length
+                    * (0.96 + 0.04 * cos(phase))
+                    * (0.80 * v + 0.20 * v * v)
+                )
                 h = 7 + (y - 1.625) / 0.103
                 section = 0.104 * scalp(angle, h, root_radius / 0.104)
                 # Loose ends can hang away from the receding jaw. Use a
@@ -71,9 +97,13 @@ def dress_temples(patch, material, combed, edge_row, scalp, smooth):
                 radius = root_radius + weight * (
                     radius + 0.0009 + 0.0016 * sin(pi * v) - root_radius
                 )
+                fiber_u = 1 - u if i == 8 else u
+                fiber_v = v - 0.045 * loose * sin(pi * v)
+                shaft = smooth((v - 0.035) / 0.165) * (1 - smooth((v - 0.28) / 0.40))
+                fiber_v += shaft_advance * shaft
                 return (
                     (radius * sin(angle), y, axis_z + radius * cos(angle)),
-                    ((i % 4 + u) / 4, v),
+                    ((atlas_strip + fiber_u) / 4, fiber_v),
                     head,
                 )
 

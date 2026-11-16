@@ -45,6 +45,7 @@ def dress(out, bones, rest, art):
     crimson = material("RoseBinding", (1, 1, 1), 0.71, texture="rosewood.jpg")
     brass = material("ChasedBrass", (1, 1, 1), 0.38, 0.64, "brass.jpg")
     hair = material("InkHair", (1, 1, 1), 0.63, texture="hair.jpg")
+    crown = material("CrownSilk", (1, 1, 1), 0.65, texture="crown-fiber-grain.jpg")
     jade = material("CloudJade", (0.16, 0.40, 0.32), 0.27, 0.12)
     pearl = material("SeedPearl", (0.84, 0.75, 0.62), 0.28, 0.09)
     flower = material("WhiteJadePetal", (0.80, 0.85, 0.69), 0.30, 0.04)
@@ -220,6 +221,15 @@ def dress(out, bones, rest, art):
             * exp(-(((y - 1.741) / 0.014) ** 2))
             * smooth((v - 0.045) / 0.10)
         )
+        # The dressed front changes tangent below the crown. Its bulk
+        # advances above the brow, then settles onto the bare forehead.
+        # Keep the established temple margin and the buried roots seated.
+        bow = 1 - smooth((temple - 0.16) / 0.58)
+        swell = exp(-(((y - 1.7309) / 0.0132) ** 2))
+        z += 0.00350 * bow * swell * smooth((y - 1.7178) / 0.009)
+        # Tuck the underside of the roll closer to the forehead. Individual
+        # strands, rather than a translucent flap, carry the outer silhouette.
+        z -= 0.00105 * bow * exp(-(((y - 1.7248) / 0.0037) ** 2))
         y += (
             forward
             * 0.0048
@@ -261,9 +271,12 @@ def dress(out, bones, rest, art):
     def swept_hair(u, v):
         a = tau * u
         edge = edge_row(a)
+        # The center of the forward roll tucks into the wisps below it.
+        # Only its dense core extends; the outermost flyaways stay put.
+        front = abs(atan2(sin(a - 0.025), cos(a - 0.025)))
+        edge -= 0.029 * exp(-((front / 0.255) ** 2))
         row = edge + (1 - edge) * v
-        p = combed(a, row)
-        return p, (u * 5, 0.96 - 0.92 * row), head
+        return combed(a, row), (u, 1 - v), head
 
     def roots(u, v):
         a = tau * u
@@ -278,10 +291,76 @@ def dress(out, bones, rest, art):
         row += 0.046 * above_helix(a) * (1 - v)
         angle = hair_flow(a, row)
         x, y, z = combed(a, row)
-        return (x + 0.00018 * sin(angle), y, z + 0.00018 * cos(angle)), (u * 8, v), head
+        # At the grazing frontal edge the broad veil otherwise darkens the
+        # space between the roll and the forehead as one solid wedge. Sample
+        # the sparser end of the same atlas while the sides keep their roots.
+        light = 1 - smooth((azimuth - 0.13) / 0.38)
+        opacity_row = v + 0.49 * light * (1 - v)
+        return (
+            (x + 0.00018 * sin(angle), y, z + 0.00018 * cos(angle)),
+            (u * 8, opacity_row),
+            head,
+        )
 
-    patch(hair, 144, 38, swept_hair)
+    patch(crown, 144, 38, swept_hair)
     patch(fringe, 160, 16, roots)
+
+    # Loose surface locks bridge the opaque front and the down on the
+    # forehead. Each begins inside the combed cap, lifts at midshaft and
+    # lands on the scalp. Unequal guide lengths feather the silhouette.
+    for index in range(61):
+        phase = index * 2.39996
+        root = -0.91 + 1.82 * index / 60 + 0.021 * sin(phase)
+        start = 0.32 + 0.08 * cos(phase)
+        end = -0.020 + 0.039 * sin(phase + 1.4)
+        width = 0.093 + 0.034 * cos(phase + 0.7)
+
+        def forelock(u, v):
+            angle = root + (u - 0.5) * width * (1 - 0.42 * v)
+            angle += (0.13 * sin(root - 0.28) + 0.043 * sin(phase)) * sin(pi * v)
+            row = start + (end - start) * v
+            x, y, z = combed(angle, row)
+            direction = hair_flow(angle, row)
+            lift = (0.0011 + 0.00135 * (0.5 + 0.5 * sin(phase))) * sin(pi * v) ** 1.3
+            return (
+                (x + lift * sin(direction), y + 0.28 * lift, z + lift * cos(direction)),
+                ((index % 4 + u) / 4, v**0.82),
+                head,
+            )
+
+        patch(temple_hair if index % 7 == 1 else down_hair, 5, 20, forelock)
+
+    # Sparse escape hairs follow the frontal roll. Each thread rises and
+    # settles into a different section of the comb; its round section also
+    # reads at a grazing angle where a card becomes nearly invisible.
+    for k in range(34):
+        phase = k * 2.39996
+        a0 = -0.42 + 0.84 * ((k * 0.618034) % 1)
+        top = 0.21 + 0.41 * ((k * 0.754878 + 0.16) % 1)
+        foot = -0.021 + 0.145 * ((k * 0.56984 + 0.08) % 1)
+        sweep = 0.044 + 0.10 * sin(phase + 0.3)
+        height = 0.00065 + 0.00115 * (0.5 + 0.5 * cos(phase + 0.6))
+        girth = 0.00008 + 0.00006 * (0.5 + 0.5 * sin(phase))
+
+        def escape(t):
+            row = top + (foot - top) * t
+            angle = a0 + sweep * t + 0.03 * sin(pi * t + phase)
+            x, y, z = combed(angle, row)
+            axis = hair_flow(angle, row)
+            ridge = height * sin(pi * t) ** 1.35 - 0.00018
+            return (
+                x + ridge * sin(axis),
+                y + ridge * (0.28 + row),
+                z + ridge * cos(axis),
+            )
+
+        strand(
+            hair,
+            escape,
+            lambda t: girth * (0.13 + 0.87 * sin(pi * t) ** 0.52),
+            head,
+            20,
+        )
 
     # Lay short swept fibers across the sidewall in staggered rows. The
     # overlap covers the opaque cap edge and thins towards the ear.
