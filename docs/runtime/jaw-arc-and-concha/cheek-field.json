@@ -1,0 +1,23 @@
+{
+  "art": {
+    "num_columns": 26,
+    "median_band_peak_offset_y_from_guide": 0.0,
+    "mean_absolute_guide_gradient_difference_in_49px_band": 0.0,
+    "mean_upper_minus_lower_luma_on_guide_center": 9.89,
+    "mean_peak_strength": 9.89
+  },
+  "Base65_61": {
+    "num_columns": 26,
+    "median_band_peak_offset_y_from_guide": -25.0,
+    "mean_absolute_guide_gradient_difference_in_49px_band": 5.69,
+    "mean_upper_minus_lower_luma_on_guide_center": -0.03,
+    "mean_peak_strength": 4.34
+  },
+  "Linhua": {
+    "num_columns": 26,
+    "median_band_peak_offset_y_from_guide": -0.5,
+    "mean_absolute_guide_gradient_difference_in_49px_band": 2.64,
+    "mean_upper_minus_lower_luma_on_guide_center": 10.67,
+    "mean_peak_strength": 11.53
+  }
+}

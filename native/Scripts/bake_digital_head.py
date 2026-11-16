@@ -344,6 +344,60 @@ def jaw_and_neck_planes(rest):
     swing = 0.00092 * core * outward
     delta[:, 2] += swing
     delta[:, 1] -= swing
+    delta += mandibular_taper(rest + delta)
+    return delta
+
+
+def mandibular_taper(rest):
+    """Roll the lower lateral cheek over the jaw into the submandibular plane."""
+    x, y, z = rest.T
+    side = np.abs(x)
+
+    def ramp(t):
+        t = np.clip(t, 0, 1)
+        return t * t * (3 - 2 * t)
+
+    # Trace the art's sloping jaw from the masseter towards the chin on the
+    # already fitted skin. The turn is below this line, not on the cheekbone.
+    along = z - 0.060
+    line = 1.5638 - 0.539 * along + 3.88 * along**2
+    line += 0.0016 * ramp((0.053 - z) / 0.013) - 0.0007 * ramp((z - 0.054) / 0.008)
+    height = y - line
+    flank = ramp((side - 0.018) / 0.016)
+    band = flank * ramp((y - 1.538) / 0.016) * ramp((1.609 - y) / 0.010)
+    length = ramp((z - 0.034) / 0.011) * ramp((0.077 - z) / 0.019)
+    shoulder = -0.002 + 0.0015 * ramp((z - 0.050) / 0.010)
+    # The artwork's jaw crossing lies about a third of the way between
+    # the low and high trial rolls over the continuous ear-to-chin section.
+    lift = 0.00035 + 0.0042 * (1 - ramp((z - 0.039) / 0.014))
+    roll_height = height - lift
+    under = 0.5 * (1 - np.tanh((roll_height - shoulder + 0.00375) / 0.0045))
+    under *= np.exp(-((np.minimum(roll_height + 0.015, 0) / 0.020) ** 2))
+
+    # The skin above the jaw turns more slowly than its underside. Keep
+    # this shallow taper behind the frontal silhouette near mouth level.
+    rear = np.exp(-(((height - 0.009) / 0.015) ** 2) - ((z - 0.043) / 0.019) ** 4)
+    rear *= ramp((z - 0.023) / 0.014)
+    # Ease the anterior cheek back into the oral pad in three-quarter view.
+    # The depth window avoids the sides of the neck and the central lips.
+    oblique = np.exp(
+        -(((z - 0.098) / 0.013) ** 2)
+        - ((y - 1.591) / 0.015) ** 2
+        - ((side - 0.046) / 0.017) ** 2
+    )
+    delta = np.zeros_like(rest)
+    # Release the underside gradually across its width as well as its
+    # height. A narrow lateral mask cuts a groove in the neck-facing skin.
+    underside_flank = (
+        ramp((side - 0.015) / 0.026)
+        * ramp((y - 1.537) / 0.019)
+        * ramp((1.609 - y) / 0.010)
+    )
+    delta[:, 0] = -np.sign(x) * (
+        band * (0.0018 * rear + 0.0013 * oblique)
+        + 0.0068 * underside_flank * length * under
+    )
+    delta[:, 2] = -band * 0.0012 * oblique
     return delta
 
 
@@ -477,6 +531,71 @@ def ear_cartilage_offset(rest):
     change[active, 1] += 0.00085 * corner
     change[active, 2] += 0.00090 * corner
     return change
+
+
+def round_conchal_wall(points, faces):
+    """Unroll the projecting tragal wall over the floor of the cavum."""
+    x, y, z = points.T
+    lateral = abs(x)
+
+    def ramp(v):
+        v = np.clip(v, 0.0, 1.0)
+        return v * v * (3 - 2 * v)
+
+    # Both the outer lip and the skin behind it are in this window. A
+    # planar mask alone would pull the lobe and the adjoining cheek along.
+    local = (
+        ramp((lateral - 0.053) / 0.006)
+        * ramp((0.078 - lateral) / 0.006)
+        * ramp((y - 1.6135) / 0.007)
+        * ramp((1.640 - y) / 0.0085)
+        * ramp((z - 0.008) / 0.010)
+        * ramp((0.041 - z) / 0.010)
+    )
+    # In section the free wall doubles back 6–9 mm over the bowl.
+    # Rotate that overhang open, carrying the transition round its lower
+    # end. The upper entrance stays narrow. The lower floor descends into
+    # the turn while the outer skin wraps gradually around the tragus.
+    depth = np.clip(lateral - 0.065, -0.0065, 0.0065)
+    lower = ramp((1.632 - y) / 0.010)
+    tip = np.exp(-(((z - 0.026) / 0.009) ** 2 + ((y - 1.624) / 0.007) ** 2))
+    result = points.copy()
+    result[:, 0] -= np.sign(x) * local * 0.40 * depth
+    result[:, 2] += local * depth * (1.34 - 0.29 * lower)
+    result[:, 1] += local * (0.74 * lower * depth - 0.0036 * tip)
+
+    # Relax only connected scan neighbours. The source mesh uses a welded
+    # position layout here, before UV seam expansion. This rounds both
+    # tangents across the return without bridging across the canal.
+    patch = faces[np.any(local[faces] > 0, axis=1)]
+    edges = np.concatenate((patch[:, [0, 1]], patch[:, [1, 2]], patch[:, [2, 0]]))
+    edges = np.unique(np.sort(edges, axis=1), axis=0)
+    i, j = np.concatenate((edges, edges[:, ::-1])).T
+    weight = 1 / np.maximum(np.linalg.norm(points[j] - points[i], axis=1), 0.0003)
+    totals = np.bincount(i, weight, minlength=len(points))
+    active = np.flatnonzero((local > 0) & (totals > 0))
+    for _ in range(9):
+        sums = np.zeros_like(result)
+        np.add.at(sums, i, weight[:, None] * result[j])
+        delta = sums[active] / totals[active, None] - result[active]
+        result[active] += 0.38 * local[active, None] * delta
+    # The cavum is deeper centrally and turns down and forward below the
+    # tragus. Cup the gently unfolded floor along that oblique axis. Only
+    # the compact free end of the tragus turns back over the entrance.
+    lateral, height, forward = abs(result[:, 0]), result[:, 1], result[:, 2]
+    along = forward - 0.0218
+    bowl_height = height - 1.6251 + 0.48 * along
+    bowl = np.exp(-((along / 0.0073) ** 2 + (bowl_height / 0.0056) ** 2))
+    lip = np.exp(
+        -(((forward - 0.0271) / 0.0050) ** 2 + ((height - 1.6305) / 0.0047) ** 2)
+    )
+    free = ramp((lateral - 0.0615) / 0.0054)
+    root = np.exp(
+        -(((forward - 0.0265) / 0.0085) ** 2 + ((height - 1.631) / 0.0065) ** 2)
+    )
+    result[:, 0] += np.sign(x) * local * (0.00115 * lip * free - 0.0032 * bowl)
+    result[:, 2] -= local * (0.0027 * lip * free + 0.0015 * root)
+    return result
 
 
 def ear_ambient_visibility(points, faces, normals):
@@ -701,6 +820,7 @@ def bake(cache, art):
         if name == "head":
             # The original shoulder apron sits inside the game's neckline.
             face = face[np.max(rest[index[face], 1], axis=1) >= 1.5195]
+            rest = round_conchal_wall(rest, index[face])
         triangles_xyz = rest[index[face]]
         area = np.cross(
             triangles_xyz[:, 1] - triangles_xyz[:, 0],
@@ -770,6 +890,46 @@ def portrait_skin_coverage(x, y):
     release = np.clip((y - 610) / 70, 0, 1)
     release *= release * (3 - 2 * release)
     return keep + release * (1 - keep)
+
+
+def mandibular_undertone(x, y, z):
+    """Blend the cheek powder into the warmer underside of the mandibular arch."""
+
+    def smooth(t):
+        t = np.clip(t, 0, 1)
+        return t * t * (3 - 2 * t)
+
+    # Neutral surface stations (metres), from behind the masseter towards
+    # the chin. Both UV islands follow the same anatomy through animation.
+    stations = [0.031, 0.0367, 0.0423, 0.0479, 0.0536, 0.0593, 0.0650, 0.0707, 0.0764]
+    heights = [1.5860, 1.5801, 1.5766, 1.5693, 1.5663, 1.5639, 1.5613, 1.5591, 1.5569]
+    height = y - np.interp(z, stations, heights)
+    placement = smooth((z - 0.032) / 0.010) * smooth((0.078 - z) / 0.012)
+    placement *= smooth((np.abs(x) - 0.016) / 0.011) * smooth((y - 1.546) / 0.007)
+    # Use broad upper and lower skin tones. A soft transition retains
+    # scanned pores and lets the actual mesh catch light as the head turns.
+    upper = 0.5 + 0.5 * np.tanh(height / 0.0031)
+    upper *= smooth((0.033 - height) / 0.016)
+    lower = (
+        (1 - upper)
+        * smooth((height + 0.015) / 0.009)
+        * smooth((0.012 - height) / 0.006)
+    )
+    front = smooth((z - 0.046) / 0.014)
+    upper_rgb = np.stack(
+        (-0.012 - 0.030 * front, 0.145 - 0.115 * front, 0.130 - 0.115 * front), axis=-1
+    )
+    lower_rgb = np.stack(
+        (-0.085 - 0.055 * front, 0.002 - 0.105 * front, -0.060 - 0.082 * front), axis=-1
+    )
+    # Faint green/ochre in the deeper hollow balances the red subsurface
+    # cast below the ear. The neck and collar use their own skin swatch.
+    hollow = np.exp(-(((height + 0.0105) / 0.0048) ** 2))
+    return placement[..., None] * (
+        upper[..., None] * upper_rgb
+        + lower[..., None] * lower_rgb
+        + hollow[..., None] * [-0.023, 0.039, 0.033]
+    )
 
 
 def cosmetics(diffuse, head, art):
@@ -952,8 +1112,43 @@ def cosmetics(diffuse, head, art):
             + pad(1.663, 0.094, 0.009, 0.009)[:, :, None] * [-0.027, 0.009, 0.030]
         )
         patch = undertone[lo[1] : hi[1] + 1, lo[0] : hi[0] + 1]
-        patch[mask] = (1 + gain * gate[:, :, None] + side_gain * side[:, :, None])[mask]
+        patch[mask] = (
+            1
+            + gain * gate[:, :, None]
+            + side_gain * side[:, :, None]
+            + mandibular_undertone(x, y, z)
+        )[mask]
     return target, undertone
+
+
+def correct_cavum_pigment(pigment):
+    """Recover the local cartilage hue from adjacent texels of the same ear."""
+    h, w = pigment.shape[:2]
+    for u, v in ((0.1776, 0.4579), (0.8212, 0.4550)):
+        rx, ry = 0.0070 * w, 0.0150 * h
+        cx, cy = u * w, v * h
+        x0, x1 = int(cx - rx), int(cx + rx) + 1
+        y0, y1 = int(cy - ry), int(cy + ry) + 1
+        patch = pigment[y0:y1, x0:x1]
+        rgb = patch.astype(float)
+        y, x = np.mgrid[y0:y1, x0:x1]
+        radius = ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2
+        warm = rgb[:, :, 0] - rgb[:, :, 1]
+        neighbors = (radius < 1) & (warm > 30)
+        if not np.any(neighbors):
+            continue
+        # Preserve high-frequency luminance and the darker entrance. The
+        # donor scan contains cyan texels normally hidden under the tragus.
+        luma = rgb @ [0.2126, 0.7152, 0.0722]
+        local_chroma = np.median((rgb - luma[:, :, None])[neighbors], axis=0)
+        fade = np.clip((1 - radius) / 0.48, 0, 1)
+        correction = np.clip((25 - warm) / 25, 0, 1)
+        amount = (fade * fade * (3 - 2 * fade)) * (correction**2 * (3 - 2 * correction))
+        target = luma[:, :, None] + local_chroma
+        patch[:] = np.uint8(
+            np.rint(rgb + amount[:, :, None] * (target - rgb)).clip(0, 255)
+        )
+    return pigment
 
 
 def textures(cache, art, head):
@@ -991,7 +1186,10 @@ def textures(cache, art, head):
     # The torso UVs sample a small cheek swatch. Give them the same base
     # pigment but leave facial blush out of the neck, shoulders and arms.
     for filename, pigment in (
-        ("HaitangDiffuse.jpg", np.uint8((base_pigment * undertone).clip(0, 255))),
+        (
+            "HaitangDiffuse.jpg",
+            correct_cavum_pigment(np.uint8((base_pigment * undertone).clip(0, 255))),
+        ),
         ("HaitangCollar.jpg", base_pigment),
     ):
         painted = pigment.astype(float)

@@ -1,0 +1,337 @@
+{
+  "revisions": [
+    61,
+    65
+  ],
+  "source_primitive": "HaitangPortrait{revision}.glb / WayfarerSkin / POSITION",
+  "coordinates": "neutral GLB metres; x lateral, y superior, z anterior",
+  "mesh": {
+    "vertex_count": 24408,
+    "triangle_count": 45207,
+    "index_arrays_identical": true,
+    "position_buffer_sha256_f32le": {
+      "61": "697fbc24b33e8764426d8ca47b1b3f50662945ba058342140e477f5b1b5d564a",
+      "65": "9998d0b9ec2f6815c39ec8a910565b1fc6d69aa0ea3a06cdc5bbbccd4a7093f9"
+    },
+    "glb_sha256": {
+      "61": "a3e6b6d0726ecf341ef9c6e0339136603a8f40877635e24ccb934e16956663ee",
+      "65": "5768880fdf05fad533674776ed48978c29e15cea7a23850f9dfd9e7098069237"
+    }
+  },
+  "regions": {
+    "anterior_chin": {
+      "neutral_bounds_m": "abs(x)<.017, z>.105, y<1.571",
+      "vertices": 432,
+      "maximum_displacement_mm": 0.0,
+      "maximum_absolute_xyz_mm": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "upper_face_anterior": {
+      "neutral_bounds_m": "z>.045, y>1.610",
+      "vertices": 9528,
+      "maximum_displacement_mm": 0.0,
+      "maximum_absolute_xyz_mm": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "lip_seam": {
+      "neutral_bounds_m": "abs(x)<.021, z>.114, 1.578<y<1.593",
+      "vertices": 1345,
+      "maximum_displacement_mm": 0.0028,
+      "maximum_absolute_xyz_mm": [
+        0.00205,
+        0.0,
+        0.0019
+      ]
+    },
+    "neck_collar": {
+      "neutral_bounds_m": "y<1.532",
+      "vertices": 1713,
+      "maximum_displacement_mm": 0.0,
+      "maximum_absolute_xyz_mm": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "lower_lateral_cheek": {
+      "neutral_bounds_m": "y<1.607, .037<z<.115, abs(x)>.018",
+      "vertices": 3726,
+      "maximum_displacement_mm": 6.26564,
+      "maximum_absolute_xyz_mm": [
+        6.26564,
+        0.0,
+        1.18747
+      ]
+    }
+  },
+  "registered_profile": {
+    "art_anchor_xy_px": [
+      [
+        650,
+        857
+      ],
+      [
+        675,
+        885
+      ],
+      [
+        700,
+        899
+      ],
+      [
+        725,
+        915
+      ]
+    ],
+    "vertical_sample_offsets_px": [
+      -10,
+      0,
+      10
+    ],
+    "near_surface_inset_mm": [
+      [
+        2.324,
+        3.078,
+        4.331
+      ],
+      [
+        2.176,
+        3.341,
+        4.373
+      ],
+      [
+        1.749,
+        2.117,
+        3.091
+      ],
+      [
+        1.337,
+        1.945,
+        2.89
+      ]
+    ],
+    "method": "The 88 degree game projection registered to the near pupil and lip commissure intersects the actual GLB triangles. Positive values move the visible negative-x side of the jaw toward the median plane. Columns sample above the reference jaw line, on it, and below it."
+  },
+  "triangles_of_changed_lower_cheek": {
+    "count_valid_nonzero": 3417,
+    "min_area_ratio_new_old": 0.88819,
+    "min_new_old_normal_dot": 0.85248
+  },
+  "actual_section_relocation_against_62": {
+    "method": "Raycast the most lateral negative-x triangle of each exported neutral mesh along the same vertical y line at fixed z. Relative to 61, follow the upper side of the actual inset lobe between 35 and 85 percent of its peak, after the common superior section offset. Positive rise is up toward the cheekbone. Width here is anatomical geometry, not a pixel-level lighting or style score.",
+    "rows": [
+      {
+        "depth_z_mm": 42.5,
+        "base_guide_y_mm": 1574.421,
+        "by_revision": {
+          "62": {
+            "peak_inset_mm": 6.773,
+            "y_at_half_roll_mm": 1570.092,
+            "y_at_35pct_mm": 1571.411,
+            "y_at_85pct_mm": 1567.034,
+            "width_35_to_85pct_mm": 4.377
+          },
+          "65": {
+            "peak_inset_mm": 5.575,
+            "y_at_half_roll_mm": 1575.729,
+            "y_at_35pct_mm": 1578.827,
+            "y_at_85pct_mm": 1571.961,
+            "width_35_to_85pct_mm": 6.866
+          },
+          "63": {
+            "peak_inset_mm": 5.469,
+            "y_at_half_roll_mm": 1584.024,
+            "y_at_35pct_mm": 1586.804,
+            "y_at_85pct_mm": 1578.908,
+            "width_35_to_85pct_mm": 7.896
+          },
+          "64": {
+            "peak_inset_mm": 5.575,
+            "y_at_half_roll_mm": 1575.729,
+            "y_at_35pct_mm": 1578.827,
+            "y_at_85pct_mm": 1571.961,
+            "width_35_to_85pct_mm": 6.866
+          }
+        },
+        "rise_of_half_roll_mm": 5.637,
+        "change_in_width_mm": 2.489,
+        "half_roll_fraction_across_62_to_63": 0.4046,
+        "guide_luma_ridge_fraction_across_62_to_63_neighbouring_columns": 0.3537,
+        "63_minus_64_half_roll_height_mm": 8.295
+      },
+      {
+        "depth_z_mm": 48.099999999999994,
+        "base_guide_y_mm": 1570.764,
+        "by_revision": {
+          "62": {
+            "peak_inset_mm": 7.5,
+            "y_at_half_roll_mm": 1565.892,
+            "y_at_35pct_mm": 1566.798,
+            "y_at_85pct_mm": 1563.637,
+            "width_35_to_85pct_mm": 3.161
+          },
+          "65": {
+            "peak_inset_mm": 5.112,
+            "y_at_half_roll_mm": 1570.512,
+            "y_at_35pct_mm": 1572.437,
+            "y_at_85pct_mm": 1565.957,
+            "width_35_to_85pct_mm": 6.48
+          },
+          "63": {
+            "peak_inset_mm": 5.794,
+            "y_at_half_roll_mm": 1578.432,
+            "y_at_35pct_mm": 1581.169,
+            "y_at_85pct_mm": 1574.291,
+            "width_35_to_85pct_mm": 6.878
+          },
+          "64": {
+            "peak_inset_mm": 5.112,
+            "y_at_half_roll_mm": 1570.512,
+            "y_at_35pct_mm": 1572.437,
+            "y_at_85pct_mm": 1565.957,
+            "width_35_to_85pct_mm": 6.48
+          }
+        },
+        "rise_of_half_roll_mm": 4.62,
+        "change_in_width_mm": 3.319,
+        "half_roll_fraction_across_62_to_63": 0.3684,
+        "guide_luma_ridge_fraction_across_62_to_63_neighbouring_columns": 0.3258,
+        "63_minus_64_half_roll_height_mm": 7.92
+      },
+      {
+        "depth_z_mm": 53.8,
+        "base_guide_y_mm": 1567.291,
+        "by_revision": {
+          "62": {
+            "peak_inset_mm": 5.905,
+            "y_at_half_roll_mm": 1563.03,
+            "y_at_35pct_mm": 1563.694,
+            "y_at_85pct_mm": 1561.491,
+            "width_35_to_85pct_mm": 2.203
+          },
+          "65": {
+            "peak_inset_mm": 3.814,
+            "y_at_half_roll_mm": 1566.394,
+            "y_at_35pct_mm": 1569.622,
+            "y_at_85pct_mm": 1562.781,
+            "width_35_to_85pct_mm": 6.841
+          },
+          "63": {
+            "peak_inset_mm": 4.982,
+            "y_at_half_roll_mm": 1573.561,
+            "y_at_35pct_mm": 1576.49,
+            "y_at_85pct_mm": 1569.328,
+            "width_35_to_85pct_mm": 7.162
+          },
+          "64": {
+            "peak_inset_mm": 3.814,
+            "y_at_half_roll_mm": 1566.394,
+            "y_at_35pct_mm": 1569.622,
+            "y_at_85pct_mm": 1562.781,
+            "width_35_to_85pct_mm": 6.841
+          }
+        },
+        "rise_of_half_roll_mm": 3.364,
+        "change_in_width_mm": 4.638,
+        "half_roll_fraction_across_62_to_63": 0.3194,
+        "guide_luma_ridge_fraction_across_62_to_63_neighbouring_columns": 0.3514,
+        "63_minus_64_half_roll_height_mm": 7.167
+      },
+      {
+        "depth_z_mm": 59.4,
+        "base_guide_y_mm": 1564.125,
+        "by_revision": {
+          "62": {
+            "peak_inset_mm": 4.589,
+            "y_at_half_roll_mm": 1560.615,
+            "y_at_35pct_mm": 1561.211,
+            "y_at_85pct_mm": 1558.952,
+            "width_35_to_85pct_mm": 2.259
+          },
+          "65": {
+            "peak_inset_mm": 2.863,
+            "y_at_half_roll_mm": 1564.251,
+            "y_at_35pct_mm": 1567.096,
+            "y_at_85pct_mm": 1560.88,
+            "width_35_to_85pct_mm": 6.216
+          },
+          "63": {
+            "peak_inset_mm": 3.661,
+            "y_at_half_roll_mm": 1569.672,
+            "y_at_35pct_mm": 1572.314,
+            "y_at_85pct_mm": 1566.016,
+            "width_35_to_85pct_mm": 6.299
+          },
+          "64": {
+            "peak_inset_mm": 2.863,
+            "y_at_half_roll_mm": 1564.251,
+            "y_at_35pct_mm": 1567.096,
+            "y_at_85pct_mm": 1560.88,
+            "width_35_to_85pct_mm": 6.216
+          }
+        },
+        "rise_of_half_roll_mm": 3.636,
+        "change_in_width_mm": 3.957,
+        "half_roll_fraction_across_62_to_63": 0.4015,
+        "guide_luma_ridge_fraction_across_62_to_63_neighbouring_columns": 0.3582,
+        "63_minus_64_half_roll_height_mm": 5.421
+      }
+    ]
+  },
+  "real_export_comparison_64_to_65": {
+    "compared": [
+      64,
+      65
+    ],
+    "source_glbs_sha256": {
+      "64": "4f358c09659f195c5a0705b55e74f0febb79505a4ed4e86352ead7b618bc6d32",
+      "65": "5768880fdf05fad533674776ed48978c29e15cea7a23850f9dfd9e7098069237"
+    },
+    "all_mesh_primitives_bit_identical": true,
+    "primitives_count_each": [
+      38,
+      38
+    ],
+    "total_vertices_across_primitives_each": [
+      366575,
+      366575
+    ],
+    "total_triangles_each": [
+      404741,
+      404741
+    ],
+    "total_morph_targets_each": [
+      266,
+      266
+    ],
+    "geometry_included": "All per-primitive POSITION, NORMAL, TEXCOORD, JOINTS/WEIGHTS, vertex color and any other authored attributes, indices, morph-target deltas, draw mode, primitive order, and material assignment. Packed and strided data are decoded by glTF accessor.",
+    "all_geometry_payload_sha256": {
+      "64": "513fac406f19dee8a8fb633649317285cb2efdc6a1eb3e44c487fe1a13a817d5",
+      "65": "513fac406f19dee8a8fb633649317285cb2efdc6a1eb3e44c487fe1a13a817d5"
+    },
+    "wayfarer_skin_position_identical": true,
+    "wayfarer_skin_uv_identical": true,
+    "wayfarer_skin_vertex_count": 24408,
+    "wayfarer_skin_position_sha256": {
+      "64": "9998d0b9ec2f6815c39ec8a910565b1fc6d69aa0ea3a06cdc5bbbccd4a7093f9",
+      "65": "9998d0b9ec2f6815c39ec8a910565b1fc6d69aa0ea3a06cdc5bbbccd4a7093f9"
+    },
+    "skeleton_bind_joints_and_node_transforms_bit_identical": true,
+    "embedded_or_referenced_images_compared": 24,
+    "changed_image_labels": [
+      "NecklineSkin",
+      "WayfarerSkin"
+    ],
+    "changed_primitive_attributes": [],
+    "max_skin_position_difference_mm": 0.0,
+    "count_changed_skin_positions": 0,
+    "max_skin_uv_component_difference": 0.0,
+    "skin_triangles_byte_identical": true
+  }
+}
